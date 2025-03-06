@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	gin.ForceConsoleColor()
 	router := gin.Default()
 	router.GET("/quiz", getQuizzes)
 	router.GET("/quiz/:id", getQuizByID)
