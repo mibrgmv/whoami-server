@@ -1,17 +1,18 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run()
+	router := gin.Default()
+	router.GET("/quiz", getQuizzes)
+	router.GET("/quiz/:id", getQuizByID)
+
+	s := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+	s.ListenAndServe()
 }
