@@ -1,17 +1,13 @@
-package internal
+package services
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"whoami-server/internal/models"
 )
 
-type quiz struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-}
-
-var quizzes = []quiz{
+var quizzes = []models.Quiz{
 	{ID: 1, Title: "Which sigma boy are you?"},
 	{ID: 2, Title: "Who are you from GTA V?"},
 	{ID: 3, Title: "Are you gay?"},

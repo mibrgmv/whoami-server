@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"whoami-server/configuration"
-	"whoami-server/internal"
+	"whoami-server/internal/services"
 )
 
 func main() {
@@ -24,9 +24,9 @@ func main() {
 		AllowAllOrigins: true,
 	}))
 
-	router.GET("/quiz", internal.GetQuizzes)
-	router.GET("/quiz/:id", internal.GetQuizByID)
-	router.GET("/quiz/:id/questions", internal.GetQuestionsByQuizID)
+	router.GET("/quiz", services.GetQuizzes)
+	router.GET("/quiz/:id", services.GetQuizByID)
+	router.GET("/quiz/:id/questions", services.GetQuestionsByQuizID)
 
 	s := &http.Server{
 		Addr:    ":8080",
