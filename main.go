@@ -1,53 +1,32 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"whoami-server/configuration"
+	"whoami-server/internal"
 )
 
-var loggedInUser string
-
 func main() {
+	config, err := (&configuration.Config{}).Load("config.yaml")
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	connStr := config.GetPostgresConnectionString()
+	log.Printf("Postgres connection string: %s", connStr)
+
 	gin.ForceConsoleColor()
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+	}))
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"LoggedIn": loggedInUser != "",
-			"Username": loggedInUser,
-			"Role":     getRole(loggedInUser),
-		})
-	})
-
-	router.POST("/login", func(c *gin.Context) {
-		username := c.PostForm("username")
-		password := c.PostForm("password")
-
-		if (username == "user" && password == "pass") || (username == "root" && password == "root") {
-			tokenString, err := createToken(username)
-			if err != nil {
-				c.String(http.StatusInternalServerError, "Error creating token")
-				return
-			}
-
-			loggedInUser = username
-			fmt.Printf("Token created: %s\n", tokenString)
-			c.SetCookie("token", tokenString, 3600, "/", "localhost", false, true)
-			c.Redirect(http.StatusSeeOther, "/")
-		} else {
-			c.String(http.StatusUnauthorized, "Invalid credentials")
-		}
-	})
-
-	router.GET("/logout", func(c *gin.Context) {
-		loggedInUser = ""
-		c.SetCookie("token", "", -1, "/", "localhost", false, true)
-		c.Redirect(http.StatusSeeOther, "/")
-	})
-
-	router.GET("/quiz", getQuizzes)
-	router.GET("/quiz/:id", authenticateMiddleware, getQuizByID)
+	router.GET("/quiz", internal.GetQuizzes)
+	router.GET("/quiz/:id", internal.GetQuizByID)
+	router.GET("/quiz/:id/questions", internal.GetQuestionsByQuizID)
 
 	s := &http.Server{
 		Addr:    ":8080",
