@@ -17,7 +17,7 @@ func GetQuestionsByQuizID(c *gin.Context) {
 	quizIDStr := c.Param("id")
 	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
 		return
 	}
 
@@ -29,9 +29,9 @@ func GetQuestionsByQuizID(c *gin.Context) {
 	}
 
 	if len(result) == 0 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No questions found for the given quiz ID"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "No questions found for the given quiz ID"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, result)
 }
