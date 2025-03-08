@@ -14,7 +14,7 @@ var quizzes = []models.Quiz{
 }
 
 func GetQuizzes(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, quizzes)
+	c.JSON(http.StatusOK, quizzes)
 }
 
 func GetQuizByID(c *gin.Context) {
@@ -22,16 +22,16 @@ func GetQuizByID(c *gin.Context) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
 		return
 	}
 
 	for _, q := range quizzes {
 		if q.ID == id {
-			c.IndentedJSON(http.StatusOK, q)
+			c.JSON(http.StatusOK, q)
 			return
 		}
 	}
 
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
+	c.JSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
 }
