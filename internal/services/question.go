@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 	"whoami-server/internal/models"
 	"whoami-server/internal/persistence/repositories"
 )
@@ -43,22 +44,35 @@ func (s *QuestionService) AddQuestions(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdQuestions)
 }
 
-func (s *QuestionService) GetQuestionsByQuizID(c *gin.Context) {
-	quizIDStr := c.Param("id")
-	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
-		return
+// QueryQuestions godoc
+// @Summary Query questions with parameters
+// @Description Query questions with parameters such as an array of quiz IDs.
+// @Tags questions
+// @Produce json
+// @Param quiz_ids query []int64 false "Array of Quiz IDs (comma-separated)"
+// @Success 200 {array} models.Question
+// @Failure 400
+// @Failure 500
+// @Router /question/q [get]
+func (s *QuestionService) QueryQuestions(c *gin.Context) {
+	quizIDsStr := c.Query("quiz_ids")
+
+	var quizIDs []int64
+	if quizIDsStr != "" {
+		idStrSlice := strings.Split(quizIDsStr, ",")
+		for _, idStr := range idStrSlice {
+			id, err := strconv.ParseInt(strings.TrimSpace(idStr), 10, 64)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz IDs"})
+				return
+			}
+			quizIDs = append(quizIDs, id)
+		}
 	}
 
-	questions, err := s.repo.GetQuestionsByQuizID(c.Request.Context(), quizID)
+	questions, err := s.repo.QueryQuestions(c.Request.Context(), repositories.QuestionQuery{QuizIds: quizIDs})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
-		return
-	}
-
-	if len(questions) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "No questions found for the given quiz ID"})
 		return
 	}
 

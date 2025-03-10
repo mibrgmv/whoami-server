@@ -61,16 +61,16 @@ func (r *QuestionRepository) AddQuestions(ctx context.Context, questions []model
 	return createdQuestions, nil
 }
 
-func (r *QuestionRepository) GetQuestionsByQuizID(ctx context.Context, quizID int64) ([]models.Question, error) {
-	query := `
+func (r *QuestionRepository) QueryQuestions(ctx context.Context, query QuestionQuery) ([]models.Question, error) {
+	sql := `
 	select question_id,
-	       quiz_id,
-	       question_body,
-	       array_to_json(question_options)
+		   quiz_id,
+		   question_body,
+		   question_options_weights
 	from questions
-	where quiz_id = $1`
+	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_id = any ($1))`
 
-	rows, err := r.pool.Query(ctx, query, quizID)
+	rows, err := r.pool.Query(ctx, sql, query.QuizIds)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
@@ -79,13 +79,16 @@ func (r *QuestionRepository) GetQuestionsByQuizID(ctx context.Context, quizID in
 	var questions []models.Question
 	for rows.Next() {
 		var q models.Question
-		var optionsStr string
-		if err := rows.Scan(&q.ID, &q.QuizID, &q.Body, &optionsStr); err != nil {
+		var optionsWeightsJSON []byte
+
+		if err := rows.Scan(&q.ID, &q.QuizID, &q.Body, &optionsWeightsJSON); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		if err := json.Unmarshal([]byte(optionsStr), &q.Options); err != nil {
-			return nil, fmt.Errorf("json unmarshal failed: %w", err)
+
+		if err = json.Unmarshal(optionsWeightsJSON, &q.OptionsWeights); err != nil {
+			return nil, fmt.Errorf("unmarshal failed: %w", err)
 		}
+
 		questions = append(questions, q)
 	}
 
