@@ -1,23 +1,23 @@
-package repositories
+package postgresql
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"whoami-server/internal/models"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/internal/services/question"
 )
 
-type QuestionRepository struct {
+type Repository struct {
 	pool *pgxpool.Pool
 }
 
-func NewQuestionRepository(pool *pgxpool.Pool) *QuestionRepository {
-	return &QuestionRepository{pool: pool}
+func NewRepository(pool *pgxpool.Pool) *Repository {
+	return &Repository{pool: pool}
 }
 
-func (r *QuestionRepository) AddQuestions(ctx context.Context, questions []models.Question) ([]models.Question, error) {
+func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -61,7 +61,7 @@ func (r *QuestionRepository) AddQuestions(ctx context.Context, questions []model
 	return createdQuestions, nil
 }
 
-func (r *QuestionRepository) QueryQuestions(ctx context.Context, query QuestionQuery) ([]models.Question, error) {
+func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.Question, error) {
 	sql := `
 	select question_id,
 		   quiz_id,

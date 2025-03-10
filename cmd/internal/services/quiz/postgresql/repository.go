@@ -1,22 +1,22 @@
-package repositories
+package postgresql
 
 import (
 	"context"
 	"fmt"
-	"whoami-server/internal/models"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/internal/services/quiz"
 )
 
-type QuizRepository struct {
+type Repository struct {
 	pool *pgxpool.Pool
 }
 
-func NewQuizRepository(pool *pgxpool.Pool) *QuizRepository {
-	return &QuizRepository{pool: pool}
+func NewRepository(pool *pgxpool.Pool) *Repository {
+	return &Repository{pool: pool}
 }
 
-func (r *QuizRepository) AddQuizzes(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
+func (r *Repository) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -35,26 +35,26 @@ func (r *QuizRepository) AddQuizzes(ctx context.Context, quizzes []models.Quiz) 
 
 	var createdQuizzes []models.Quiz
 
-	for _, quiz := range quizzes {
+	for _, q := range quizzes {
 		query := `
 		insert into quizzes (quiz_title, quiz_results)
 		values ($1, $2)
 		returning quiz_id`
 
 		var createdID int64
-		err = tx.QueryRow(ctx, query, quiz.Title, quiz.Results).Scan(&createdID)
+		err = tx.QueryRow(ctx, query, q.Title, q.Results).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add quiz: %w", err)
 		}
 
-		quiz.ID = createdID
-		createdQuizzes = append(createdQuizzes, quiz)
+		q.ID = createdID
+		createdQuizzes = append(createdQuizzes, q)
 	}
 
 	return createdQuizzes, nil
 }
 
-func (r *QuizRepository) QueryQuizzes(ctx context.Context, query QuizQuery) ([]models.Quiz, error) {
+func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz, error) {
 	sql := `
 	select quiz_id,
 		   quiz_title,
@@ -70,12 +70,12 @@ func (r *QuizRepository) QueryQuizzes(ctx context.Context, query QuizQuery) ([]m
 	defer rows.Close()
 	var quizzes []models.Quiz
 	for rows.Next() {
-		var quiz models.Quiz
-		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Results); err != nil {
+		var q models.Quiz
+		if err := rows.Scan(&q.ID, &q.Title, &q.Results); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		quizzes = append(quizzes, quiz)
+		quizzes = append(quizzes, q)
 	}
 
 	if err := rows.Err(); err != nil {

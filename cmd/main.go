@@ -9,14 +9,15 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
-	"whoami-server/configuration"
+	"whoami-server/cmd/internal/services/question"
+	pgquestion "whoami-server/cmd/internal/services/question/postgresql"
+	"whoami-server/cmd/internal/services/quiz"
+	pgquiz "whoami-server/cmd/internal/services/quiz/postgresql"
 	"whoami-server/docs"
-	"whoami-server/internal/persistence/repositories"
-	"whoami-server/internal/services"
 )
 
 func main() {
-	config, err := (&configuration.Config{}).Load("config.yaml")
+	config, err := (&Config{}).Load("configs/default.yaml")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
@@ -32,23 +33,17 @@ func main() {
 	}
 	defer pool.Close()
 
-	quizzes := repositories.NewQuizRepository(pool)
-	questions := repositories.NewQuestionRepository(pool)
+	quizzes := pgquiz.NewRepository(pool)
+	questions := pgquestion.NewRepository(pool)
 
-	quizService := services.NewQuizService(quizzes)
-	questionService := services.NewQuestionService(questions)
+	quizService := quiz.NewService(quizzes)
+	questionService := question.NewService(questions)
 
 	gin.ForceConsoleColor()
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 	}))
-
-	// todo make a database context and make all services createable with this database context.
-	// something like
-	//quizservice(context) {
-	//	repo = context.repo
-	//}
 
 	docs.SwaggerInfo.BasePath = ""
 

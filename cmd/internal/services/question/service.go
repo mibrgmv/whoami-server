@@ -1,20 +1,19 @@
-package services
+package question
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
-	"whoami-server/internal/models"
-	"whoami-server/internal/persistence/repositories"
+	"whoami-server/cmd/internal/models"
 )
 
-type QuestionService struct {
-	repo *repositories.QuestionRepository
+type Service struct {
+	repo Repository
 }
 
-func NewQuestionService(repo *repositories.QuestionRepository) *QuestionService {
-	return &QuestionService{repo: repo}
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
 // AddQuestions godoc
@@ -28,14 +27,14 @@ func NewQuestionService(repo *repositories.QuestionRepository) *QuestionService 
 // @Failure 400
 // @Failure 500
 // @Router /question/a [post]
-func (s *QuestionService) AddQuestions(c *gin.Context) {
+func (s *Service) AddQuestions(c *gin.Context) {
 	var questions []models.Question
 	if err := c.ShouldBindJSON(&questions); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	createdQuestions, err := s.repo.AddQuestions(c.Request.Context(), questions)
+	createdQuestions, err := s.repo.Add(c.Request.Context(), questions)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add questions"})
 		return
@@ -54,7 +53,7 @@ func (s *QuestionService) AddQuestions(c *gin.Context) {
 // @Failure 400
 // @Failure 500
 // @Router /question/q [get]
-func (s *QuestionService) QueryQuestions(c *gin.Context) {
+func (s *Service) QueryQuestions(c *gin.Context) {
 	quizIDsStr := c.Query("quiz_ids")
 
 	var quizIDs []int64
@@ -70,7 +69,7 @@ func (s *QuestionService) QueryQuestions(c *gin.Context) {
 		}
 	}
 
-	questions, err := s.repo.QueryQuestions(c.Request.Context(), repositories.QuestionQuery{QuizIds: quizIDs})
+	questions, err := s.repo.Query(c.Request.Context(), Query{QuizIds: quizIDs})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
 		return
@@ -90,7 +89,7 @@ func (s *QuestionService) QueryQuestions(c *gin.Context) {
 // @Failure 404
 // @Failure 500
 // @Router /quiz/{id}/questions [get]
-func (s *QuestionService) GetQuestionsByQuizID(c *gin.Context) {
+func (s *Service) GetQuestionsByQuizID(c *gin.Context) {
 	quizIDStr := c.Param("id")
 	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
 	if err != nil {
@@ -99,7 +98,7 @@ func (s *QuestionService) GetQuestionsByQuizID(c *gin.Context) {
 	}
 
 	questionIDs := []int64{quizID}
-	questions, err := s.repo.QueryQuestions(c.Request.Context(), repositories.QuestionQuery{QuizIds: questionIDs})
+	questions, err := s.repo.Query(c.Request.Context(), Query{QuizIds: questionIDs})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
 		return
