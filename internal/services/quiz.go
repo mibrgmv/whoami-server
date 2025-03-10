@@ -44,7 +44,7 @@ func (s *QuizService) AddQuizzes(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdQuizzes)
 }
 
-// GetQuizzes godoc
+// QueryQuizzes godoc
 // @Summary Get quizzes
 // @Description Retrieve quizzes based on optional quiz IDs. If no quiz IDs are provided, retrieves all quizzes.
 // @Tags quizzes
@@ -77,4 +77,38 @@ func (s *QuizService) QueryQuizzes(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, quizzes)
+}
+
+// GetQuizByID godoc
+// @Summary Get quiz by ID
+// @Description Retrieve a quiz by its ID.
+// @Tags quizzes
+// @Produce json
+// @Param id path int64 true "Quiz ID"
+// @Success 200 {object} models.Quiz
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /quiz/{id} [get]
+func (s *QuizService) GetQuizByID(c *gin.Context) {
+	quizIDStr := c.Param("id")
+	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
+		return
+	}
+
+	quizIDs := []int64{quizID}
+	quizzes, err := s.repo.QueryQuizzes(c.Request.Context(), repositories.QuizQuery{Ids: quizIDs})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch quiz"})
+		return
+	}
+
+	if len(quizzes) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, quizzes[0])
 }

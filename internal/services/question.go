@@ -78,3 +78,37 @@ func (s *QuestionService) QueryQuestions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, questions)
 }
+
+// GetQuestionsByQuizID godoc
+// @Summary Get questions by quiz ID
+// @Description Retrieve questions associated with a specific quiz ID.
+// @Tags questions
+// @Produce json
+// @Param id path int64 true "Quiz ID"
+// @Success 200 {array} models.Question
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /quiz/{id}/questions [get]
+func (s *QuestionService) GetQuestionsByQuizID(c *gin.Context) {
+	quizIDStr := c.Param("id")
+	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
+		return
+	}
+
+	questionIDs := []int64{quizID}
+	questions, err := s.repo.QueryQuestions(c.Request.Context(), repositories.QuestionQuery{QuizIds: questionIDs})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
+		return
+	}
+
+	if len(questions) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No questions found for the given quiz ID"})
+		return
+	}
+
+	c.JSON(http.StatusOK, questions)
+}
