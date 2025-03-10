@@ -15,9 +15,96 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/quiz/add": {
+        "/question/a": {
             "post": {
-                "description": "Add a new quiz to the database",
+                "description": "Add multiple questions to the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "questions"
+                ],
+                "summary": "Add multiple questions",
+                "parameters": [
+                    {
+                        "description": "Array of question objects to add",
+                        "name": "questions",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Question"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Question"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/question/q": {
+            "get": {
+                "description": "Query questions with parameters such as an array of quiz IDs.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "questions"
+                ],
+                "summary": "Query questions with parameters",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Array of Quiz IDs (comma-separated)",
+                        "name": "quiz_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Question"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/quiz/a": {
+            "post": {
+                "description": "Add multiple quizzes to the database",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,15 +114,18 @@ const docTemplate = `{
                 "tags": [
                     "quizzes"
                 ],
-                "summary": "Add a new quiz",
+                "summary": "Add multiple quizzes",
                 "parameters": [
                     {
-                        "description": "Quiz object to add",
-                        "name": "quiz",
+                        "description": "Array of quiz objects to add",
+                        "name": "quizzes",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Quiz"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Quiz"
+                            }
                         }
                     }
                 ],
@@ -43,7 +133,51 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Quiz"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Quiz"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/quiz/q": {
+            "get": {
+                "description": "Retrieve quizzes based on optional quiz IDs. If no quiz IDs are provided, retrieves all quizzes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "quizzes"
+                ],
+                "summary": "Get quizzes",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "List of Quiz IDs (comma-separated)",
+                        "name": "quiz_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Quiz"
+                            }
                         }
                     },
                     "400": {
@@ -57,11 +191,40 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.Question": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "options_weights": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "quiz_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Quiz": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "title": {
                     "type": "string"
