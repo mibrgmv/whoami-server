@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"whoami-server/internal/models"
 	"whoami-server/internal/persistence/repositories"
 )
 
@@ -13,6 +14,33 @@ type QuestionService struct {
 
 func NewQuestionService(repo *repositories.QuestionRepository) *QuestionService {
 	return &QuestionService{repo: repo}
+}
+
+// AddQuestions godoc
+// @Summary Add multiple questions
+// @Description Add multiple questions to the database
+// @Tags questions
+// @Accept json
+// @Produce json
+// @Param questions body []models.Question true "Array of question objects to add"
+// @Success 201 {array} models.Question
+// @Failure 400
+// @Failure 500
+// @Router /question/a [post]
+func (s *QuestionService) AddQuestions(c *gin.Context) {
+	var questions []models.Question
+	if err := c.ShouldBindJSON(&questions); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createdQuestions, err := s.repo.AddQuestions(c.Request.Context(), questions)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add questions"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdQuestions)
 }
 
 func (s *QuestionService) GetQuestionsByQuizID(c *gin.Context) {
