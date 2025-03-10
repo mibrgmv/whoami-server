@@ -4,4 +4,4 @@ postgres:
   database: "postgres"
   username: "postgres"
   password: "postgres"
-  ssl_mode: "Prefer"
+  ssl_mode: "prefer"

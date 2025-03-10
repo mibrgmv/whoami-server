@@ -4,20 +4,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"whoami-server/internal/models"
+	"whoami-server/internal/persistence/repositories"
 )
 
-var quizzes = []models.Quiz{
-	{ID: 1, Title: "Which sigma boy are you?"},
-	{ID: 2, Title: "Who are you from GTA V?"},
-	{ID: 3, Title: "Are you gay?"},
+type QuizService struct {
+	repo *repositories.QuizRepository
 }
 
-func GetQuizzes(c *gin.Context) {
+func NewQuizService(repo *repositories.QuizRepository) *QuizService {
+	return &QuizService{repo: repo}
+}
+
+func (s *QuizService) GetQuizzes(c *gin.Context) {
+	var quizzes, err = s.repo.GetQuizzes(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to get quizzes"})
+		return
+	}
+
 	c.JSON(http.StatusOK, quizzes)
 }
 
-func GetQuizByID(c *gin.Context) {
+func (s *QuizService) GetQuizByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 
@@ -26,12 +34,12 @@ func GetQuizByID(c *gin.Context) {
 		return
 	}
 
-	for _, q := range quizzes {
-		if q.ID == id {
-			c.JSON(http.StatusOK, q)
-			return
-		}
+	quiz, err := s.repo.GetQuizByID(c.Request.Context(), id)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed to get quiz by ID"})
+		return
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
+	c.JSON(http.StatusOK, quiz)
 }

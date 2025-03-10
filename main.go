@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"net/http"
 	"whoami-server/configuration"
+	"whoami-server/internal/persistence/repositories"
 	"whoami-server/internal/services"
 )
 
@@ -16,7 +19,21 @@ func main() {
 	}
 
 	connStr := config.GetPostgresConnectionString()
-	log.Printf("Postgres connection string: %s", connStr)
+	poolConfig, err := pgxpool.ParseConfig(connStr)
+	if err != nil {
+		log.Fatalf("Unable to parse connStr: %v", err)
+	}
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
+	quizzes := repositories.NewQuizRepository(pool)
+	questions := repositories.NewQuestionRepository(pool)
+
+	quizService := services.NewQuizService(quizzes)
+	questionService := services.NewQuestionService(questions)
 
 	gin.ForceConsoleColor()
 	router := gin.Default()
@@ -24,9 +41,15 @@ func main() {
 		AllowAllOrigins: true,
 	}))
 
-	router.GET("/quiz", services.GetQuizzes)
-	router.GET("/quiz/:id", services.GetQuizByID)
-	router.GET("/quiz/:id/questions", services.GetQuestionsByQuizID)
+	// todo make a database context and make all services createable with this database context.
+	// something like
+	//quizservice(context) {
+	//	repo = context.repo
+	//}
+
+	router.GET("/quiz", quizService.GetQuizzes)
+	router.GET("/quiz/:id", quizService.GetQuizByID)
+	router.GET("/quiz/:id/questions", questionService.GetQuestionsByQuizID)
 
 	s := &http.Server{
 		Addr:    ":8080",
