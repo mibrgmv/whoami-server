@@ -1,0 +1,38 @@
+definitions:
+  models.Quiz:
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /quiz/add:
+    post:
+      consumes:
+      - application/json
+      description: Add a new quiz to the database
+      parameters:
+      - description: Quiz object to add
+        in: body
+        name: quiz
+        required: true
+        schema:
+          $ref: '#/definitions/models.Quiz'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Quiz'
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Add a new quiz
+      tags:
+      - quizzes
+swagger: "2.0"

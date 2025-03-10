@@ -39,7 +39,9 @@ func (r *QuestionRepository) GetQuestionsByQuizID(ctx context.Context, quizID in
 		if err := rows.Scan(&q.ID, &q.QuizID, &q.Body, &optionsStr); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		json.Unmarshal([]byte(optionsStr), &q.Options)
+		if err := json.Unmarshal([]byte(optionsStr), &q.Options); err != nil {
+			return nil, fmt.Errorf("json unmarshal failed: %w", err)
+		}
 		questions = append(questions, q)
 	}
 

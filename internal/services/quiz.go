@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"whoami-server/internal/models"
 	"whoami-server/internal/persistence/repositories"
 )
 
@@ -13,6 +14,33 @@ type QuizService struct {
 
 func NewQuizService(repo *repositories.QuizRepository) *QuizService {
 	return &QuizService{repo: repo}
+}
+
+// AddQuiz godoc
+// @Summary Add a new quiz
+// @Description Add a new quiz to the database
+// @Tags quizzes
+// @Accept json
+// @Produce json
+// @Param quiz body models.Quiz true "Quiz object to add"
+// @Success 201 {object} models.Quiz
+// @Failure 400
+// @Failure 500
+// @Router /quiz/add [post]
+func (s *QuizService) AddQuiz(c *gin.Context) {
+	var quiz models.Quiz
+	if err := c.ShouldBindJSON(&quiz); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createdQuiz, err := s.repo.AddQuiz(c.Request.Context(), quiz)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add quiz"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdQuiz)
 }
 
 func (s *QuizService) GetQuizzes(c *gin.Context) {

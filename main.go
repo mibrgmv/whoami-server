@@ -5,9 +5,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
 	"whoami-server/configuration"
+	"whoami-server/docs"
 	"whoami-server/internal/persistence/repositories"
 	"whoami-server/internal/services"
 )
@@ -47,9 +50,13 @@ func main() {
 	//	repo = context.repo
 	//}
 
+	docs.SwaggerInfo.BasePath = ""
+
 	router.GET("/quiz", quizService.GetQuizzes)
+	router.POST("/quiz/add", quizService.AddQuiz)
 	router.GET("/quiz/:id", quizService.GetQuizByID)
 	router.GET("/quiz/:id/questions", questionService.GetQuestionsByQuizID)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	s := &http.Server{
 		Addr:    ":8080",

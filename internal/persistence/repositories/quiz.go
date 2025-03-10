@@ -17,6 +17,22 @@ func NewQuizRepository(pool *pgxpool.Pool) *QuizRepository {
 	return &QuizRepository{pool: pool}
 }
 
+func (r *QuizRepository) AddQuiz(ctx context.Context, quiz models.Quiz) (models.Quiz, error) {
+	query := `
+	insert into quizzes (quiz_title)
+	values ($1)
+	returning quiz_id`
+
+	var createdID int64
+	err := r.pool.QueryRow(ctx, query, quiz.Title).Scan(&createdID)
+	if err != nil {
+		return models.Quiz{}, fmt.Errorf("failed to add quiz: %w", err)
+	}
+
+	quiz.ID = createdID
+	return quiz, nil
+}
+
 func (r *QuizRepository) GetQuizzes(ctx context.Context) ([]models.Quiz, error) {
 	query := `
 	select quiz_id,
