@@ -85,6 +85,58 @@ paths:
       summary: Query questions with parameters
       tags:
       - questions
+  /quiz/{id}:
+    get:
+      description: Retrieve a quiz by its ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Quiz'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Get quiz by ID
+      tags:
+      - quizzes
+  /quiz/{id}/questions:
+    get:
+      description: Retrieve questions associated with a specific quiz ID.
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Question'
+            type: array
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Get questions by quiz ID
+      tags:
+      - questions
   /quiz/a:
     post:
       consumes:
