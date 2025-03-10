@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"whoami-server/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -55,25 +54,28 @@ func (r *QuizRepository) AddQuizzes(ctx context.Context, quizzes []models.Quiz) 
 	return createdQuizzes, nil
 }
 
-func (r *QuizRepository) GetQuizzes(ctx context.Context) ([]models.Quiz, error) {
-	query := `
+func (r *QuizRepository) QueryQuizzes(ctx context.Context, query QuizQuery) ([]models.Quiz, error) {
+	sql := `
 	select quiz_id,
-	       quiz_title
-	from quizzes`
+		   quiz_title,
+		   quiz_results
+	from quizzes
+	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_id = any ($1))`
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, sql, query.Ids)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
-	defer rows.Close()
 
+	defer rows.Close()
 	var quizzes []models.Quiz
 	for rows.Next() {
-		var q models.Quiz
-		if err := rows.Scan(&q.ID, &q.Title); err != nil {
+		var quiz models.Quiz
+		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Results); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		quizzes = append(quizzes, q)
+
+		quizzes = append(quizzes, quiz)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -81,24 +83,4 @@ func (r *QuizRepository) GetQuizzes(ctx context.Context) ([]models.Quiz, error) 
 	}
 
 	return quizzes, nil
-}
-
-func (r *QuizRepository) GetQuizByID(ctx context.Context, id int64) (models.Quiz, error) {
-	query := `
-	select quiz_id,
-	       quiz_title
-	from quizzes
-	where quiz_id = $1`
-
-	row := r.pool.QueryRow(ctx, query, id)
-
-	var quiz models.Quiz
-	if err := row.Scan(&quiz.ID, &quiz.Title); err != nil {
-		if err == pgx.ErrNoRows {
-			return models.Quiz{}, fmt.Errorf("quiz not found")
-		}
-		return models.Quiz{}, fmt.Errorf("scan failed: %w", err)
-	}
-
-	return quiz, nil
 }
