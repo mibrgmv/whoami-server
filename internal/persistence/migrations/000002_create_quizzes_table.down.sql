@@ -1,4 +1,1 @@
-create table quizzes
-(
-    quiz_id bigint primary key generated always as identity,
-);
+drop table if exists quizzes;
