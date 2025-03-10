@@ -17,20 +17,42 @@ func NewQuizRepository(pool *pgxpool.Pool) *QuizRepository {
 	return &QuizRepository{pool: pool}
 }
 
-func (r *QuizRepository) AddQuiz(ctx context.Context, quiz models.Quiz) (models.Quiz, error) {
-	query := `
-	insert into quizzes (quiz_title)
-	values ($1)
-	returning quiz_id`
-
-	var createdID int64
-	err := r.pool.QueryRow(ctx, query, quiz.Title).Scan(&createdID)
+func (r *QuizRepository) AddQuizzes(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return models.Quiz{}, fmt.Errorf("failed to add quiz: %w", err)
+		return nil, fmt.Errorf("begin transaction failed: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				fmt.Printf("transaction rollback failed: %v\n", rbErr)
+			}
+			return
+		}
+		if cErr := tx.Commit(ctx); cErr != nil {
+			fmt.Printf("transaction commit failed: %v\n", cErr)
+		}
+	}()
+
+	var createdQuizzes []models.Quiz
+
+	for _, quiz := range quizzes {
+		query := `
+		insert into quizzes (quiz_title, quiz_results)
+		values ($1, $2)
+		returning quiz_id`
+
+		var createdID int64
+		err = tx.QueryRow(ctx, query, quiz.Title, quiz.Results).Scan(&createdID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add quiz: %w", err)
+		}
+
+		quiz.ID = createdID
+		createdQuizzes = append(createdQuizzes, quiz)
 	}
 
-	quiz.ID = createdID
-	return quiz, nil
+	return createdQuizzes, nil
 }
 
 func (r *QuizRepository) GetQuizzes(ctx context.Context) ([]models.Quiz, error) {
