@@ -8,6 +8,27 @@ import (
 	"whoami-server/cmd/internal/models"
 )
 
+type question struct {
+	ID      int64    `json:"id"`
+	QuizID  int64    `json:"quiz_id"`
+	Body    string   `json:"body"`
+	Options []string `json:"options"`
+}
+
+func ToView(m *models.Question) question {
+	options := make([]string, 0, len(m.OptionsWeights))
+	for option := range m.OptionsWeights {
+		options = append(options, option)
+	}
+
+	return question{
+		ID:      m.ID,
+		QuizID:  m.QuizID,
+		Body:    m.Body,
+		Options: options,
+	}
+}
+
 type Service struct {
 	repo Repository
 }
@@ -49,7 +70,7 @@ func (s *Service) Add(c *gin.Context) {
 // @Tags questions
 // @Produce json
 // @Param quiz_ids query []int64 false "Array of Quiz IDs (comma-separated)"
-// @Success 200 {array} models.Question
+// @Success 200 {array} question
 // @Failure 400
 // @Failure 500
 // @Router /question/q [get]
@@ -75,7 +96,12 @@ func (s *Service) Query(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, questions)
+	var result []question
+	for _, q := range questions {
+		result = append(result, ToView(&q))
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // GetQuestionsByQuizID godoc
@@ -84,7 +110,7 @@ func (s *Service) Query(c *gin.Context) {
 // @Tags questions
 // @Produce json
 // @Param id path int64 true "Quiz ID"
-// @Success 200 {array} models.Question
+// @Success 200 {array} question
 // @Failure 400
 // @Failure 404
 // @Failure 500
@@ -109,5 +135,10 @@ func (s *Service) GetQuestionsByQuizID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, questions)
+	var result []question
+	for _, q := range questions {
+		result = append(result, ToView(&q))
+	}
+
+	c.JSON(http.StatusOK, result)
 }
