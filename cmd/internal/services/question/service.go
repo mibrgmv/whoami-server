@@ -16,7 +16,7 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-// AddQuestions godoc
+// Add godoc
 // @Summary Add multiple questions
 // @Description Add multiple questions to the database
 // @Tags questions
@@ -27,7 +27,7 @@ func NewService(repo Repository) *Service {
 // @Failure 400
 // @Failure 500
 // @Router /question/a [post]
-func (s *Service) AddQuestions(c *gin.Context) {
+func (s *Service) Add(c *gin.Context) {
 	var questions []models.Question
 	if err := c.ShouldBindJSON(&questions); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -43,7 +43,7 @@ func (s *Service) AddQuestions(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdQuestions)
 }
 
-// QueryQuestions godoc
+// Query godoc
 // @Summary Query questions with parameters
 // @Description Query questions with parameters such as an array of quiz IDs.
 // @Tags questions
@@ -53,7 +53,7 @@ func (s *Service) AddQuestions(c *gin.Context) {
 // @Failure 400
 // @Failure 500
 // @Router /question/q [get]
-func (s *Service) QueryQuestions(c *gin.Context) {
+func (s *Service) Query(c *gin.Context) {
 	quizIDsStr := c.Query("quiz_ids")
 
 	var quizIDs []int64

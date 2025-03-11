@@ -47,10 +47,10 @@ func main() {
 
 	docs.SwaggerInfo.BasePath = ""
 
-	router.GET("/quiz/q", quizService.QueryQuizzes)
-	router.POST("/quiz/a", quizService.AddQuizzes)
-	router.GET("/question/q", questionService.QueryQuestions)
-	router.POST("/question/a", questionService.AddQuestions)
+	router.GET("/quiz/q", quizService.Query)
+	router.POST("/quiz/a", quizService.Add)
+	router.GET("/question/q", questionService.Query)
+	router.POST("/question/a", questionService.Add)
 	router.GET("/quiz/:id", quizService.GetQuizByID)
 	router.GET("/quiz/:id/questions", questionService.GetQuestionsByQuizID)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
