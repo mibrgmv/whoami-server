@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	hQuestion "whoami-server/cmd/internal/handlers/question"
+	hQuiz "whoami-server/cmd/internal/handlers/quiz"
 	sQuestion "whoami-server/cmd/internal/services/question"
 	pgquestion "whoami-server/cmd/internal/services/question/postgresql"
 	sQuiz "whoami-server/cmd/internal/services/quiz"
@@ -28,10 +29,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to parse connStr: %v", err)
 	}
+
 	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer pool.Close()
 
 	quizzes := pgquiz.NewRepository(pool)
@@ -41,6 +44,7 @@ func main() {
 	questionService := sQuestion.NewService(questions)
 
 	questionHandler := hQuestion.NewHandler(questionService)
+	quizHandler := hQuiz.NewHandler(quizService)
 
 	gin.ForceConsoleColor()
 	router := gin.Default()
@@ -51,11 +55,8 @@ func main() {
 	docs.SwaggerInfo.BasePath = ""
 
 	questionHandler.Setup(router)
+	quizHandler.Setup(router)
 
-	router.GET("/quiz/q", quizService.Query)
-	router.POST("/quiz/a", quizService.Add)
-	router.GET("/quiz/:id", quizService.GetQuizByID)
-	router.GET("/quiz/:id/questions", questionService.GetQuestionsByQuizID)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	s := &http.Server{
