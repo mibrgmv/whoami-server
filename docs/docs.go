@@ -89,7 +89,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Question"
+                                "$ref": "#/definitions/question.question"
                             }
                         }
                     },
@@ -252,7 +252,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Question"
+                                "$ref": "#/definitions/question.question"
                             }
                         }
                     },
@@ -307,6 +307,26 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "question.question": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "quiz_id": {
+                    "type": "integer"
                 }
             }
         }

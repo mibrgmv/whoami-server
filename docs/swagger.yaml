@@ -25,6 +25,19 @@ definitions:
       title:
         type: string
     type: object
+  question.question:
+    properties:
+      body:
+        type: string
+      id:
+        type: integer
+      options:
+        items:
+          type: string
+        type: array
+      quiz_id:
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
@@ -76,7 +89,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Question'
+              $ref: '#/definitions/question.question'
             type: array
         "400":
           description: Bad Request
@@ -126,7 +139,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Question'
+              $ref: '#/definitions/question.question'
             type: array
         "400":
           description: Bad Request

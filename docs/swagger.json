@@ -78,7 +78,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Question"
+                                "$ref": "#/definitions/question.question"
                             }
                         }
                     },
@@ -241,7 +241,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Question"
+                                "$ref": "#/definitions/question.question"
                             }
                         }
                     },
@@ -296,6 +296,26 @@
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "question.question": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "quiz_id": {
+                    "type": "integer"
                 }
             }
         }
