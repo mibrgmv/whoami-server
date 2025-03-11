@@ -9,9 +9,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
-	"whoami-server/cmd/internal/services/question"
+	hQuestion "whoami-server/cmd/internal/handlers/question"
+	sQuestion "whoami-server/cmd/internal/services/question"
 	pgquestion "whoami-server/cmd/internal/services/question/postgresql"
-	"whoami-server/cmd/internal/services/quiz"
+	sQuiz "whoami-server/cmd/internal/services/quiz"
 	pgquiz "whoami-server/cmd/internal/services/quiz/postgresql"
 	"whoami-server/docs"
 )
@@ -36,8 +37,10 @@ func main() {
 	quizzes := pgquiz.NewRepository(pool)
 	questions := pgquestion.NewRepository(pool)
 
-	quizService := quiz.NewService(quizzes)
-	questionService := question.NewService(questions)
+	quizService := sQuiz.NewService(quizzes)
+	questionService := sQuestion.NewService(questions)
+
+	questionHandler := hQuestion.NewHandler(questionService)
 
 	gin.ForceConsoleColor()
 	router := gin.Default()
@@ -47,10 +50,10 @@ func main() {
 
 	docs.SwaggerInfo.BasePath = ""
 
+	questionHandler.Setup(router)
+
 	router.GET("/quiz/q", quizService.Query)
 	router.POST("/quiz/a", quizService.Add)
-	router.GET("/question/q", questionService.Query)
-	router.POST("/question/a", questionService.Add)
 	router.GET("/quiz/:id", quizService.GetQuizByID)
 	router.GET("/quiz/:id/questions", questionService.GetQuestionsByQuizID)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
