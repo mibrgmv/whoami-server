@@ -9,6 +9,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"net/http"
+	"whoami-server/cmd/internal"
 	hQuestion "whoami-server/cmd/internal/handlers/question"
 	hQuiz "whoami-server/cmd/internal/handlers/quiz"
 	sQuestion "whoami-server/cmd/internal/services/question"
@@ -54,8 +55,10 @@ func main() {
 
 	docs.SwaggerInfo.BasePath = ""
 
-	questionHandler.Setup(router)
-	quizHandler.Setup(router)
+	internal.SetupRoutes(router, internal.RouterSetup{
+		QuizHandler:     quizHandler,
+		QuestionHandler: questionHandler,
+	})
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
