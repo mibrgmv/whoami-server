@@ -38,7 +38,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID int64) (*[]models.Ques
 	return &questions, nil
 }
 
-func EvaluateAnswers(answers []models.Answer, questions []models.Question, quiz models.Quiz) ([]float32, error) {
+func (s *Service) EvaluateAnswers(answers []models.Answer, questions []models.Question, quiz models.Quiz) ([]float32, error) {
 	for _, answer := range answers {
 		if answer.QuizID != quiz.ID {
 			return nil, errors.New("answer quiz ID does not match quiz ID")

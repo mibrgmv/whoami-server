@@ -1,13 +1,33 @@
-package question
+package question_test
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"reflect"
 	"testing"
 	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/internal/services/question"
 )
 
+type MockRepository struct {
+	mock.Mock
+}
+
+func (m *MockRepository) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
+	args := m.Called(ctx, questions)
+	return args.Get(0).([]models.Question), args.Error(1)
+}
+
+func (m *MockRepository) Query(ctx context.Context, query question.Query) ([]models.Question, error) {
+	args := m.Called(ctx, query)
+	return args.Get(0).([]models.Question), args.Error(1)
+}
+
 func TestEvaluateAnswers(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := question.NewService(mockRepo)
+
 	quizID := int64(1)
 	quiz := models.Quiz{
 		ID:      quizID,
@@ -135,7 +155,7 @@ func TestEvaluateAnswers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := EvaluateAnswers(tt.answers, questions, quiz)
+			results, err := service.EvaluateAnswers(tt.answers, questions, quiz)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -152,7 +172,11 @@ func TestEvaluateAnswers(t *testing.T) {
 	}
 }
 
+// Additional test for question with mismatched quiz ID
 func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := question.NewService(mockRepo)
+
 	quiz := models.Quiz{
 		ID:      1,
 		Title:   "GTA Character Quiz",
@@ -174,13 +198,17 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 		{QuizID: 1, QuestionID: 101, Body: "Yes"},
 	}
 
-	results, err := EvaluateAnswers(answers, questions, quiz)
+	results, err := service.EvaluateAnswers(answers, questions, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "question quiz ID does not match quiz ID")
 	assert.Nil(t, results)
 }
 
+// Test for weight length mismatch
 func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := question.NewService(mockRepo)
+
 	quiz := models.Quiz{
 		ID:      1,
 		Title:   "GTA Character Quiz",
@@ -202,7 +230,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 		{QuizID: 1, QuestionID: 101, Body: "Yes"},
 	}
 
-	results, err := EvaluateAnswers(answers, questions, quiz)
+	results, err := service.EvaluateAnswers(answers, questions, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
 	assert.Nil(t, results)
