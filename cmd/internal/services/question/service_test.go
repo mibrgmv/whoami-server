@@ -74,6 +74,8 @@ func TestEvaluateAnswers(t *testing.T) {
 		},
 	}
 
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{quizID}}).Return(questions, nil)
+
 	tests := []struct {
 		name     string
 		answers  []models.Answer
@@ -155,7 +157,8 @@ func TestEvaluateAnswers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			results, err := service.EvaluateAnswers(tt.answers, questions, quiz)
+			ctx := context.Background()
+			results, err := service.EvaluateAnswers(ctx, tt.answers, quiz)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -194,11 +197,14 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 		},
 	}
 
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{1}}).Return(questions, nil)
+
 	answers := []models.Answer{
 		{QuizID: 1, QuestionID: 101, Body: "Yes"},
 	}
 
-	results, err := service.EvaluateAnswers(answers, questions, quiz)
+	ctx := context.Background()
+	results, err := service.EvaluateAnswers(ctx, answers, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "question quiz ID does not match quiz ID")
 	assert.Nil(t, results)
@@ -226,11 +232,14 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 		},
 	}
 
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{1}}).Return(questions, nil)
+
 	answers := []models.Answer{
 		{QuizID: 1, QuestionID: 101, Body: "Yes"},
 	}
 
-	results, err := service.EvaluateAnswers(answers, questions, quiz)
+	ctx := context.Background()
+	results, err := service.EvaluateAnswers(ctx, answers, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
 	assert.Nil(t, results)
