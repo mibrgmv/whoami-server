@@ -1,3 +1,14 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "release"
+  cors:
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Origin", "Content-Type", "Accept", "Authorization"]
+    allow_credentials: true
+    max_age: 86400 #24h
+
 postgres:
   host: "localhost"
   port: 5432
@@ -5,3 +16,10 @@ postgres:
   username: "postgres"
   password: "postgres"
   ssl_mode: "prefer"
+
+swagger:
+  enabled: true
+  base_path: ""
+  title: "WhoAmI API"
+  description: "API for WhoAmI quiz application"
+  version: "1.0.0"
