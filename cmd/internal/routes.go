@@ -18,6 +18,7 @@ func SetupRoutes(r *gin.Engine, setup RouterSetup) {
 		quizGroup.POST("/a", setup.QuizHandler.Add)
 		quizGroup.GET("/:id", setup.QuizHandler.GetByID)
 		quizGroup.GET("/:id/questions", setup.QuestionHandler.GetByQuizID)
+		quizGroup.POST("/:id/evaluate", setup.QuizHandler.EvaluateAnswers)
 	}
 
 	questionGroup := r.Group("/question")

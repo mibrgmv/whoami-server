@@ -7,15 +7,17 @@ import (
 	"strconv"
 	"strings"
 	"whoami-server/cmd/internal/models"
-	sQuiz "whoami-server/cmd/internal/services/quiz"
+	question "whoami-server/cmd/internal/services/question"
+	quiz "whoami-server/cmd/internal/services/quiz"
 )
 
 type Handler struct {
-	s *sQuiz.Service
+	quizService     *quiz.Service
+	questionService *question.Service
 }
 
-func NewHandler(s *sQuiz.Service) *Handler {
-	return &Handler{s: s}
+func NewHandler(quizService *quiz.Service, questionService *question.Service) *Handler {
+	return &Handler{quizService: quizService, questionService: questionService}
 }
 
 // Add godoc
@@ -36,7 +38,7 @@ func (h *Handler) Add(c *gin.Context) {
 		return
 	}
 
-	createdQuizzes, err := h.s.Add(c.Request.Context(), quizzes)
+	createdQuizzes, err := h.quizService.Add(c.Request.Context(), quizzes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add quizzes"})
 		return
@@ -71,7 +73,7 @@ func (h *Handler) Query(c *gin.Context) {
 		}
 	}
 
-	quizzes, err := h.s.Query(c.Request.Context(), sQuiz.Query{Ids: ids})
+	quizzes, err := h.quizService.Query(c.Request.Context(), quiz.Query{Ids: ids})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch quizzes"})
 		return
@@ -99,9 +101,9 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
-	quiz, err := h.s.GetByID(c.Request.Context(), quizID)
+	q, err := h.quizService.GetByID(c.Request.Context(), quizID)
 	if err != nil {
-		if errors.Is(err, sQuiz.ErrNotFound) {
+		if errors.Is(err, quiz.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
 			return
 		}
@@ -109,5 +111,75 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, quiz)
+	c.JSON(http.StatusOK, q)
+}
+
+// EvaluateAnswers godoc
+// @Summary Evaluate answers for a quiz
+// @Description Evaluate submitted answers against a quiz and return result weights
+// @Tags questions
+// @Accept json
+// @Produce json
+// @Param id path int64 true "Quiz ID"
+// @Param answers body []models.Answer true "Array of answer objects to evaluate"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /quiz/{id}/evaluate [post]
+func (h *Handler) EvaluateAnswers(c *gin.Context) {
+	quizIDStr := c.Param("id")
+	quizID, err := strconv.ParseInt(quizIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz ID"})
+		return
+	}
+
+	var answers []models.Answer
+	if err := c.ShouldBindJSON(&answers); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid answers format", "error": err.Error()})
+		return
+	}
+
+	if len(answers) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No answers provided"})
+		return
+	}
+
+	quiz, err := h.quizService.GetByID(c.Request.Context(), quizID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Quiz not found"})
+		return
+	}
+
+	weights, err := h.questionService.EvaluateAnswers(c.Request.Context(), answers, *quiz)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	maxIndex := 0
+	maxWeight := weights[0]
+	for i, weight := range weights {
+		if weight > maxWeight {
+			maxWeight = weight
+			maxIndex = i
+		}
+	}
+
+	if maxIndex >= len(quiz.Results) {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid result index"})
+		return
+	}
+
+	topResult := quiz.Results[maxIndex]
+	response := gin.H{
+		"result": topResult,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
