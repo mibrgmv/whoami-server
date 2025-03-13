@@ -5,3 +5,9 @@ migrate_up:
 
 migrate_down:
 	migrate -path=/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" -verbose down
+
+lint:
+	golangci-lint run
+
+swagger:
+	swag init -o ./docs -d ./cmd
