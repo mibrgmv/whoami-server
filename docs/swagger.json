@@ -216,6 +216,60 @@
                 }
             }
         },
+        "/quiz/{id}/evaluate": {
+            "post": {
+                "description": "Evaluate submitted answers against a quiz and return result weights",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "questions"
+                ],
+                "summary": "Evaluate answers for a quiz",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Quiz ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Array of answer objects to evaluate",
+                        "name": "answers",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Answer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/quiz/{id}/questions": {
             "get": {
                 "description": "Retrieve questions associated with a specific quiz ID.",
@@ -259,6 +313,20 @@
         }
     },
     "definitions": {
+        "models.Answer": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "question_id": {
+                    "type": "integer"
+                },
+                "quiz_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Question": {
             "type": "object",
             "properties": {

@@ -1,4 +1,13 @@
 definitions:
+  models.Answer:
+    properties:
+      body:
+        type: string
+      question_id:
+        type: integer
+      quiz_id:
+        type: integer
+    type: object
   models.Question:
     properties:
       body:
@@ -123,6 +132,42 @@ paths:
       summary: Get quiz by ID
       tags:
       - quizzes
+  /quiz/{id}/evaluate:
+    post:
+      consumes:
+      - application/json
+      description: Evaluate submitted answers against a quiz and return result weights
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Array of answer objects to evaluate
+        in: body
+        name: answers
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/models.Answer'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Evaluate answers for a quiz
+      tags:
+      - questions
   /quiz/{id}/questions:
     get:
       description: Retrieve questions associated with a specific quiz ID.

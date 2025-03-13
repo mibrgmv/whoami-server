@@ -53,7 +53,7 @@ func (h *Handler) Add(c *gin.Context) {
 // @Tags questions
 // @Produce json
 // @Param quiz_ids query []int64 false "Array of Quiz IDs (comma-separated)"
-// @Success 200 {array} QuestionView
+// @Success 200 {array} question
 // @Failure 400
 // @Failure 500
 // @Router /question/q [get]
@@ -93,7 +93,7 @@ func (h *Handler) Query(c *gin.Context) {
 // @Tags questions
 // @Produce json
 // @Param id path int64 true "Quiz ID"
-// @Success 200 {array} QuestionView
+// @Success 200 {array} question
 // @Failure 400
 // @Failure 404
 // @Failure 500
