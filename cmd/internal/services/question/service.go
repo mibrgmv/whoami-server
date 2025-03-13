@@ -3,6 +3,7 @@ package question
 import (
 	"context"
 	"errors"
+	"fmt"
 	"whoami-server/cmd/internal/models"
 )
 
@@ -35,4 +36,45 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID int64) (*[]models.Ques
 	}
 
 	return &questions, nil
+}
+
+func EvaluateAnswers(answers []models.Answer, questions []models.Question, quiz models.Quiz) ([]float32, error) {
+	for _, answer := range answers {
+		if answer.QuizID != quiz.ID {
+			return nil, errors.New("answer quiz ID does not match quiz ID")
+		}
+	}
+
+	numResults := len(quiz.Results)
+	results := make([]float32, numResults)
+
+	questionsMap := make(map[int64]models.Question)
+	for _, q := range questions {
+		if q.QuizID != quiz.ID {
+			return nil, errors.New("question quiz ID does not match quiz ID")
+		}
+		questionsMap[q.ID] = q
+	}
+
+	for _, answer := range answers {
+		question, exists := questionsMap[answer.QuestionID]
+		if !exists {
+			return nil, fmt.Errorf("question with ID %d not found", answer.QuestionID)
+		}
+
+		weights, exists := question.OptionsWeights[answer.Body]
+		if !exists {
+			return nil, fmt.Errorf("option '%s' not found for question %d", answer.Body, question.ID)
+		}
+
+		if len(weights) != numResults {
+			return nil, fmt.Errorf("weights length for option '%s' does not match number of results", answer.Body)
+		}
+
+		for i, weight := range weights {
+			results[i] += weight
+		}
+	}
+
+	return results, nil
 }
