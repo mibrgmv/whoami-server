@@ -31,7 +31,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	quizID := int64(1)
 	quiz := models.Quiz{
 		ID:      quizID,
-		Title:   "GTA Character Quiz",
+		Title:   "GTA V Character Quiz",
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
@@ -68,7 +68,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			QuizID: quizID,
 			Body:   "Are you fond of hip hop?",
 			OptionsWeights: map[string][]float32{
-				"Yes": {0.0, 0.1, 0.0},
+				"Yes": {0.0, 1.0, 0.0},
 				"No":  {0.5, 0.0, 0.5},
 			},
 		},
@@ -86,36 +86,36 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name: "All Trevor answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "Yes"}, // Likes gasoline -> Trevor
-				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't betray friends -> Franklin/Trevor
+				{QuizID: quizID, QuestionID: 101, Body: "Yes"}, // Likes drinking gasoline -> +1.0 Trevor
+				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
 				{QuizID: quizID, QuestionID: 103, Body: "No"},  // Not good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> Michael/Trevor
+				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
-			expected: []float32{0.5, 0.5, 2.0}, // Trevor has highest score
+			expected: []float32{0.5, 0.5, 2.0}, // Trevor has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
 		{
 			name: "All Michael answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like gasoline -> Michael/Franklin
-				{QuizID: quizID, QuestionID: 102, Body: "Yes"}, // Betrays friends -> Michael
+				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
+				{QuizID: quizID, QuestionID: 102, Body: "Yes"}, // Likes betraying friends -> +1.0 Michael
 				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> Michael/Trevor
+				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
-			expected: []float32{2.0, 0.5, 0.5}, // Michael has highest score
+			expected: []float32{2.0, 0.5, 0.5}, // Michael has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
 		{
 			name: "All Franklin answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like gasoline -> Michael/Franklin
-				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't betray friends -> Franklin/Trevor
+				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
+				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
 				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "Yes"}, // Fond of hip hop -> Franklin
+				{QuizID: quizID, QuestionID: 104, Body: "Yes"}, // Fond of hip hop -> +1.0 Franklin
 			},
-			expected: []float32{0.5, 1.1, 0.5}, // Franklin has highest score
+			expected: []float32{0.5, 2.0, 0.5}, // Franklin has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
