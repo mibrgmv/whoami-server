@@ -22,7 +22,7 @@ func SetupRoutes(r *gin.Engine, setup RouterSetup) {
 	{
 		userGroup.Use(jwt.AuthMiddleware())
 		userGroup.GET("me", setup.UserHandler.GetCurrent)
-		userGroup.GET("all", setup.UserHandler.GetAll)
+		userGroup.GET("", setup.UserHandler.GetAll)
 	}
 
 	quizGroup := r.Group("/quiz")

@@ -8,6 +8,13 @@ definitions:
       quiz_id:
         type: integer
     type: object
+  models.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   models.Question:
     properties:
       body:
@@ -34,6 +41,26 @@ definitions:
       title:
         type: string
     type: object
+  models.RegisterRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.User:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      lastLogin:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
   question.question:
     properties:
       body:
@@ -47,9 +74,48 @@ definitions:
       quiz_id:
         type: integer
     type: object
+  user.TokenResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully logged in with token and user ID
+          schema:
+            $ref: '#/definitions/user.TokenResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: User login
+      tags:
+      - users
   /question/a:
     post:
       consumes:
@@ -253,4 +319,80 @@ paths:
       summary: Get quizzes
       tags:
       - quizzes
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with the provided username and password
+      parameters:
+      - description: User registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Register a new user
+      tags:
+      - users
+  /u:
+    get:
+      description: Retrieve a list of all registered users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - users
+  /u/me:
+    get:
+      description: Retrieve the profile of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

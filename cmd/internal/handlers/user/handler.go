@@ -21,6 +21,23 @@ func NewHandler(userService *user.Service) *Handler {
 	}
 }
 
+type TokenResponse struct {
+	Token  string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	UserID int64  `json:"user_id" example:"1"`
+}
+
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account with the provided username and password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body models.RegisterRequest true "User registration details"
+// @Success 201 {object} models.User "User created successfully"
+// @Failure 400
+// @Failure 409
+// @Failure 500
+// @Router /register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,6 +67,19 @@ func (h *Handler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, userResponse)
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate a user and return a JWT token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body models.LoginRequest true "User login credentials"
+// @Success 200 {object} TokenResponse "Successfully logged in with token and user ID"
+// @Failure 400
+// @Failure 401
+// @Failure 404
+// @Failure 500
+// @Router /login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -86,6 +116,17 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
+// GetCurrent godoc
+// @Summary Get current user profile
+// @Description Retrieve the profile of the currently authenticated user
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} models.User "User profile"
+// @Failure 401
+// @Failure 404
+// @Failure 500
+// @Router /u/me [get]
 func (h *Handler) GetCurrent(c *gin.Context) {
 	userID, exists := jwt.GetUserID(c)
 	if !exists {
@@ -109,6 +150,16 @@ func (h *Handler) GetCurrent(c *gin.Context) {
 	c.JSON(http.StatusOK, userResponse)
 }
 
+// GetAll godoc
+// @Summary Get all users
+// @Description Retrieve a list of all registered users
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.User "List of users"
+// @Failure 401
+// @Failure 500
+// @Router /u [get]
 func (h *Handler) GetAll(c *gin.Context) {
 	_, exists := jwt.GetUserID(c)
 	if !exists {

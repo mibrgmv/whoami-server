@@ -23,6 +23,10 @@ import (
 	"whoami-server/docs"
 )
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and the JWT token.
 func main() {
 	config, err := (&Config{}).Load("configs/default.yaml")
 	if err != nil {
