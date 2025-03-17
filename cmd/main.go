@@ -13,10 +13,13 @@ import (
 	"whoami-server/cmd/internal"
 	hQuestion "whoami-server/cmd/internal/handlers/question"
 	hQuiz "whoami-server/cmd/internal/handlers/quiz"
+	hUser "whoami-server/cmd/internal/handlers/user"
 	sQuestion "whoami-server/cmd/internal/services/question"
 	pgquestion "whoami-server/cmd/internal/services/question/postgresql"
 	sQuiz "whoami-server/cmd/internal/services/quiz"
 	pgquiz "whoami-server/cmd/internal/services/quiz/postgresql"
+	sUser "whoami-server/cmd/internal/services/user"
+	pguser "whoami-server/cmd/internal/services/user/postgresql"
 	"whoami-server/docs"
 )
 
@@ -53,12 +56,15 @@ func main() {
 
 	quizzes := pgquiz.NewRepository(pool)
 	questions := pgquestion.NewRepository(pool)
+	users := pguser.NewRepository(pool)
 
 	quizService := sQuiz.NewService(quizzes)
 	questionService := sQuestion.NewService(questions)
+	userService := sUser.NewService(users)
 
 	questionHandler := hQuestion.NewHandler(questionService)
-	quizHandler := hQuiz.NewHandler(quizService)
+	quizHandler := hQuiz.NewHandler(quizService, questionService)
+	userHandler := hUser.NewHandler(userService)
 
 	gin.ForceConsoleColor()
 	router := gin.Default()
@@ -83,6 +89,7 @@ func main() {
 	internal.SetupRoutes(router, internal.RouterSetup{
 		QuizHandler:     quizHandler,
 		QuestionHandler: questionHandler,
+		UserHandler:     userHandler,
 	})
 
 	serverAddr := config.GetServerAddress()
