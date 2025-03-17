@@ -1,8 +1,7 @@
-package services
+package history
 
 import (
 	"context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"whoami-server/cmd/history/internal/models"
@@ -47,7 +46,7 @@ func (s *Service) Add(ctx context.Context, req *pb.AddRequest) (*pb.AddResponse,
 	return &pb.AddResponse{Items: responseItems}, nil
 }
 
-func (s *Service) Query(req *pb.QueryRequest, stream grpc.ServerStreamingServer[pb.QuizCompletionHistoryItem]) error {
+func (s *Service) Query(req *pb.QueryRequest, stream pb.QuizCompletionHistoryService_QueryServer) error {
 	ctx := stream.Context()
 
 	query := Query{

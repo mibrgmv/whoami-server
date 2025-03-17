@@ -1,4 +1,4 @@
-package services
+package history
 
 type Query struct {
 	IDs     []int64

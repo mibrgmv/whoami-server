@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"whoami-server/cmd/history/internal/models"
-	"whoami-server/cmd/history/internal/services"
+	"whoami-server/cmd/history/internal/services/history"
 )
 
 type Repository struct {
 	pool *pgxpool.Pool
+}
+
+func NewRepository(pool *pgxpool.Pool) *Repository {
+	return &Repository{pool: pool}
 }
 
 func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletionHistoryItem) ([]models.QuizCompletionHistoryItem, error) {
@@ -50,7 +54,7 @@ func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletio
 	return createdItems, nil
 }
 
-func (r Repository) Query(ctx context.Context, query services.Query) ([]models.QuizCompletionHistoryItem, error) {
+func (r Repository) Query(ctx context.Context, query history.Query) ([]models.QuizCompletionHistoryItem, error) {
 	sql := `
 	select quiz_completion_history_item_id,
 		   user_id,

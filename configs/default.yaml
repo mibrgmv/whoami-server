@@ -9,6 +9,9 @@ server:
     allow_credentials: true
     max_age: 86400 #24h
 
+history:
+  port: 50051
+
 postgres:
   host: "localhost"
   port: 5432
