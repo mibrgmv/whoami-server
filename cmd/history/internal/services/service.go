@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"whoami-server/cmd/history/internal/models"
 	pb "whoami-server/protogen/golang/history"
 )
@@ -29,7 +31,7 @@ func (s *Service) Add(ctx context.Context, req *pb.AddRequest) (*pb.AddResponse,
 
 	resultItems, err := s.repo.Add(ctx, modelItems)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to add items: %v", err)
 	}
 
 	responseItems := make([]*pb.QuizCompletionHistoryItem, len(resultItems))
@@ -56,7 +58,7 @@ func (s *Service) Query(req *pb.QueryRequest, stream grpc.ServerStreamingServer[
 
 	items, err := s.repo.Query(ctx, query)
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, "failed to query items: %v", err)
 	}
 
 	for _, item := range items {
@@ -68,7 +70,7 @@ func (s *Service) Query(req *pb.QueryRequest, stream grpc.ServerStreamingServer[
 		}
 
 		if err := stream.Send(protoItem); err != nil {
-			return err
+			return status.Errorf(codes.Internal, "failed to send response: %v", err)
 		}
 	}
 
