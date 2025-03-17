@@ -11,3 +11,6 @@ lint:
 
 swagger:
 	swag init -o ./docs -d ./cmd
+
+protoc:
+	protoc ./cmd/*/api/*.proto --go_out=.. --go-grpc_out=..
