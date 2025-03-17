@@ -1,6 +1,8 @@
 package question
 
-import "whoami-server/cmd/internal/models"
+import (
+	"whoami-server/cmd/whoami/internal/models"
+)
 
 type question struct {
 	ID      int64    `json:"id"`

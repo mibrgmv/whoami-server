@@ -3,7 +3,7 @@ package quiz
 import (
 	"context"
 	"errors"
-	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/whoami/internal/models"
 )
 
 var ErrNotFound = errors.New("quiz not found")

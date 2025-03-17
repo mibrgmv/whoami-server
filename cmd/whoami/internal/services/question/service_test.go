@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"reflect"
 	"testing"
-	"whoami-server/cmd/internal/models"
-	"whoami-server/cmd/internal/services/question"
+	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/whoami/internal/services/question"
 )
 
 type MockRepository struct {

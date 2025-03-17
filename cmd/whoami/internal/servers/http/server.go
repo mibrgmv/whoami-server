@@ -9,11 +9,11 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"whoami-server/cmd/whoami/internal"
+	questionHandler "whoami-server/cmd/whoami/internal/handlers/question"
+	quizHandler "whoami-server/cmd/whoami/internal/handlers/quiz"
 
 	"github.com/gin-gonic/gin"
-	"whoami-server/cmd/internal"
-	questionHandler "whoami-server/cmd/internal/handlers/question"
-	quizHandler "whoami-server/cmd/internal/handlers/quiz"
 )
 
 type ServerConfig struct {

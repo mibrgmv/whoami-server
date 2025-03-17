@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
-	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/whoami/internal/models"
 )
 
 var ErrUserNotFound = errors.New("user not found")

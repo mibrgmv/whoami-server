@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"whoami-server/cmd/internal/models"
+	"whoami-server/cmd/whoami/internal/models"
 )
 
 var ErrNotFound = errors.New("no questions found for quiz")

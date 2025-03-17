@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/cmd/internal/models"
-	"whoami-server/cmd/internal/services/question"
+	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/whoami/internal/services/question"
 )
 
 type Repository struct {

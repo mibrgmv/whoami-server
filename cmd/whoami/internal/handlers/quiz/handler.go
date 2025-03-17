@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"whoami-server/cmd/internal/models"
-	question "whoami-server/cmd/internal/services/question"
-	quiz "whoami-server/cmd/internal/services/quiz"
+	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/whoami/internal/services/question"
+	"whoami-server/cmd/whoami/internal/services/quiz"
 )
 
 type Handler struct {

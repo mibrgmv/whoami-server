@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"whoami-server/cmd/internal/models"
-	"whoami-server/cmd/internal/services/user"
+	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/whoami/internal/services/user"
 	"whoami-server/internal/jwt"
 )
 

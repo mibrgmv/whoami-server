@@ -10,16 +10,16 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"whoami-server/cmd/internal"
-	hQuestion "whoami-server/cmd/internal/handlers/question"
-	hQuiz "whoami-server/cmd/internal/handlers/quiz"
-	hUser "whoami-server/cmd/internal/handlers/user"
-	sQuestion "whoami-server/cmd/internal/services/question"
-	pgquestion "whoami-server/cmd/internal/services/question/postgresql"
-	sQuiz "whoami-server/cmd/internal/services/quiz"
-	pgquiz "whoami-server/cmd/internal/services/quiz/postgresql"
-	sUser "whoami-server/cmd/internal/services/user"
-	pguser "whoami-server/cmd/internal/services/user/postgresql"
+	"whoami-server/cmd/whoami/internal"
+	hQuestion "whoami-server/cmd/whoami/internal/handlers/question"
+	hQuiz "whoami-server/cmd/whoami/internal/handlers/quiz"
+	hUser "whoami-server/cmd/whoami/internal/handlers/user"
+	sQuestion "whoami-server/cmd/whoami/internal/services/question"
+	pgquestion "whoami-server/cmd/whoami/internal/services/question/postgresql"
+	sQuiz "whoami-server/cmd/whoami/internal/services/quiz"
+	pgquiz "whoami-server/cmd/whoami/internal/services/quiz/postgresql"
+	sUser "whoami-server/cmd/whoami/internal/services/user"
+	pguser "whoami-server/cmd/whoami/internal/services/user/postgresql"
 	"whoami-server/docs"
 )
 
@@ -33,13 +33,13 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	if config.Server.Mode == "release" {
-		gin.SetMode(gin.ReleaseMode)
-	} else if config.Server.Mode == "test" {
-		gin.SetMode(gin.TestMode)
-	} else {
-		gin.SetMode(gin.DebugMode)
-	}
+	//if config.Server.Mode == "release" {
+	//	gin.SetMode(gin.ReleaseMode)
+	//} else if config.Server.Mode == "test" {
+	//	gin.SetMode(gin.TestMode)
+	//} else {
+	//	gin.SetMode(gin.DebugMode)
+	//}
 
 	connString := config.GetPostgresConnectionString()
 	poolConfig, err := pgxpool.ParseConfig(connString)

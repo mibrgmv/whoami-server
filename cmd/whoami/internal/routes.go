@@ -2,15 +2,15 @@ package internal
 
 import (
 	"github.com/gin-gonic/gin"
-	questionHandler "whoami-server/cmd/internal/handlers/question"
-	quizHandler "whoami-server/cmd/internal/handlers/quiz"
-	"whoami-server/cmd/internal/handlers/user"
+	"whoami-server/cmd/whoami/internal/handlers/question"
+	"whoami-server/cmd/whoami/internal/handlers/quiz"
+	"whoami-server/cmd/whoami/internal/handlers/user"
 	"whoami-server/internal/jwt"
 )
 
 type RouterSetup struct {
-	QuizHandler     *quizHandler.Handler
-	QuestionHandler *questionHandler.Handler
+	QuizHandler     *quiz.Handler
+	QuestionHandler *question.Handler
 	UserHandler     *user.Handler
 }
 

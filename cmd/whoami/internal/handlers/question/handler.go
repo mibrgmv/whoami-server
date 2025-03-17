@@ -1,4 +1,3 @@
-// File: internal/handlers/question/handler.go
 package question
 
 import (
@@ -7,16 +6,15 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"whoami-server/cmd/internal/models"
-
-	questionService "whoami-server/cmd/internal/services/question"
+	"whoami-server/cmd/whoami/internal/models"
+	sQuestion "whoami-server/cmd/whoami/internal/services/question"
 )
 
 type Handler struct {
-	service *questionService.Service
+	service *sQuestion.Service
 }
 
-func NewHandler(service *questionService.Service) *Handler {
+func NewHandler(service *sQuestion.Service) *Handler {
 	return &Handler{service: service}
 }
 
@@ -73,7 +71,7 @@ func (h *Handler) Query(c *gin.Context) {
 		}
 	}
 
-	questions, err := h.service.Query(c.Request.Context(), questionService.Query{QuizIds: quizIDs})
+	questions, err := h.service.Query(c.Request.Context(), sQuestion.Query{QuizIds: quizIDs})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
 		return
@@ -108,7 +106,7 @@ func (h *Handler) GetByQuizID(c *gin.Context) {
 
 	questions, err := h.service.GetByQuizID(c.Request.Context(), quizID)
 	if err != nil {
-		if errors.Is(err, questionService.ErrNotFound) {
+		if errors.Is(err, sQuestion.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"message": "No questions found for the given quiz ID"})
 			return
 		}
