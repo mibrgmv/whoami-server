@@ -19,6 +19,7 @@ import (
 type Server struct {
 	server *grpc.Server
 	config *Config
+	pool   *pgxpool.Pool
 }
 
 func NewServer(config *Config) *Server {
@@ -39,19 +40,19 @@ func (s *Server) Start() error {
 		log.Fatalf("Unable to parse connStr: %v", err)
 	}
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+	s.pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v", err)
 	}
-	defer pool.Close()
 
-	if err := pool.Ping(context.Background()); err != nil {
+	if err := s.pool.Ping(context.Background()); err != nil {
+		s.pool.Close()
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
 	log.Println("Connected to database successfully")
 
 	s.server = grpc.NewServer()
-	repo := pg.NewRepository(pool)
+	repo := pg.NewRepository(s.pool)
 	service := history.NewService(repo)
 	pb.RegisterQuizCompletionHistoryServiceServer(s.server, service)
 	reflection.Register(s.server)
@@ -71,6 +72,12 @@ func (s *Server) Stop() {
 		fmt.Println("Stopping gRPC server...")
 		s.server.GracefulStop()
 		fmt.Println("gRPC server stopped")
+	}
+
+	if s.pool != nil {
+		fmt.Println("Closing database connection pool...")
+		s.pool.Close()
+		fmt.Println("Database connection pool closed")
 	}
 }
 
