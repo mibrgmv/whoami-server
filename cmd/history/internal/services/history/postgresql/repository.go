@@ -37,12 +37,12 @@ func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletio
 
 	for _, i := range historyItems {
 		query := `
-		insert into quiz_completion_history (quiz_completion_history_item_id, user_id, quiz_id, quiz_result)
-		values ($1, $2, $3, $4)
-		returning user_id`
+		insert into quiz_completion_history (user_id, quiz_id, quiz_result)
+		values ($1, $2, $3)
+		returning quiz_completion_history_item_id`
 
 		var createdID int64
-		err = tx.QueryRow(ctx, query, i.ID, i.UserID, i.QuizID, i.QuizResult).Scan(&createdID)
+		err = tx.QueryRow(ctx, query, i.UserID, i.QuizID, i.QuizResult).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add user: %w", err)
 		}
@@ -60,10 +60,10 @@ func (r Repository) Query(ctx context.Context, query history.Query) ([]models.Qu
 		   user_id,
 		   quiz_id,
 		   quiz_result
-	from users
-	where (cardinality($1) = 0 or quiz_completion_history_item_id = any ($1))
-	  and (cardinality($2) = 0 or user_id = any ($2))
-	  and (cardinality($3) = 0 or quiz_id = any ($3))`
+	from quiz_completion_history
+	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_completion_history_item_id = any ($1))
+	  and ($2::bigint[] is null or cardinality($2) = 0 or user_id = any ($2))
+	  and ($3::bigint[] is null or cardinality($3) = 0 or quiz_id = any ($3))`
 
 	rows, err := r.pool.Query(ctx, sql, query.IDs, query.UserIDs, query.QuizIDs)
 	if err != nil {
