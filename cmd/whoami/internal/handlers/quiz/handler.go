@@ -152,7 +152,7 @@ func (h *Handler) EvaluateAnswers(c *gin.Context) {
 		return
 	}
 
-	weights, err := h.questionService.EvaluateAnswers(c.Request.Context(), answers, *quiz)
+	result, err := h.questionService.EvaluateAnswers(c.Request.Context(), answers, *quiz)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
@@ -162,23 +162,8 @@ func (h *Handler) EvaluateAnswers(c *gin.Context) {
 		return
 	}
 
-	maxIndex := 0
-	maxWeight := weights[0]
-	for i, weight := range weights {
-		if weight > maxWeight {
-			maxWeight = weight
-			maxIndex = i
-		}
-	}
-
-	if maxIndex >= len(quiz.Results) {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid result index"})
-		return
-	}
-
-	topResult := quiz.Results[maxIndex]
 	response := gin.H{
-		"result": topResult,
+		"result": result,
 	}
 
 	c.JSON(http.StatusOK, response)

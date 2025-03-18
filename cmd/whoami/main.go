@@ -63,7 +63,10 @@ func main() {
 	users := pguser.NewRepository(pool)
 
 	quizService := sQuiz.NewService(quizzes)
-	questionService := sQuestion.NewService(questions)
+	questionService, err := sQuestion.NewService(questions, "localhost:50051")
+	if err != nil {
+		log.Fatalf("Failed to create question service: %v", err)
+	}
 	userService := sUser.NewService(users)
 
 	questionHandler := hQuestion.NewHandler(questionService)
@@ -95,6 +98,8 @@ func main() {
 		QuestionHandler: questionHandler,
 		UserHandler:     userHandler,
 	})
+
+	// todo need to close the grpc conn
 
 	serverAddr := config.GetServerAddress()
 	s := &http.Server{
