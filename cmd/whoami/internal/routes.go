@@ -18,25 +18,25 @@ func SetupRoutes(r *gin.Engine, setup RouterSetup) {
 	r.POST("/login", setup.UserHandler.Login)
 	r.POST("/register", setup.UserHandler.Register)
 
-	userGroup := r.Group("u")
+	userGroup := r.Group("/users")
 	{
 		userGroup.Use(jwt.AuthMiddleware())
-		userGroup.GET("me", setup.UserHandler.GetCurrent)
+		userGroup.GET("/current", setup.UserHandler.GetCurrent)
 		userGroup.GET("", setup.UserHandler.GetAll)
 	}
 
-	quizGroup := r.Group("/quiz")
+	quizGroup := r.Group("/quizzes")
 	{
-		quizGroup.GET("/q", setup.QuizHandler.Query)
-		quizGroup.POST("/a", setup.QuizHandler.Add)
+		quizGroup.GET("", setup.QuizHandler.All)
+		quizGroup.POST("/add", setup.QuizHandler.Add)
 		quizGroup.GET("/:id", setup.QuizHandler.GetByID)
 		quizGroup.GET("/:id/questions", setup.QuestionHandler.GetByQuizID)
 		quizGroup.POST("/:id/evaluate", setup.QuizHandler.EvaluateAnswers)
 	}
 
-	questionGroup := r.Group("/question")
+	questionGroup := r.Group("/questions")
 	{
-		questionGroup.GET("/q", setup.QuestionHandler.Query)
-		questionGroup.POST("/a", setup.QuestionHandler.Add)
+		questionGroup.GET("", setup.QuestionHandler.All)
+		questionGroup.POST("/add", setup.QuestionHandler.Add)
 	}
 }

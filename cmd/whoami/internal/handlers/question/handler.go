@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"strings"
 	"whoami-server/cmd/whoami/internal/models"
 	sQuestion "whoami-server/cmd/whoami/internal/services/question"
 )
@@ -45,33 +44,17 @@ func (h *Handler) Add(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdQuestions)
 }
 
-// Query godoc
+// All godoc
 // @Summary Query questions with parameters
-// @Description Query questions with parameters such as an array of quiz IDs.
+// @Description Retrieve all quizzes.
 // @Tags questions
 // @Produce json
-// @Param quiz_ids query []int64 false "Array of Quiz IDs (comma-separated)"
 // @Success 200 {array} question
 // @Failure 400
 // @Failure 500
-// @Router /question/q [get]
-func (h *Handler) Query(c *gin.Context) {
-	quizIDsStr := c.Query("quiz_ids")
-
-	var quizIDs []int64
-	if quizIDsStr != "" {
-		idStrSlice := strings.Split(quizIDsStr, ",")
-		for _, idStr := range idStrSlice {
-			id, err := strconv.ParseInt(strings.TrimSpace(idStr), 10, 64)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid quiz IDs"})
-				return
-			}
-			quizIDs = append(quizIDs, id)
-		}
-	}
-
-	questions, err := h.service.Query(c.Request.Context(), sQuestion.Query{QuizIds: quizIDs})
+// @Router /question/ [get]
+func (h *Handler) All(c *gin.Context) {
+	questions, err := h.service.Query(c.Request.Context(), sQuestion.Query{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch questions"})
 		return
