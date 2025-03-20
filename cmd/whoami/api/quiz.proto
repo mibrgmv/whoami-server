@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package quiz;
+
+option go_package = "whoami-server/protogen/golang/quiz";
+
+service QuizService {
+  rpc Add(stream Quiz) returns (stream Quiz) {}
+  rpc GetAll(Empty) returns (stream Quiz) {}
+  rpc GetByID(GetByIDRequest) returns (Quiz) {}
+}
+
+message Empty {}
+
+message Quiz {
+  int64 ID = 1;
+  string Title = 2;
+  repeated string Results = 3;
+}
+
+message GetByIDRequest {
+  int64 ID = 1;
+}

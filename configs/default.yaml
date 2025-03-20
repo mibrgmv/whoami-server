@@ -1,4 +1,4 @@
-server:
+gateway:
   host: "0.0.0.0"
   port: 8080
   mode: "release"
@@ -8,9 +8,15 @@ server:
     allowed_headers: ["Origin", "Content-Type", "Accept", "Authorization"]
     allow_credentials: true
     max_age: 86400 #24h
+  grpc:
+    whoami: 50051
+    history: 50052
+
+whoami:
+  port: 50051
 
 history:
-  port: 50051
+  port: 50052
 
 postgres:
   host: "localhost"
