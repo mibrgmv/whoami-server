@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -25,6 +26,12 @@ func NewService(service *question.Service, historyServiceAddr string) (*Question
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to history service: %w", err)
 	}
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			fmt.Printf("failed to close connection to history service: %v", err)
+		}
+	}(conn)
 
 	historyClient := pbHistory.NewQuizCompletionHistoryServiceClient(conn)
 
@@ -165,7 +172,7 @@ func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID
 	go func() {
 		for {
 			resp, err := stream.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				done <- true
 				return
 			}

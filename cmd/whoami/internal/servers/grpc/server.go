@@ -69,10 +69,12 @@ func (s *Server) Start() error {
 	pbquestion.RegisterQuestionServiceServer(s.server, questionServiceGrpc)
 	reflection.Register(s.server)
 
-	fmt.Printf("Starting gRPC server on port %d\n", s.config.Server.Port)
-	if err := s.server.Serve(listener); err != nil {
-		fmt.Printf("Failed to serve: %v\n", err)
-	}
+	go func() {
+		fmt.Printf("Starting gRPC server on port %d\n", s.config.Server.Port)
+		if err := s.server.Serve(listener); err != nil {
+			fmt.Printf("Failed to serve: %v\n", err)
+		}
+	}()
 
 	return nil
 }

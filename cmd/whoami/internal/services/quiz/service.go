@@ -27,18 +27,14 @@ func (s *Service) Add(stream pb.QuizService_AddServer) error {
 
 	for {
 		req, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			log.Fatalf("receive error %v", err)
 		}
 
-		quiz := models.Quiz{
-			ID:      req.ID,
-			Title:   req.Title,
-			Results: req.Results,
-		}
+		quiz := models.Quiz{ID: req.ID, Title: req.Title, Results: req.Results}
 		quizzesToCreate = append(quizzesToCreate, quiz)
 	}
 

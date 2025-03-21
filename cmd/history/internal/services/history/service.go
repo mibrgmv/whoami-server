@@ -1,6 +1,7 @@
 package history
 
 import (
+	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
@@ -23,7 +24,7 @@ func (s *Service) Add(stream pb.QuizCompletionHistoryService_AddServer) error {
 
 	for {
 		req, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
