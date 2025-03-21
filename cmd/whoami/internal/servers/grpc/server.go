@@ -59,11 +59,11 @@ func (s *Server) Start() error {
 	quizRepo := pgquiz.NewRepository(s.pool)
 	questionRepo := pgquestion.NewRepository(s.pool)
 	quizService := quiz.NewService(quizRepo)
-	questionService, err := question.NewService(questionRepo, "localhost:50052")
+	questionService := question.NewService(questionRepo)
+	questionServiceGrpc, err := grpcQuestion.NewService(questionService, "localhost:50052")
 	if err != nil {
-		log.Fatalf("Failed to create question service: %v", err)
+		log.Fatalf("Failed to create question grpc service: %v", err)
 	}
-	questionServiceGrpc := grpcQuestion.NewService(questionService)
 
 	pbquiz.RegisterQuizServiceServer(s.server, quizService)
 	pbquestion.RegisterQuestionServiceServer(s.server, questionServiceGrpc)

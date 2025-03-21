@@ -72,6 +72,7 @@ func (s *Service) GetAll(empty *pb.Empty, stream pb.QuizService_GetAllServer) er
 		defer close(done)
 		for _, q := range quizzes {
 			if err := stream.Send(&pb.Quiz{
+				ID:      q.ID,
 				Title:   q.Title,
 				Results: q.Results,
 			}); err != nil {

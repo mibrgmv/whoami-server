@@ -4,39 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"whoami-server/cmd/whoami/internal/models"
-	pb "whoami-server/protogen/golang/history"
 )
 
-var ErrNotFound = errors.New("no questions found for quiz")
-
 type Service struct {
-	repo          Repository
-	historyClient pb.QuizCompletionHistoryServiceClient
-	conn          *grpc.ClientConn
+	repo Repository
 }
 
-func NewService(repo Repository, historyServiceAddr string) (*Service, error) {
-	conn, err := grpc.NewClient(historyServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to history service: %w", err)
-	}
-
-	historyClient := pb.NewQuizCompletionHistoryServiceClient(conn)
-
-	return &Service{
-		repo:          repo,
-		historyClient: historyClient,
-	}, nil
-}
-
-func (s *Service) Close() error {
-	if s.conn != nil {
-		return s.conn.Close()
-	}
-	return nil
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
 func (s *Service) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
@@ -51,10 +27,6 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID int64) ([]models.Quest
 	questions, err := s.repo.Query(ctx, Query{QuizIds: []int64{quizID}})
 	if err != nil {
 		return nil, err
-	}
-
-	if len(questions) == 0 {
-		return nil, ErrNotFound
 	}
 
 	return questions, nil
@@ -117,22 +89,5 @@ func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, 
 	}
 
 	topResult := quiz.Results[maxIndex]
-
-	item := &pb.QuizCompletionHistoryItem{
-		// todo
-		UserId:     1,
-		QuizId:     quiz.ID,
-		QuizResult: topResult,
-	}
-
-	req := &pb.AddRequest{
-		Items: []*pb.QuizCompletionHistoryItem{item},
-	}
-
-	_, err = s.historyClient.Add(ctx, req)
-	if err != nil {
-		return "", fmt.Errorf("failed to call history service Add: %w", err)
-	}
-
 	return topResult, nil
 }
