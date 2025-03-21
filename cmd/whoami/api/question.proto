@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package question;
+
+option go_package = "whoami-server/protogen/golang/question";
+
+service QuestionService {
+  rpc Add(stream Question) returns (stream Question) {}
+  rpc GetAll(Empty) returns (stream Question) {}
+  rpc GetByQuizID(GetByQuizIDRequest) returns (stream Question) {}
+  rpc EvaluateAnswers(EvaluateAnswersRequest) returns (EvaluateAnswersResponse) {}
+}
+
+message Empty {}
+
+message Question {
+  int64 ID = 1;
+  int64 QuizID = 2;
+  string Body = 3;
+  map<string, OptionWeights> OptionsWeights = 4;
+}
+
+message OptionWeights {
+  repeated float Weights = 1;
+}
+
+message Quiz {
+  int64 ID = 1;
+  string Title = 2;
+  repeated string Results = 3;
+}
+
+message Answer {
+  int64 QuizID = 1;
+  int64 QuestionID = 2;
+  string Body = 3;
+}
+
+message GetByQuizIDRequest {
+  int64 QuizID = 1;
+}
+
+message EvaluateAnswersRequest {
+  repeated Answer Answers = 1;
+  Quiz Quiz = 2;
+}
+
+message EvaluateAnswersResponse {
+  string Result = 1;
+  string Description = 2;
+}

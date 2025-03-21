@@ -47,7 +47,7 @@ func (s *Service) Query(ctx context.Context, query Query) ([]models.Question, er
 	return s.repo.Query(ctx, query)
 }
 
-func (s *Service) GetByQuizID(ctx context.Context, quizID int64) (*[]models.Question, error) {
+func (s *Service) GetByQuizID(ctx context.Context, quizID int64) ([]models.Question, error) {
 	questions, err := s.repo.Query(ctx, Query{QuizIds: []int64{quizID}})
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID int64) (*[]models.Ques
 		return nil, ErrNotFound
 	}
 
-	return &questions, nil
+	return questions, nil
 }
 
 func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz models.Quiz) (string, error) {

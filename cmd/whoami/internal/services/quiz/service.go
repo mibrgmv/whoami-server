@@ -44,7 +44,7 @@ func (s *Service) Add(stream pb.QuizService_AddServer) error {
 
 	createdQuizzes, err := s.repo.Add(stream.Context(), quizzesToCreate)
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, "failed to add quizzes: %v", err)
 	}
 
 	for _, quiz := range createdQuizzes {
