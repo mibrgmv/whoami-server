@@ -1,9 +1,10 @@
 package history
 
 import (
-	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
+	"log"
 	"whoami-server/cmd/history/internal/models"
 	pb "whoami-server/protogen/golang/history"
 )
@@ -17,61 +18,100 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Add(ctx context.Context, req *pb.AddRequest) (*pb.AddResponse, error) {
-	modelItems := make([]models.QuizCompletionHistoryItem, len(req.Items))
-	for i, item := range req.Items {
-		modelItems[i] = models.QuizCompletionHistoryItem{
-			ID:         item.Id,
-			QuizID:     item.QuizId,
-			UserID:     item.UserId,
-			QuizResult: item.QuizResult,
+func (s *Service) Add(stream pb.QuizCompletionHistoryService_AddServer) error {
+	var itemsToCreate []models.QuizCompletionHistoryItem
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
+		if err != nil {
+			log.Fatalf("receive error %v", err)
+		}
+
+		item := models.QuizCompletionHistoryItem{
+			ID:         req.Id,
+			QuizID:     req.QuizId,
+			UserID:     req.UserId,
+			QuizResult: req.QuizResult,
+		}
+		itemsToCreate = append(itemsToCreate, item)
 	}
 
-	resultItems, err := s.repo.Add(ctx, modelItems)
+	createdItems, err := s.repo.Add(stream.Context(), itemsToCreate)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to add items: %v", err)
+		return status.Errorf(codes.Internal, "failed to add items: %v", err)
 	}
 
-	responseItems := make([]*pb.QuizCompletionHistoryItem, len(resultItems))
-	for i, item := range resultItems {
-		responseItems[i] = &pb.QuizCompletionHistoryItem{
-			Id:         item.ID,
-			QuizId:     item.QuizID,
-			UserId:     item.UserID,
-			QuizResult: item.QuizResult,
+	for _, quiz := range createdItems {
+		if err := stream.Send(&pb.QuizCompletionHistoryItem{
+			Id:         quiz.ID,
+			QuizId:     quiz.ID,
+			UserId:     quiz.UserID,
+			QuizResult: quiz.QuizResult,
+		}); err != nil {
+			log.Fatalf("can not send %v", err)
 		}
 	}
 
-	return &pb.AddResponse{Items: responseItems}, nil
+	return nil
 }
 
-func (s *Service) Query(req *pb.QueryRequest, stream pb.QuizCompletionHistoryService_QueryServer) error {
-	ctx := stream.Context()
-
-	query := Query{
-		IDs:     req.Ids,
-		UserIDs: req.UserIds,
-		QuizIDs: req.QuizIds,
-	}
-
-	items, err := s.repo.Query(ctx, query)
+func (s *Service) GetAll(empty *pb.Empty, stream pb.QuizCompletionHistoryService_GetAllServer) error {
+	items, err := s.repo.Query(stream.Context(), Query{})
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to query items: %v", err)
+		return status.Errorf(codes.Internal, "failed to query quizzes: %v", err)
 	}
 
-	for _, item := range items {
-		protoItem := &pb.QuizCompletionHistoryItem{
-			Id:         item.ID,
-			QuizId:     item.QuizID,
-			UserId:     item.UserID,
-			QuizResult: item.QuizResult,
-		}
+	done := make(chan bool)
 
-		if err := stream.Send(protoItem); err != nil {
-			return status.Errorf(codes.Internal, "failed to send response: %v", err)
+	go func() {
+		defer close(done)
+		for _, item := range items {
+			protoItem := &pb.QuizCompletionHistoryItem{
+				Id:         item.ID,
+				QuizId:     item.QuizID,
+				UserId:     item.UserID,
+				QuizResult: item.QuizResult,
+			}
+
+			if err := stream.Send(protoItem); err != nil {
+				log.Fatalf("failed to send response: %v", err)
+			}
 		}
+	}()
+
+	<-done
+	return nil
+}
+
+func (s *Service) GetByUserID(request *pb.GetByUserIDRequest, stream pb.QuizCompletionHistoryService_GetByUserIDServer) error {
+	query := Query{UserIDs: []int64{request.UserId}}
+
+	items, err := s.repo.Query(stream.Context(), query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to query quizzes: %v", err)
 	}
 
+	done := make(chan bool)
+
+	go func() {
+		defer close(done)
+		for _, item := range items {
+			protoItem := &pb.QuizCompletionHistoryItem{
+				Id:         item.ID,
+				QuizId:     item.QuizID,
+				UserId:     item.UserID,
+				QuizResult: item.QuizResult,
+			}
+
+			if err := stream.Send(protoItem); err != nil {
+				log.Fatalf("failed to send response: %v", err)
+			}
+		}
+	}()
+
+	<-done
 	return nil
 }

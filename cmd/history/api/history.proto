@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package history;
+
+option go_package = "whoami-server/protogen/golang/history";
+
+service QuizCompletionHistoryService {
+  rpc Add(stream QuizCompletionHistoryItem) returns (stream QuizCompletionHistoryItem) {}
+  rpc GetAll(Empty) returns (stream QuizCompletionHistoryItem) {}
+  rpc GetByUserID(GetByUserIDRequest) returns (stream QuizCompletionHistoryItem) {}
+}
+
+message Empty {}
+
+message QuizCompletionHistoryItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 quiz_id = 3;
+  string quiz_result = 4;
+}
+
+message GetByUserIDRequest {
+  int64 user_id = 1;
+}
