@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/user"
+	"whoami-server/cmd/gateway/internal/models"
+	"whoami-server/cmd/gateway/internal/services/user"
 	"whoami-server/internal/jwt"
 )
 
@@ -126,7 +126,7 @@ func (h *Handler) Login(c *gin.Context) {
 // @Failure 401
 // @Failure 404
 // @Failure 500
-// @Router /u/me [get]
+// @Router /users/current [get]
 func (h *Handler) GetCurrent(c *gin.Context) {
 	userID, exists := jwt.GetUserID(c)
 	if !exists {
@@ -159,7 +159,7 @@ func (h *Handler) GetCurrent(c *gin.Context) {
 // @Success 200 {array} models.User "List of users"
 // @Failure 401
 // @Failure 500
-// @Router /u [get]
+// @Router /users [get]
 func (h *Handler) GetAll(c *gin.Context) {
 	_, exists := jwt.GetUserID(c)
 	if !exists {

@@ -1,17 +1,19 @@
-package main
+package http
 
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
+	"time"
 )
 
 type Config struct {
 	Server struct {
-		Host string `yaml:"host" json:"host"`
-		Port int    `yaml:"port" json:"port"`
-		Mode string `yaml:"mode" json:"mode"`
-		Cors struct {
+		Host            string        `yaml:"host" json:"host"`
+		Port            int           `yaml:"port" json:"port"`
+		Mode            string        `yaml:"mode" json:"mode"`
+		ShutdownTimeout time.Duration `yaml:"shutdown_timeout" json:"shutdown_timeout"`
+		Cors            struct {
 			AllowedOrigins   []string `yaml:"allowed_origins" json:"allowed_origins"`
 			AllowedMethods   []string `yaml:"allowed_methods" json:"allowed_methods"`
 			AllowedHeaders   []string `yaml:"allowed_headers" json:"allowed_headers"`
@@ -20,14 +22,10 @@ type Config struct {
 		} `yaml:"cors" json:"cors"`
 	} `yaml:"server" json:"server"`
 
-	Postgres struct {
-		Host     string `yaml:"host" json:"host"`
-		Port     int    `yaml:"port" json:"port"`
-		Database string `yaml:"database" json:"database"`
-		Username string `yaml:"username" json:"username"`
-		Password string `yaml:"password" json:"password"`
-		SslMode  string `yaml:"ssl_mode" json:"ssl_mode"`
-	} `yaml:"postgres" json:"postgres"`
+	Services struct {
+		Quiz     string `yaml:"quiz" json:"quiz"`
+		Question string `yaml:"question" json:"question"`
+	} `yaml:"services" json:"services"`
 
 	Swagger struct {
 		Enabled     bool   `yaml:"enabled" json:"enabled"`
@@ -41,7 +39,7 @@ type Config struct {
 func (c *Config) Load(filename string) (*Config, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer file.Close()
 
@@ -52,18 +50,6 @@ func (c *Config) Load(filename string) (*Config, error) {
 	}
 
 	return config, nil
-}
-
-func (c *Config) GetPostgresConnectionString() string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		c.Postgres.Username,
-		c.Postgres.Password,
-		c.Postgres.Host,
-		c.Postgres.Port,
-		c.Postgres.Database,
-		c.Postgres.SslMode,
-	)
 }
 
 func (c *Config) GetServerAddress() string {

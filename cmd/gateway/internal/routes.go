@@ -2,9 +2,9 @@ package internal
 
 import (
 	"github.com/gin-gonic/gin"
-	"whoami-server/cmd/whoami/internal/handlers/question"
-	"whoami-server/cmd/whoami/internal/handlers/quiz"
-	"whoami-server/cmd/whoami/internal/handlers/user"
+	"whoami-server/cmd/gateway/internal/handlers/question"
+	"whoami-server/cmd/gateway/internal/handlers/quiz"
+	"whoami-server/cmd/gateway/internal/handlers/user"
 	"whoami-server/internal/jwt"
 )
 
@@ -31,7 +31,7 @@ func SetupRoutes(r *gin.Engine, setup RouterSetup) {
 		quizGroup.POST("/add", setup.QuizHandler.Add)
 		quizGroup.GET("/:id", setup.QuizHandler.GetByID)
 		quizGroup.GET("/:id/questions", setup.QuestionHandler.GetByQuizID)
-		quizGroup.POST("/:id/evaluate", setup.QuizHandler.EvaluateAnswers)
+		quizGroup.POST("/:id/evaluate", setup.QuestionHandler.EvaluateAnswers)
 	}
 
 	questionGroup := r.Group("/questions")
