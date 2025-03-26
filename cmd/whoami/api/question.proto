@@ -4,48 +4,48 @@ package question;
 
 option go_package = "whoami-server/protogen/golang/question";
 
+import "google/protobuf/empty.proto";
+
 service QuestionService {
   rpc Add(stream Question) returns (stream Question) {}
-  rpc GetAll(Empty) returns (stream Question) {}
+  rpc GetAll(google.protobuf.Empty) returns (stream Question) {}
   rpc GetByQuizID(GetByQuizIDRequest) returns (stream Question) {}
   rpc EvaluateAnswers(EvaluateAnswersRequest) returns (EvaluateAnswersResponse) {}
 }
 
-message Empty {}
-
 message Question {
-  int64 ID = 1;
-  int64 QuizID = 2;
-  string Body = 3;
-  map<string, OptionWeights> OptionsWeights = 4;
+  int64 id = 1;
+  int64 quiz_id = 2;
+  string body = 3;
+  map<string, OptionWeights> options_weights = 4;
 }
 
 message OptionWeights {
-  repeated float Weights = 1;
+  repeated float weights = 1;
 }
 
 message Quiz {
-  int64 ID = 1;
-  string Title = 2;
-  repeated string Results = 3;
+  int64 id = 1;
+  string title = 2;
+  repeated string results = 3;
 }
 
 message Answer {
-  int64 QuizID = 1;
-  int64 QuestionID = 2;
-  string Body = 3;
+  int64 quiz_id = 1;
+  int64 question_id = 2;
+  string body = 3;
 }
 
 message GetByQuizIDRequest {
-  int64 QuizID = 1;
+  int64 quiz_id = 1;
 }
 
 message EvaluateAnswersRequest {
-  repeated Answer Answers = 1;
-  Quiz Quiz = 2;
+  repeated Answer answers = 1;
+  Quiz quiz = 2;
 }
 
 message EvaluateAnswersResponse {
-  string Result = 1;
-  string Description = 2;
+  string result = 1;
+  string description = 2;
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
 	"whoami-server/cmd/whoami/internal/models"
@@ -54,8 +55,8 @@ func (s *QuestionService) Add(stream pb.QuestionService_AddServer) error {
 		}
 
 		q := models.ToModel(&pb.Question{
-			ID:             req.ID,
-			QuizID:         req.QuizID,
+			Id:             req.Id,
+			QuizId:         req.QuizId,
 			Body:           req.Body,
 			OptionsWeights: req.OptionsWeights,
 		})
@@ -77,7 +78,7 @@ func (s *QuestionService) Add(stream pb.QuestionService_AddServer) error {
 	return nil
 }
 
-func (s *QuestionService) GetAll(empty *pb.Empty, stream pb.QuestionService_GetAllServer) error {
+func (s *QuestionService) GetAll(empty *emptypb.Empty, stream pb.QuestionService_GetAllServer) error {
 	questions, err := s.service.Query(stream.Context(), question.Query{})
 	if err != nil {
 		return err
@@ -99,7 +100,7 @@ func (s *QuestionService) GetAll(empty *pb.Empty, stream pb.QuestionService_GetA
 }
 
 func (s *QuestionService) GetByQuizID(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIDServer) error {
-	questions, err := s.service.GetByQuizID(stream.Context(), request.QuizID)
+	questions, err := s.service.GetByQuizID(stream.Context(), request.QuizId)
 	if err != nil {
 		return err
 	}
@@ -117,14 +118,14 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 	var answers []models.Answer
 	for _, answer := range request.Answers {
 		answers = append(answers, models.Answer{
-			QuizID:     answer.QuizID,
-			QuestionID: answer.QuestionID,
+			QuizID:     answer.QuizId,
+			QuestionID: answer.QuestionId,
 			Body:       answer.Body,
 		})
 	}
 
 	quiz := models.Quiz{
-		ID:      request.Quiz.ID,
+		ID:      request.Quiz.Id,
 		Title:   request.Quiz.Title,
 		Results: request.Quiz.Results,
 	}
