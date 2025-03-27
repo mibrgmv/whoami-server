@@ -1,7 +1,9 @@
 package models
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
+	pb "whoami-server/protogen/golang/user"
 )
 
 type User struct {
@@ -10,6 +12,16 @@ type User struct {
 	Password  string
 	CreatedAt time.Time
 	LastLogin time.Time
+}
+
+func ToProto(user *User) *pb.User {
+	return &pb.User{
+		UserId:    user.ID,
+		Username:  user.Name,
+		Password:  user.Password,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		LastLogin: timestamppb.New(user.LastLogin),
+	}
 }
 
 type LoginRequest struct {

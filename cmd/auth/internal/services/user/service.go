@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
-	"whoami-server/cmd/gateway/internal/models"
+	"whoami-server/cmd/auth/internal/models"
 )
 
 var ErrUserNotFound = errors.New("user not found")
@@ -56,8 +56,6 @@ func (s *Service) Login(ctx context.Context, username, password string) (int64, 
 	if err := bcrypt.CompareHashAndPassword([]byte(users[0].Password), []byte(password)); err != nil {
 		return 0, fmt.Errorf("invalid password")
 	}
-
-	// todo make last login update here (Upsert)
 
 	return users[0].ID, nil
 }
