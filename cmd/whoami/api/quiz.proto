@@ -4,20 +4,47 @@ package quiz;
 
 option go_package = "whoami-server/protogen/golang/quiz";
 
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
 service QuizService {
-  rpc Add(stream Quiz) returns (stream Quiz) {}
-  rpc GetAll(Empty) returns (stream Quiz) {}
-  rpc GetByID(GetByIDRequest) returns (Quiz) {}
+//  rpc AddBatch(QuizBatch) returns (QuizBatch) {
+//    option (google.api.http) = {
+//      post: "/api/v1/quizzes/add"
+//    };
+//  }
+
+  rpc AddStream(stream Quiz) returns (stream Quiz) {
+    option (google.api.http) = {
+      post: "/api/v1/quizzes/add"
+    };
+  }
+
+  rpc GetAll(google.protobuf.Empty) returns (stream Quiz) {
+    option (google.api.http) = {
+      get: "/api/v1/quizzes"
+    };
+  }
+
+  rpc GetByID(GetByIDRequest) returns (Quiz) {
+    option (google.api.http) = {
+      get: "/api/v1/quizzes/{id}"
+    };
+  }
 }
 
-message Empty {}
-
 message Quiz {
-  int64 ID = 1;
-  string Title = 2;
-  repeated string Results = 3;
+  int64 id = 1;
+  string title = 2;
+  repeated string results = 3;
+}
+
+message QuizBatch {
+  repeated Quiz quizzes = 1;
 }
 
 message GetByIDRequest {
-  int64 ID = 1;
+  int64 id = 1;
 }

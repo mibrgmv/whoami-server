@@ -4,13 +4,13 @@ package history;
 
 option go_package = "whoami-server/protogen/golang/history";
 
+import "google/protobuf/empty.proto";
+
 service QuizCompletionHistoryService {
   rpc Add(stream QuizCompletionHistoryItem) returns (stream QuizCompletionHistoryItem) {}
-  rpc GetAll(Empty) returns (stream QuizCompletionHistoryItem) {}
+  rpc GetAll(google.protobuf.Empty) returns (stream QuizCompletionHistoryItem) {}
   rpc GetByUserID(GetByUserIDRequest) returns (stream QuizCompletionHistoryItem) {}
 }
-
-message Empty {}
 
 message QuizCompletionHistoryItem {
   int64 id = 1;
