@@ -1,0 +1,128 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "question.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "QuestionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "questionAnswer": {
+      "type": "object",
+      "properties": {
+        "quizId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "questionId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "body": {
+          "type": "string"
+        }
+      }
+    },
+    "questionEvaluateAnswersResponse": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "questionOptionWeights": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      }
+    },
+    "questionQuestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "quizId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "body": {
+          "type": "string"
+        },
+        "optionsWeights": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/questionOptionWeights"
+          }
+        }
+      }
+    },
+    "questionQuiz": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "title": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
