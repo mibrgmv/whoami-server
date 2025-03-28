@@ -26,6 +26,10 @@ func NewUserService(service *user.Service) *UserService {
 }
 
 func (s *UserService) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.User, error) {
+	if request.Username == "" || request.Password == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
+	}
+
 	usr, err := s.service.Register(ctx, request.Username, request.Password)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to register user: %v", err)

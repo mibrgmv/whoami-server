@@ -17,7 +17,7 @@ var (
 )
 
 func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	if info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
+	if info.FullMethod == "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" || info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
 		return handler(ctx, req)
 	}
 
@@ -48,7 +48,7 @@ func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 }
 
 func AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	if info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
+	if info.FullMethod == "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" || info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
 		return handler(srv, ss)
 	}
 
@@ -59,7 +59,7 @@ func AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 
 	authHeader, ok := md["authorization"]
 	if !ok || len(authHeader) == 0 {
-		return status.Errorf(codes.Unauthenticated, "authorization header is not provided")
+		return errAuthHeaderNotProvided
 	}
 
 	tokenParts := strings.Split(authHeader[0], " ")
