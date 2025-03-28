@@ -8,14 +8,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
-	"whoami-server/cmd/auth/internal/models"
-	"whoami-server/cmd/auth/internal/services/user"
+	"whoami-server/cmd/users/internal/models"
+	"whoami-server/cmd/users/internal/services/user"
 	"whoami-server/internal/jwt"
 	pb "whoami-server/protogen/golang/user"
 )
 
 type UserService struct {
 	service *user.Service
+	pb.UnimplementedUserServiceServer
 }
 
 func NewUserService(service *user.Service) *UserService {

@@ -48,6 +48,15 @@ func ValidateToken(tokenString string) (int64, error) {
 	return claims.UserID, nil
 }
 
+// todo unused
+func GetUserID(c *gin.Context) (int64, bool) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return 0, false
+	}
+	return userID.(int64), true
+}
+
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -72,12 +81,4 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_id", userID)
 		c.Next()
 	}
-}
-
-func GetUserID(c *gin.Context) (int64, bool) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return 0, false
-	}
-	return userID.(int64), true
 }

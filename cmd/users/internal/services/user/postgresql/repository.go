@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/cmd/auth/internal/models"
-	"whoami-server/cmd/auth/internal/services/user"
+	"whoami-server/cmd/users/internal/models"
+	"whoami-server/cmd/users/internal/services/user"
 )
 
 type Repository struct {

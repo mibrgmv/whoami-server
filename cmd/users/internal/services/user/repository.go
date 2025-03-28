@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"whoami-server/cmd/auth/internal/models"
+	"whoami-server/cmd/users/internal/models"
 )
 
 type Repository interface {
