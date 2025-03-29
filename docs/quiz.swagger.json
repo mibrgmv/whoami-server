@@ -18,7 +18,7 @@
   "paths": {
     "/api/v1/quizzes": {
       "get": {
-        "operationId": "QuizService_GetAll",
+        "operationId": "QuizService_GetAllStream",
         "responses": {
           "200": {
             "description": "A successful response.(streaming responses)",
@@ -75,27 +75,13 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "title",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "results",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
+            "name": "body",
+            "description": " (streaming inputs)",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/quizQuiz"
+            }
           }
         ],
         "tags": [
