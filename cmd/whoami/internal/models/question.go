@@ -22,17 +22,17 @@ func ToModel(protoQuestion *pb.Question) *Question {
 	}
 
 	return &Question{
-		ID:             protoQuestion.ID,
-		QuizID:         protoQuestion.QuizID,
+		ID:             protoQuestion.Id,
+		QuizID:         protoQuestion.QuizId,
 		Body:           protoQuestion.Body,
 		OptionsWeights: optionsWeights,
 	}
 }
 
-func ToProto(model Question) *pb.Question {
+func (question *Question) ToProto() *pb.Question {
 	protoOptionsWeights := make(map[string]*pb.OptionWeights)
 
-	for option, weights := range model.OptionsWeights {
+	for option, weights := range question.OptionsWeights {
 		protoWeights := &pb.OptionWeights{
 			Weights: make([]float32, len(weights)),
 		}
@@ -45,9 +45,9 @@ func ToProto(model Question) *pb.Question {
 	}
 
 	return &pb.Question{
-		ID:             model.ID,
-		QuizID:         model.QuizID,
-		Body:           model.Body,
+		Id:             question.ID,
+		QuizId:         question.QuizID,
+		Body:           question.Body,
 		OptionsWeights: protoOptionsWeights,
 	}
 }

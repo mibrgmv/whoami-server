@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
@@ -18,7 +20,6 @@ import (
 type QuestionService struct {
 	service       *question.Service
 	historyClient pbHistory.QuizCompletionHistoryServiceClient
-	conn          *grpc.ClientConn
 	pb.UnimplementedQuestionServiceServer
 }
 
@@ -27,6 +28,7 @@ func NewService(service *question.Service, historyServiceAddr string) (*Question
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to history service: %w", err)
 	}
+
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
 		if err != nil {
@@ -42,7 +44,7 @@ func NewService(service *question.Service, historyServiceAddr string) (*Question
 	}, nil
 }
 
-func (s *QuestionService) Add(stream pb.QuestionService_AddServer) error {
+func (s *QuestionService) Add(stream pb.QuestionService_AddStreamServer) error {
 	var questions []models.Question
 
 	for {
@@ -69,8 +71,7 @@ func (s *QuestionService) Add(stream pb.QuestionService_AddServer) error {
 	}
 
 	for _, q := range addedQuestions {
-		pbQuestion := models.ToProto(q)
-		if err := stream.Send(pbQuestion); err != nil {
+		if err := stream.Send(q.ToProto()); err != nil {
 			return err
 		}
 	}
@@ -78,7 +79,7 @@ func (s *QuestionService) Add(stream pb.QuestionService_AddServer) error {
 	return nil
 }
 
-func (s *QuestionService) GetAll(empty *emptypb.Empty, stream pb.QuestionService_GetAllServer) error {
+func (s *QuestionService) GetAll(empty *emptypb.Empty, stream pb.QuestionService_GetAllStreamServer) error {
 	questions, err := s.service.Query(stream.Context(), question.Query{})
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func (s *QuestionService) GetAll(empty *emptypb.Empty, stream pb.QuestionService
 	go func() {
 		defer close(done)
 		for _, q := range questions {
-			if err := stream.Send(models.ToProto(q)); err != nil {
+			if err := stream.Send(q.ToProto()); err != nil {
 				log.Fatalf("can not send %v", err)
 			}
 		}
@@ -106,7 +107,7 @@ func (s *QuestionService) GetByQuizID(request *pb.GetByQuizIDRequest, stream pb.
 	}
 
 	for _, q := range questions {
-		if err := stream.Send(models.ToProto(q)); err != nil {
+		if err := stream.Send(q.ToProto()); err != nil {
 			return err
 		}
 	}
@@ -125,9 +126,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 	}
 
 	quiz := models.Quiz{
-		ID:      request.Quiz.Id,
-		Title:   request.Quiz.Title,
-		Results: request.Quiz.Results,
+		// todo need to make a grpc request to quiz service
 	}
 
 	result, err := s.service.EvaluateAnswers(ctx, answers, quiz)
@@ -135,8 +134,13 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		return nil, err
 	}
 
-	// todo user ID
-	historyError := s.addToQuizCompletionHistory(ctx, 1, quiz.ID, result)
+	// todo use jwt service
+	userID, ok := ctx.Value("user_id").(int64)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	historyError := s.addToQuizCompletionHistory(ctx, userID, quiz.ID, result)
 	if historyError != nil {
 		return nil, historyError
 	}

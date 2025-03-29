@@ -4,6 +4,7 @@ import (
 	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
 	"whoami-server/cmd/history/internal/models"
@@ -12,7 +13,6 @@ import (
 
 type Service struct {
 	repo Repository
-	pb.UnimplementedQuizCompletionHistoryServiceServer
 }
 
 func NewService(repo Repository) *Service {
@@ -59,7 +59,7 @@ func (s *Service) Add(stream pb.QuizCompletionHistoryService_AddServer) error {
 	return nil
 }
 
-func (s *Service) GetAll(empty *pb.Empty, stream pb.QuizCompletionHistoryService_GetAllServer) error {
+func (s *Service) GetAll(empty *emptypb.Empty, stream pb.QuizCompletionHistoryService_GetAllServer) error {
 	items, err := s.repo.Query(stream.Context(), Query{})
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to query quizzes: %v", err)
