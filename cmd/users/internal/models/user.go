@@ -14,7 +14,7 @@ type User struct {
 	LastLogin time.Time
 }
 
-func ToProto(user *User) *pb.User {
+func (user *User) ToProto() *pb.User {
 	return &pb.User{
 		UserId:    user.ID,
 		Username:  user.Name,
@@ -22,14 +22,4 @@ func ToProto(user *User) *pb.User {
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		LastLogin: timestamppb.New(user.LastLogin),
 	}
-}
-
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type RegisterRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
 }

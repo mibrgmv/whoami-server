@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
-	"whoami-server/cmd/users/internal/models"
 	"whoami-server/cmd/users/internal/services/user"
 	"whoami-server/internal/jwt"
 	pb "whoami-server/protogen/golang/user"
@@ -82,7 +81,7 @@ func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
-	return models.ToProto(usr), nil
+	return usr.ToProto(), nil
 }
 
 func (s *UserService) GetAll(empty *emptypb.Empty, stream pb.UserService_GetAllServer) error {
@@ -101,7 +100,7 @@ func (s *UserService) GetAll(empty *emptypb.Empty, stream pb.UserService_GetAllS
 	go func() {
 		defer close(done)
 		for _, u := range users {
-			if err := stream.Send(models.ToProto(&u)); err != nil {
+			if err := stream.Send(u.ToProto()); err != nil {
 				log.Fatalf("can not send %v", err)
 			}
 		}
