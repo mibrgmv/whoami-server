@@ -1,95 +1,41 @@
 package grpc
 
 import (
-	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
 	"whoami-server/cmd/history/internal/services/history"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
+	"whoami-server/internal/jwt"
 	pb "whoami-server/protogen/golang/history"
 )
 
-type Server struct {
-	server *grpc.Server
-	config *Config
-	pool   *pgxpool.Pool
-}
-
-func NewServer(config *Config) *Server {
-	return &Server{
-		config: config,
-	}
-}
-
-func (s *Server) Start() error {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.config.Server.Port))
-	if err != nil {
-		return fmt.Errorf("failed to listen on port %d: %v", s.config.Server.Port, err)
-	}
-
-	connString := s.config.GetPostgresConnectionString()
-	poolConfig, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		log.Fatalf("Unable to parse connStr: %v", err)
-	}
-
-	s.pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
-	if err != nil {
-		log.Fatalf("Unable to create connection pool: %v", err)
-	}
-
-	if err := s.pool.Ping(context.Background()); err != nil {
-		s.pool.Close()
-		log.Fatalf("Unable to connect to database: %v", err)
-	}
-	log.Println("Connected to database successfully")
-
-	s.server = grpc.NewServer()
-	repo := pg.NewRepository(s.pool)
+func NewServer(pool *pgxpool.Pool) *grpc.Server {
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(jwt.AuthUnaryInterceptor),
+		grpc.StreamInterceptor(jwt.AuthStreamInterceptor),
+	)
+	repo := pg.NewRepository(pool)
 	service := history.NewService(repo)
-	pb.RegisterQuizCompletionHistoryServiceServer(s.server, service)
-	reflection.Register(s.server)
-
-	go func() {
-		fmt.Printf("Starting gRPC server on port %d\n", s.config.Server.Port)
-		if err := s.server.Serve(listener); err != nil {
-			fmt.Printf("Failed to serve: %v\n", err)
-		}
-	}()
-
-	return nil
+	pb.RegisterQuizCompletionHistoryServiceServer(s, service)
+	reflection.Register(s)
+	return s
 }
 
-func (s *Server) Stop() {
-	if s.server != nil {
-		fmt.Println("Stopping gRPC server...")
-		s.server.GracefulStop()
-		fmt.Println("gRPC server stopped")
+func Start(pool *pgxpool.Pool, addr string) error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Fatalln("Failed to listen:", err)
 	}
 
-	if s.pool != nil {
-		fmt.Println("Closing database connection pool...")
-		s.pool.Close()
-		fmt.Println("Database connection pool closed")
-	}
-}
-
-func (s *Server) RunAndWait() error {
-	if err := s.Start(); err != nil {
-		return err
+	s := NewServer(pool)
+	log.Println("Serving gRPC on", lis.Addr())
+	if err := s.Serve(lis); err != nil {
+		return fmt.Errorf("failed to serve: %w", err)
 	}
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	<-sigCh
-
-	s.Stop()
 	return nil
 }
