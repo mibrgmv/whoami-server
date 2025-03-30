@@ -17,12 +17,7 @@ func main() {
 	defer cancel()
 
 	connString := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=prefer"
-	poolConfig, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		log.Fatalf("Unable to parse connStr: %v", err)
-	}
-
-	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v", err)
 	}
@@ -33,8 +28,17 @@ func main() {
 	}
 	log.Println("Connected to database successfully")
 
-	go grpc.Start(pool, ":8080")
-	go http.Start(ctx, ":8080", ":8090")
+	go func() {
+		if err := grpc.Start(pool, ":8080"); err != nil {
+			log.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
+
+	go func() {
+		if err := http.Start(ctx, ":8080", ":8090"); err != nil {
+			log.Fatalf("Failed to start HTTP server: %v", err)
+		}
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

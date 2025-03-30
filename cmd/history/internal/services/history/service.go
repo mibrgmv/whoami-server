@@ -13,6 +13,7 @@ import (
 
 type Service struct {
 	repo Repository
+	pb.UnimplementedQuizCompletionHistoryServiceServer
 }
 
 func NewService(repo Repository) *Service {

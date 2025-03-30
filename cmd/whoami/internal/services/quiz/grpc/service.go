@@ -18,10 +18,10 @@ type QuizService struct {
 	pb.UnimplementedQuizServiceServer
 }
 
-func NewService(service *quiz.Service) (*QuizService, error) {
+func NewService(service *quiz.Service) *QuizService {
 	return &QuizService{
 		service: service,
-	}, nil
+	}
 }
 
 func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {

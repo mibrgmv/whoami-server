@@ -10,7 +10,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
-	pb "whoami-server/protogen/golang/user"
+	questionpb "whoami-server/protogen/golang/question"
+	quizpb "whoami-server/protogen/golang/quiz"
 )
 
 func NewServer(ctx context.Context, grpcAddr string) (*gin.Engine, error) {
@@ -26,14 +27,22 @@ func NewServer(ctx context.Context, grpcAddr string) (*gin.Engine, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	err := pb.RegisterUserServiceHandlerFromEndpoint(
+	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
 		grpcAddr,
 		dialOpts,
-	)
-	if err != nil {
-		return nil, err
+	); err != nil {
+		return nil, fmt.Errorf("failed to register quiz service: %w", err)
+	}
+
+	if err := questionpb.RegisterQuestionServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		grpcAddr,
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register question service: %w", err)
 	}
 
 	r := gin.Default()

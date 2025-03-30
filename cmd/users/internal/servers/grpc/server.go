@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -26,7 +27,7 @@ func NewServer(pool *pgxpool.Pool) *grpc.Server {
 	return s
 }
 
-func Start(pool *pgxpool.Pool, addr string) {
+func Start(pool *pgxpool.Pool, addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalln("Failed to listen:", err)
@@ -35,6 +36,8 @@ func Start(pool *pgxpool.Pool, addr string) {
 	s := NewServer(pool)
 	log.Println("Serving gRPC on", addr)
 	if err := s.Serve(lis); err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("failed to serve: %w", err)
 	}
+
+	return nil
 }
