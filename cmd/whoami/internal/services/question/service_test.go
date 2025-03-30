@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"reflect"
 	"testing"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/question"
@@ -79,7 +78,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	tests := []struct {
 		name     string
 		answers  []models.Answer
-		expected []float32
+		expected string
 		wantErr  bool
 		errMsg   string
 	}{
@@ -91,7 +90,7 @@ func TestEvaluateAnswers(t *testing.T) {
 				{QuizID: quizID, QuestionID: 103, Body: "No"},  // Not good at math -> No effect
 				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
-			expected: []float32{0.5, 0.5, 2.0}, // Trevor has the highest score
+			expected: "Trevor", // Trevor has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
@@ -103,7 +102,7 @@ func TestEvaluateAnswers(t *testing.T) {
 				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
 				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
-			expected: []float32{2.0, 0.5, 0.5}, // Michael has the highest score
+			expected: "Michael", // Michael has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
@@ -115,7 +114,7 @@ func TestEvaluateAnswers(t *testing.T) {
 				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
 				{QuizID: quizID, QuestionID: 104, Body: "Yes"}, // Fond of hip hop -> +1.0 Franklin
 			},
-			expected: []float32{0.5, 2.0, 0.5}, // Franklin has the highest score
+			expected: "Franklin", // Franklin has the highest score
 			wantErr:  false,
 			errMsg:   "",
 		},
@@ -124,7 +123,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			answers: []models.Answer{
 				{QuizID: quizID, QuestionID: 999, Body: "Yes"}, // Non-existent question ID
 			},
-			expected: nil,
+			expected: "",
 			wantErr:  true,
 			errMsg:   "question with ID 999 not found",
 		},
@@ -133,7 +132,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			answers: []models.Answer{
 				{QuizID: quizID, QuestionID: 101, Body: "Maybe"}, // Invalid option
 			},
-			expected: nil,
+			expected: "",
 			wantErr:  true,
 			errMsg:   "option 'Maybe' not found for question 101",
 		},
@@ -142,14 +141,14 @@ func TestEvaluateAnswers(t *testing.T) {
 			answers: []models.Answer{
 				{QuizID: 999, QuestionID: 101, Body: "Yes"}, // Wrong quiz ID
 			},
-			expected: nil,
+			expected: "",
 			wantErr:  true,
 			errMsg:   "answer quiz ID does not match quiz ID",
 		},
 		{
 			name:     "Empty answers",
 			answers:  []models.Answer{},
-			expected: []float32{0, 0, 0}, // No answers means no weights added
+			expected: "Michael", // No answers means weights are all 0, so first result is returned
 			wantErr:  false,
 			errMsg:   "",
 		},
@@ -158,7 +157,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			results, err := service.EvaluateAnswers(ctx, tt.answers, quiz)
+			result, err := service.EvaluateAnswers(ctx, tt.answers, quiz)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -169,8 +168,8 @@ func TestEvaluateAnswers(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
-			assert.True(t, reflect.DeepEqual(results, tt.expected),
-				"Expected %v, got %v", tt.expected, results)
+			assert.Equal(t, tt.expected, result,
+				"Expected %v, got %v", tt.expected, result)
 		})
 	}
 }
@@ -204,10 +203,10 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	results, err := service.EvaluateAnswers(ctx, answers, quiz)
+	result, err := service.EvaluateAnswers(ctx, answers, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "question quiz ID does not match quiz ID")
-	assert.Nil(t, results)
+	assert.Empty(t, result)
 }
 
 // Test for weight length mismatch
@@ -239,8 +238,8 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	results, err := service.EvaluateAnswers(ctx, answers, quiz)
+	result, err := service.EvaluateAnswers(ctx, answers, quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
-	assert.Nil(t, results)
+	assert.Empty(t, result)
 }
