@@ -157,7 +157,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			result, err := service.EvaluateAnswers(ctx, tt.answers, quiz)
+			result, err := service.EvaluateAnswers(ctx, tt.answers, &quiz)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -203,7 +203,7 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := service.EvaluateAnswers(ctx, answers, quiz)
+	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "question quiz ID does not match quiz ID")
 	assert.Empty(t, result)
@@ -238,7 +238,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := service.EvaluateAnswers(ctx, answers, quiz)
+	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
 	assert.Empty(t, result)

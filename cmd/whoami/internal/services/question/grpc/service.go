@@ -13,17 +13,19 @@ import (
 	"log"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/question"
+	"whoami-server/cmd/whoami/internal/services/quiz"
 	pbHistory "whoami-server/protogen/golang/history"
 	pb "whoami-server/protogen/golang/question"
 )
 
 type QuestionService struct {
 	service       *question.Service
+	quizService   *quiz.Service
 	historyClient pbHistory.QuizCompletionHistoryServiceClient
 	pb.UnimplementedQuestionServiceServer
 }
 
-func NewService(service *question.Service, historyServiceAddr string) (*QuestionService, error) {
+func NewService(service *question.Service, quizService *quiz.Service, historyServiceAddr string) (*QuestionService, error) {
 	conn, err := grpc.NewClient(historyServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to history service: %w", err)
@@ -40,6 +42,7 @@ func NewService(service *question.Service, historyServiceAddr string) (*Question
 
 	return &QuestionService{
 		service:       service,
+		quizService:   quizService,
 		historyClient: historyClient,
 	}, nil
 }
@@ -125,11 +128,12 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		})
 	}
 
-	quiz := models.Quiz{
-		// todo need to make a grpc request to quiz service
+	q, err := s.quizService.GetByID(ctx, request.QuizId)
+	if err != nil {
+		return nil, err
 	}
 
-	result, err := s.service.EvaluateAnswers(ctx, answers, quiz)
+	result, err := s.service.EvaluateAnswers(ctx, answers, q)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +144,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	historyError := s.addToQuizCompletionHistory(ctx, userID, quiz.ID, result)
+	historyError := s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
 	if historyError != nil {
 		return nil, historyError
 	}
