@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"whoami-server/cmd/history/internal/servers/grpc"
-	"whoami-server/internal/postgres"
+	grpcserver "whoami-server/cmd/history/internal/servers/grpc"
+	"whoami-server/internal/cfg/grpc"
+	"whoami-server/internal/cfg/postgresql"
 )
 
 type Config struct {
-	Grpc     grpc.Config     `mapstructure:"history-grpc"`
-	Postgres postgres.Config `mapstructure:"postgres"`
+	Grpc     grpc.Config       `mapstructure:"history-grpc"`
+	Postgres postgresql.Config `mapstructure:"postgres"`
 }
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 	log.Println("Connected to database successfully")
 
 	go func() {
-		if err := grpc.Start(pool, fmt.Sprintf(":%d", cfg.Grpc.Port)); err != nil {
+		if err := grpcserver.Start(pool, cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()

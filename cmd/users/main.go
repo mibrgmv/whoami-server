@@ -3,21 +3,42 @@ package main
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"whoami-server/cmd/users/internal/servers/grpc"
-	"whoami-server/cmd/users/internal/servers/http"
+	grpcserver "whoami-server/cmd/users/internal/servers/grpc"
+	httpserver "whoami-server/cmd/users/internal/servers/http"
+	"whoami-server/internal/cfg/grpc"
+	"whoami-server/internal/cfg/http"
+	"whoami-server/internal/cfg/postgresql"
 )
+
+type Config struct {
+	Http     http.Config       `mapstructure:"users-http"`
+	Grpc     grpc.Config       `mapstructure:"users-grpc"`
+	Postgres postgresql.Config `mapstructure:"postgres"`
+}
 
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	connString := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=prefer"
-	pool, err := pgxpool.New(ctx, connString)
+	viper.SetConfigName("default")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("configs")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Failed to read config file: %v", err)
+	}
+
+	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("Failed to unmarshal config: %v", err)
+	}
+
+	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v", err)
 	}
@@ -29,13 +50,13 @@ func main() {
 	log.Println("Connected to database successfully")
 
 	go func() {
-		if err := grpc.Start(pool, ":8080"); err != nil {
+		if err := grpcserver.Start(pool, cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()
 
 	go func() {
-		if err := http.Start(ctx, ":8080", ":8090"); err != nil {
+		if err := httpserver.Start(ctx, cfg.Grpc.GetAddr(), cfg.Http.GetAddr()); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

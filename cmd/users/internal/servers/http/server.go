@@ -64,7 +64,7 @@ func Start(ctx context.Context, grpcAddr, httpAddr string) error {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
-	log.Println("Serving gRPC-Gateway on http://", httpAddr)
+	log.Println("Serving gRPC-Gateway on ", httpAddr)
 	if err := r.Run(httpAddr); err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
