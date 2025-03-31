@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/cmd/users/internal/services/user"
@@ -37,17 +38,20 @@ func (r Repository) Add(ctx context.Context, users []models.User) ([]models.User
 
 	for _, u := range users {
 		query := `
-		insert into users (user_name, user_password, user_created_at, user_last_login)
-		values ($1, $2, $3, $4)
+		insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
+		values ($1, $2, $3, $4, $5)
 		returning user_id`
 
-		var createdID int64
-		err = tx.QueryRow(ctx, query, u.Name, u.Password, u.CreatedAt, u.LastLogin).Scan(&createdID)
+		var createdID string
+		err = tx.QueryRow(ctx, query, uuid.New(), u.Name, u.Password, u.CreatedAt, u.LastLogin).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add user: %w", err)
 		}
 
-		u.ID = createdID
+		u.ID, err = uuid.Parse(createdID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse UUID: %v", err)
+		}
 		createdUsers = append(createdUsers, u)
 	}
 
@@ -62,10 +66,10 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User,
 		   user_created_at,
 		   user_last_login
 	from users
-	where ($1::bigint[] is null or cardinality($1) = 0 or user_id = any ($1))
+	where ($1::uuid[] is null or cardinality($1) = 0 or user_id = any ($1))
 	  and ($2::text is null or user_name like $2::text)`
 
-	rows, err := r.pool.Query(ctx, sql, query.IDs, query.Username)
+	rows, err := r.pool.Query(ctx, sql, query.UserIDs, query.Username)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}

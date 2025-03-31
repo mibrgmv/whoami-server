@@ -1,6 +1,6 @@
 create table users
 (
-    user_id         bigint primary key generated always as identity,
+    user_id         uuid primary key,
 
     user_name       text unique              not null,
     user_password   text                     not null,

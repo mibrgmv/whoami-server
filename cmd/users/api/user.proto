@@ -39,7 +39,7 @@ service UserService {
 }
 
 message User {
-  int64 user_id = 1;
+  string user_id = 1;
   string username = 2;
   string password = 3;
   google.protobuf.Timestamp created_at = 4;
@@ -58,5 +58,5 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
-  int64 user_id = 2;
+  string user_id = 2;
 }

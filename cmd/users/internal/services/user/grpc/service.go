@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -35,7 +36,7 @@ func (s *UserService) Register(ctx context.Context, request *pb.RegisterRequest)
 	}
 
 	return &pb.User{
-		UserId:    usr.ID,
+		UserId:    usr.ID.String(),
 		Username:  usr.Name,
 		Password:  usr.Password,
 		CreatedAt: timestamppb.New(usr.CreatedAt),
@@ -56,21 +57,26 @@ func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 		return nil, status.Errorf(codes.Internal, "failed to login: %v", err)
 	}
 
-	tokenString, err := jwt.GenerateToken(userID)
+	tokenString, err := jwt.GenerateToken(userID.String())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate token: %v", err)
 	}
 
 	return &pb.LoginResponse{
 		Token:  tokenString,
-		UserId: userID,
+		UserId: userID.String(),
 	}, nil
 }
 
 func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
-	userID, ok := ctx.Value("user_id").(int64)
+	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
 	}
 
 	usr, err := s.service.GetByID(ctx, userID)
@@ -85,9 +91,14 @@ func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb
 }
 
 func (s *UserService) GetAll(empty *emptypb.Empty, stream pb.UserService_GetAllServer) error {
-	_, ok := stream.Context().Value("user_id").(int64)
+	userIDStr, ok := stream.Context().Value("user_id").(string)
 	if !ok {
 		return status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	_, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return status.Errorf(codes.Internal, "invalid user ID format: %v", err)
 	}
 
 	users, err := s.service.GetAll(stream.Context())

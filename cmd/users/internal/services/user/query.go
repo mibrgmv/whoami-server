@@ -1,6 +1,8 @@
 package user
 
+import "github.com/google/uuid"
+
 type Query struct {
-	IDs      *[]int64
+	UserIDs  *[]uuid.UUID
 	Username *string
 }

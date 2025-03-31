@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 	"whoami-server/cmd/users/internal/models"
@@ -47,21 +48,21 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 	return &createdUsers[0], nil
 }
 
-func (s *Service) Login(ctx context.Context, username, password string) (int64, error) {
+func (s *Service) Login(ctx context.Context, username, password string) (*uuid.UUID, error) {
 	users, _ := s.users.Query(ctx, Query{Username: &username})
 	if len(users) == 0 {
-		return 0, ErrUserNotFound
+		return nil, ErrUserNotFound
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(users[0].Password), []byte(password)); err != nil {
-		return 0, fmt.Errorf("invalid password")
+		return nil, fmt.Errorf("invalid password")
 	}
 
-	return users[0].ID, nil
+	return &users[0].ID, nil
 }
 
-func (s *Service) GetByID(ctx context.Context, id int64) (*models.User, error) {
-	users, err := s.users.Query(ctx, Query{IDs: &[]int64{id}})
+func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	users, err := s.users.Query(ctx, Query{UserIDs: &[]uuid.UUID{id}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query user: %w", err)
 	}

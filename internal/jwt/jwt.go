@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -10,11 +11,16 @@ import (
 var JWTKey = []byte("my_secret_key")
 
 type Claims struct {
-	UserID int64 `json:"user_id"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID int64) (string, error) {
+func GenerateToken(userID string) (string, error) {
+	_, err := uuid.Parse(userID)
+	if err != nil {
+		return "", fmt.Errorf("invalid UUID format: %w", err)
+	}
+
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserID: userID,
@@ -29,7 +35,7 @@ func GenerateToken(userID int64) (string, error) {
 	return token.SignedString(JWTKey)
 }
 
-func ValidateToken(tokenString string) (int64, error) {
+func ValidateToken(tokenString string) (string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -39,7 +45,12 @@ func ValidateToken(tokenString string) (int64, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return 0, fmt.Errorf("invalid or expired token")
+		return "", fmt.Errorf("invalid or expired token")
+	}
+
+	_, err = uuid.Parse(claims.UserID)
+	if err != nil {
+		return "", fmt.Errorf("token contains invalid UUID: %w", err)
 	}
 
 	return claims.UserID, nil
