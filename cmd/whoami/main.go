@@ -7,17 +7,24 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"whoami-server/cmd/whoami/internal/servers/grpc"
-	"whoami-server/cmd/whoami/internal/servers/http"
+	grpcserver "whoami-server/cmd/whoami/internal/servers/grpc"
+	httpserver "whoami-server/cmd/whoami/internal/servers/http"
+	"whoami-server/internal/config"
 )
+
+var historyServiceAddr = "localhost:50053"
 
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	connString := "postgres://postgres:postgres@localhost:5432/postgres?sslmode=prefer"
-	pool, err := pgxpool.New(context.Background(), connString)
+	cfg, err := config.GetDefault("whoami")
+	if err != nil {
+		log.Fatalf("failed to read config: %v", err)
+	}
+
+	pool, err := pgxpool.New(context.Background(), cfg.Postgres.GetConnectionString())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -29,13 +36,13 @@ func main() {
 	log.Println("Connected to database successfully")
 
 	go func() {
-		if err := grpc.Start(pool, "50051", "50052"); err != nil {
+		if err := grpcserver.Start(pool, cfg.Grpc.GetAddr(), historyServiceAddr); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()
 
 	go func() {
-		if err := http.Start(ctx, "50051", "8080"); err != nil {
+		if err := httpserver.Start(ctx, cfg.Grpc.GetAddr(), cfg.Http.GetAddr()); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

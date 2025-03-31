@@ -1,43 +1,57 @@
-whoami-http:
-  host: 0.0.0.0
-  port: 8080
-  mode: debug
-  shutdown_timeout: 10s
-  cors:
-    allowed_origins: [ "*" ]
-    allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
-    allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
-    allow_credentials: true
-    max_age: 86400 #24h
+whoami:
+  http:
+    host: 0.0.0.0
+    port: 8080
+    mode: debug
+    shutdown_timeout: 10s
+    cors:
+      allowed_origins: [ "*" ]
+      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
+      allow_credentials: true
+      max_age: 86400 #24h
+  grpc:
+    host: localhost
+    port: 50051
+  postgres:
+    host: localhost
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer
 
-users-http:
-  host: 0.0.0.0
-  port: 8081
-  mode: debug
-  shutdown_timeout: 10s
-  cors:
-    allowed_origins: [ "*" ]
-    allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
-    allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
-    allow_credentials: true
-    max_age: 86400 #24h
+users:
+  http:
+    host: 0.0.0.0
+    port: 8081
+    mode: debug
+    shutdown_timeout: 10s
+    cors:
+      allowed_origins: [ "*" ]
+      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
+      allow_credentials: true
+      max_age: 86400 #24h
+  grpc:
+    host: localhost
+    port: 50052
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer
 
-whoami-grpc:
-  host: "0.0.0.0"
-  port: 50051
-
-users-grpc:
-  host: "0.0.0.0"
-  port: 50052
-
-history-grpc:
-  host: localhost
-  port: 50053
-
-postgres:
-  host: "localhost"
-  port: 5432
-  database: "postgres"
-  username: "postgres"
-  password: "postgres"
-  ssl_mode: "prefer"
+histocry:
+  grpc:
+    host: localhost
+    port: 50053
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer

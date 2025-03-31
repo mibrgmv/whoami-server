@@ -31,7 +31,7 @@ func NewServer(pool *pgxpool.Pool, historyServiceAddr string) (*grpc.Server, err
 
 	questionRepo := questionpg.NewRepository(pool)
 	questionService := question.NewService(questionRepo)
-	questionServer, err := questiongrpc.NewService(questionService, historyServiceAddr)
+	questionServer, err := questiongrpc.NewService(questionService, quizService, historyServiceAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create question service: %w", err)
 	}

@@ -3,36 +3,22 @@ package main
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	grpcserver "whoami-server/cmd/history/internal/servers/grpc"
-	"whoami-server/internal/cfg/grpc"
-	"whoami-server/internal/cfg/postgresql"
+	"whoami-server/internal/config"
 )
-
-type Config struct {
-	Grpc     grpc.Config       `mapstructure:"history-grpc"`
-	Postgres postgresql.Config `mapstructure:"postgres"`
-}
 
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	viper.SetConfigName("default")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("configs")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Failed to read config file: %v", err)
-	}
-
-	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("Failed to unmarshal config: %v", err)
+	cfg, err := config.GetDefault("users")
+	if err != nil {
+		log.Fatalf("failed to read config: %v", err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
