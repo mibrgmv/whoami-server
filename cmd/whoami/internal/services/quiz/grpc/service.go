@@ -58,7 +58,7 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 	return nil
 }
 
-func (s *QuizService) GetAll(empty *emptypb.Empty, stream pb.QuizService_GetAllStreamServer) error {
+func (s *QuizService) GetAllStream(empty *emptypb.Empty, stream pb.QuizService_GetAllStreamServer) error {
 	quizzes, err := s.service.GetAll()
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to get quizzes: %v", err)

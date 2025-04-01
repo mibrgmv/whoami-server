@@ -9,15 +9,11 @@ import (
 	"net"
 	"whoami-server/cmd/history/internal/services/history"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
-	"whoami-server/internal/jwt"
 	pb "whoami-server/protogen/golang/history"
 )
 
 func NewServer(pool *pgxpool.Pool) *grpc.Server {
-	s := grpc.NewServer(
-		grpc.UnaryInterceptor(jwt.AuthUnaryInterceptor),
-		grpc.StreamInterceptor(jwt.AuthStreamInterceptor),
-	)
+	s := grpc.NewServer()
 	repo := pg.NewRepository(pool)
 	service := history.NewService(repo)
 	pb.RegisterQuizCompletionHistoryServiceServer(s, service)

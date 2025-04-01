@@ -47,7 +47,7 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 	}, nil
 }
 
-func (s *QuestionService) Add(stream pb.QuestionService_AddStreamServer) error {
+func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) error {
 	var questions []models.Question
 
 	for {
@@ -82,7 +82,7 @@ func (s *QuestionService) Add(stream pb.QuestionService_AddStreamServer) error {
 	return nil
 }
 
-func (s *QuestionService) GetAll(empty *emptypb.Empty, stream pb.QuestionService_GetAllStreamServer) error {
+func (s *QuestionService) GetAllStream(empty *emptypb.Empty, stream pb.QuestionService_GetAllStreamServer) error {
 	questions, err := s.service.Query(stream.Context(), question.Query{})
 	if err != nil {
 		return err

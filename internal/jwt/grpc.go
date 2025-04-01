@@ -16,8 +16,21 @@ var (
 	errInvalidToken          = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
+var exemptMethods = map[string]bool{
+	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
+	"/user.UserService/Login":                                   true,
+	"/user.UserService/Register":                                true,
+	"/quiz.QuizService/AddStream":                               false,
+	"/quiz.QuizService/GetAllStream":                            true,
+	"/quiz.QuizService/GetByID":                                 false,
+	"/question.QuestionService/AddStream":                       false,
+	"/question.QuestionService/GetAllStream":                    false,
+	"/question.QuestionService/GetByQuizID":                     false,
+	"/question.QuestionService/EvaluateAnswers":                 false,
+}
+
 func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	if info.FullMethod == "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" || info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
+	if exemptMethods[info.FullMethod] {
 		return handler(ctx, req)
 	}
 
@@ -48,7 +61,7 @@ func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 }
 
 func AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	if info.FullMethod == "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" || info.FullMethod == "/user.UserService/Login" || info.FullMethod == "/user.UserService/Register" {
+	if exemptMethods[info.FullMethod] {
 		return handler(srv, ss)
 	}
 
