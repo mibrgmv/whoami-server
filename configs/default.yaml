@@ -1,4 +1,4 @@
-whoami:
+gateway:
   http:
     host: 0.0.0.0
     port: 8080
@@ -10,6 +10,8 @@ whoami:
       allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
       allow_credentials: true
       max_age: 86400 #24h
+
+whoami:
   grpc:
     host: localhost
     port: 50051
@@ -22,17 +24,6 @@ whoami:
     ssl_mode: prefer
 
 users:
-  http:
-    host: 0.0.0.0
-    port: 8081
-    mode: debug
-    shutdown_timeout: 10s
-    cors:
-      allowed_origins: [ "*" ]
-      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
-      allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
-      allow_credentials: true
-      max_age: 86400 #24h
   grpc:
     host: localhost
     port: 50052

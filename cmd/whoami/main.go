@@ -7,8 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	grpcserver "whoami-server/cmd/whoami/internal/servers/grpc"
-	httpserver "whoami-server/cmd/whoami/internal/servers/http"
+	"whoami-server/cmd/whoami/internal/servers/grpc"
 	"whoami-server/internal/config"
 )
 
@@ -36,14 +35,8 @@ func main() {
 	log.Println("Connected to database successfully")
 
 	go func() {
-		if err := grpcserver.Start(pool, cfg.Grpc.GetAddr(), historyServiceAddr); err != nil {
+		if err := grpc.Start(pool, cfg.Grpc.GetAddr(), historyServiceAddr); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
-		}
-	}()
-
-	go func() {
-		if err := httpserver.Start(ctx, cfg.Grpc.GetAddr(), cfg.Http.GetAddr()); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()
 

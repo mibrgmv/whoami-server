@@ -8,12 +8,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"log"
 	"net/http"
-	pb "whoami-server/protogen/golang/user"
+	questionpb "whoami-server/protogen/golang/question"
+	quizpb "whoami-server/protogen/golang/quiz"
+	userpb "whoami-server/protogen/golang/user"
 )
 
-func NewServer(ctx context.Context, grpcAddr string) (*gin.Engine, error) {
+func NewServer(ctx context.Context, grpcAddresses map[string]string) (*gin.Engine, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			return metadata.New(map[string]string{
@@ -26,14 +27,31 @@ func NewServer(ctx context.Context, grpcAddr string) (*gin.Engine, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	err := pb.RegisterUserServiceHandlerFromEndpoint(
+	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddr,
+		grpcAddresses["users"],
 		dialOpts,
-	)
-	if err != nil {
-		return nil, err
+	); err != nil {
+		return nil, fmt.Errorf("failed to register user service: %w", err)
+	}
+
+	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		grpcAddresses["whoami"],
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register quiz service: %w", err)
+	}
+
+	if err := questionpb.RegisterQuestionServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		grpcAddresses["whoami"],
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register question service: %w", err)
 	}
 
 	r := gin.Default()
@@ -58,13 +76,12 @@ func NewServer(ctx context.Context, grpcAddr string) (*gin.Engine, error) {
 	return r, nil
 }
 
-func Start(ctx context.Context, grpcAddr, httpAddr string) error {
-	r, err := NewServer(ctx, grpcAddr)
+func Start(ctx context.Context, grpcAddresses map[string]string, httpAddr string) error {
+	r, err := NewServer(ctx, grpcAddresses)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
-	log.Println("Serving gRPC-Gateway on", httpAddr)
 	if err := r.Run(httpAddr); err != nil {
 		return fmt.Errorf("failed to run HTTP server: %w", err)
 	}
