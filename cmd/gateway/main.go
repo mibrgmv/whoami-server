@@ -11,8 +11,8 @@ import (
 )
 
 var grpcAddresses = map[string]string{
-	"users":  "localhost:50051",
-	"whoami": "localhost:50052",
+	"whoami": "localhost:50051",
+	"users":  "localhost:50052",
 }
 
 func main() {

@@ -35,7 +35,7 @@ users:
     password: postgres
     ssl_mode: prefer
 
-histocry:
+history:
   grpc:
     host: localhost
     port: 50053

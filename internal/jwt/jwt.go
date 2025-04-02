@@ -2,10 +2,9 @@ package jwt
 
 import (
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 var JWTKey = []byte("my_secret_key")
@@ -27,7 +26,7 @@ func GenerateToken(userID string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   fmt.Sprintf("%d", userID),
+			Subject:   fmt.Sprintf("%s", userID),
 		},
 	}
 

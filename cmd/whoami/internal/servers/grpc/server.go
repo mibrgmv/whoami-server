@@ -52,7 +52,7 @@ func Start(pool *pgxpool.Pool, addr string, historyServiceAddr string) error {
 		return err
 	}
 
-	log.Println("Serving gRPC on", addr)
+	log.Println("Serving gRPC on", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}

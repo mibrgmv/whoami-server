@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	grpcserver "whoami-server/cmd/history/internal/servers/grpc"
+	"whoami-server/cmd/history/internal/servers/grpc"
 	"whoami-server/internal/config"
 )
 
@@ -16,7 +16,7 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefault("users")
+	cfg, err := config.GetDefault("history")
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}
@@ -33,7 +33,7 @@ func main() {
 	log.Println("Connected to database successfully")
 
 	go func() {
-		if err := grpcserver.Start(pool, cfg.Grpc.GetAddr()); err != nil {
+		if err := grpc.Start(pool, cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()
