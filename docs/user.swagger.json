@@ -82,21 +82,12 @@
     },
     "/api/v1/users": {
       "get": {
-        "operationId": "UserService_GetAll",
+        "operationId": "UserService_GetBatch",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/userUser"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of userUser"
+              "$ref": "#/definitions/userGetBatchResponse"
             }
           },
           "default": {
@@ -106,6 +97,21 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "UserService"
         ]
@@ -160,6 +166,21 @@
             "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "userGetBatchResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userUser"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
         }
       }
     },

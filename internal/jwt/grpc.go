@@ -18,15 +18,23 @@ var (
 
 var exemptMethods = map[string]bool{
 	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
-	"/user.UserService/Login":                                   true,
-	"/user.UserService/Register":                                true,
-	"/quiz.QuizService/AddStream":                               false,
-	"/quiz.QuizService/GetAllStream":                            true,
-	"/quiz.QuizService/GetByID":                                 false,
-	"/question.QuestionService/AddStream":                       false,
-	"/question.QuestionService/GetAllStream":                    false,
-	"/question.QuestionService/GetByQuizID":                     false,
-	"/question.QuestionService/EvaluateAnswers":                 false,
+
+	"/user.UserService/Register":   true,
+	"/user.UserService/Login":      true,
+	"/user.UserService/GetCurrent": false,
+	"/user.UserService/GetBatch":   false,
+	"/user.UserService/GetStream":  false,
+
+	"/quiz.QuizService/AddStream": false,
+	"/quiz.QuizService/GetBatch":  true,
+	"/quiz.QuizService/GetByID":   false,
+	"/quiz.QuizService/GetStream": true,
+
+	"/question.QuestionService/AddStream":       false,
+	"/question.QuestionService/GetBatch":        false,
+	"/question.QuestionService/GetByQuizID":     false,
+	"/question.QuestionService/EvaluateAnswers": false,
+	"/question.QuestionService/GetStream":       false,
 }
 
 func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

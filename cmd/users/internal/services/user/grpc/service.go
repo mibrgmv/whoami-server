@@ -90,11 +90,39 @@ func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb
 	return usr.ToProto(), nil
 }
 
-func (s *UserService) GetAll(empty *emptypb.Empty, stream pb.UserService_GetAllServer) error {
+func (s *UserService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	_, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+	}
+
+	users, err := s.service.GetAll(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get users: %v", err)
+	}
+
+	var pbUsers []*pb.User
+	for _, usr := range users {
+		pbUsers = append(pbUsers, usr.ToProto())
+	}
+
+	return &pb.GetBatchResponse{
+		Users:         pbUsers,
+		NextPageToken: "", //todo
+	}, nil
+}
+
+func (s *UserService) GetStream(empty *emptypb.Empty, stream pb.UserService_GetStreamServer) error {
 	userIDStr, ok := stream.Context().Value("user_id").(string)
 	if !ok {
 		return status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
+	// looks like auth check should be in interceptor
 
 	_, err := uuid.Parse(userIDStr)
 	if err != nil {

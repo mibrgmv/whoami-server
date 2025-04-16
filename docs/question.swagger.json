@@ -17,22 +17,13 @@
   ],
   "paths": {
     "/api/v1/questions": {
-      "post": {
-        "operationId": "QuestionService_GetAllStream",
+      "get": {
+        "operationId": "QuestionService_GetBatch",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/questionQuestion"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of questionQuestion"
+              "$ref": "#/definitions/questionGetBatchResponse"
             }
           },
           "default": {
@@ -44,13 +35,17 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {}
-            }
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -140,7 +135,7 @@
       }
     },
     "/api/v1/quizzes/{quizId}/questions": {
-      "post": {
+      "get": {
         "operationId": "QuestionService_GetByQuizID",
         "responses": {
           "200": {
@@ -172,14 +167,6 @@
             "required": true,
             "type": "string",
             "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/QuestionServiceGetByQuizIDBody"
-            }
           }
         ],
         "tags": [
@@ -200,9 +187,6 @@
           }
         }
       }
-    },
-    "QuestionServiceGetByQuizIDBody": {
-      "type": "object"
     },
     "protobufAny": {
       "type": "object",
@@ -236,6 +220,21 @@
           "type": "string"
         },
         "description": {
+          "type": "string"
+        }
+      }
+    },
+    "questionGetBatchResponse": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/questionQuestion"
+          }
+        },
+        "nextPageToken": {
           "type": "string"
         }
       }

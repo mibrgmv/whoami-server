@@ -31,11 +31,13 @@ service UserService {
     };
   }
 
-  rpc GetAll(google.protobuf.Empty) returns (stream User) {
+  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse) {
     option (google.api.http) = {
       get: "/api/v1/users"
     };
   }
+
+  rpc GetStream(google.protobuf.Empty) returns (stream User) {}
 }
 
 message User {
@@ -59,4 +61,14 @@ message LoginRequest {
 message LoginResponse {
   string token = 1;
   string user_id = 2;
+}
+
+message GetBatchRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message GetBatchResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
 }

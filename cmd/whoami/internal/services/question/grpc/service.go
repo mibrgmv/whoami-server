@@ -82,7 +82,7 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 	return nil
 }
 
-func (s *QuestionService) GetAllStream(empty *emptypb.Empty, stream pb.QuestionService_GetAllStreamServer) error {
+func (s *QuestionService) GetStream(empty *emptypb.Empty, stream pb.QuestionService_GetStreamServer) error {
 	questions, err := s.service.Query(stream.Context(), question.Query{})
 	if err != nil {
 		return err
@@ -101,6 +101,23 @@ func (s *QuestionService) GetAllStream(empty *emptypb.Empty, stream pb.QuestionS
 
 	<-done
 	return nil
+}
+
+func (s *QuestionService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
+	questions, err := s.service.Query(ctx, question.Query{})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get questions: %v", err)
+	}
+
+	var pbQuestions []*pb.Question
+	for _, q := range questions {
+		pbQuestions = append(pbQuestions, q.ToProto())
+	}
+
+	return &pb.GetBatchResponse{
+		Questions:     pbQuestions,
+		NextPageToken: "", // todo
+	}, nil
 }
 
 func (s *QuestionService) GetByQuizID(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIDServer) error {

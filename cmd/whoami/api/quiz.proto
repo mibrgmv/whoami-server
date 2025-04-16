@@ -17,7 +17,7 @@ service QuizService {
     };
   }
 
-  rpc GetAllStream(google.protobuf.Empty) returns (stream Quiz) {
+  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse) {
     option (google.api.http) = {
       get: "/api/v1/quizzes"
     };
@@ -28,12 +28,24 @@ service QuizService {
       get: "/api/v1/quizzes/{id}"
     };
   }
+
+  rpc GetStream(google.protobuf.Empty) returns (stream Quiz) {}
 }
 
 message Quiz {
   int64 id = 1;
   string title = 2;
   repeated string results = 3;
+}
+
+message GetBatchRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message GetBatchResponse {
+  repeated Quiz quizzes = 1;
+  string next_page_token = 2;
 }
 
 message GetByIDRequest {

@@ -18,21 +18,12 @@
   "paths": {
     "/api/v1/quizzes": {
       "get": {
-        "operationId": "QuizService_GetAllStream",
+        "operationId": "QuizService_GetBatch",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/quizQuiz"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of quizQuiz"
+              "$ref": "#/definitions/quizGetBatchResponse"
             }
           },
           "default": {
@@ -42,6 +33,21 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "tags": [
           "QuizService"
         ]
@@ -130,6 +136,21 @@
         }
       },
       "additionalProperties": {}
+    },
+    "quizGetBatchResponse": {
+      "type": "object",
+      "properties": {
+        "quizzes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/quizQuiz"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      }
     },
     "quizQuiz": {
       "type": "object",

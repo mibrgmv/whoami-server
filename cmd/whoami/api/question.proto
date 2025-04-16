@@ -17,17 +17,15 @@ service QuestionService {
     };
   }
 
-  rpc GetAllStream(google.protobuf.Empty) returns (stream Question) {
+  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse) {
     option (google.api.http) = {
-      post: "/api/v1/questions"
-      body: "*"
+      get: "/api/v1/questions"
     };
   }
 
   rpc GetByQuizID(GetByQuizIDRequest) returns (stream Question) {
     option (google.api.http) = {
-      post: "/api/v1/quizzes/{quiz_id}/questions"
-      body: "*"
+      get: "/api/v1/quizzes/{quiz_id}/questions"
     };
   }
 
@@ -37,6 +35,8 @@ service QuestionService {
       body: "*"
     };
   }
+
+  rpc GetStream(google.protobuf.Empty) returns (stream Question) {}
 }
 
 message Question {
@@ -60,6 +60,16 @@ message Answer {
   int64 quiz_id = 1;
   int64 question_id = 2;
   string body = 3;
+}
+
+message GetBatchRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message GetBatchResponse {
+  repeated Question questions = 1;
+  string next_page_token = 2;
 }
 
 message GetByQuizIDRequest {
