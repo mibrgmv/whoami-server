@@ -49,7 +49,7 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 		returning question_id`
 
 		var createdID int64
-		err = tx.QueryRow(ctx, query, q.ID, q.Body, optionsWeightsJSON).Scan(&createdID)
+		err = tx.QueryRow(ctx, query, q.QuizID, q.Body, optionsWeightsJSON).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add question: %w", err)
 		}
