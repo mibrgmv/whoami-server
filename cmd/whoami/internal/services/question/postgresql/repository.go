@@ -37,8 +37,8 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 
 	var createdQuestions []models.Question
 
-	for _, question := range questions {
-		optionsWeightsJSON, err := json.Marshal(question.OptionsWeights)
+	for _, q := range questions {
+		optionsWeightsJSON, err := json.Marshal(q.OptionsWeights)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal options_weights: %w", err)
 		}
@@ -49,13 +49,13 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 		returning question_id`
 
 		var createdID int64
-		err = tx.QueryRow(ctx, query, question.QuizID, question.Body, optionsWeightsJSON).Scan(&createdID)
+		err = tx.QueryRow(ctx, query, q.ID, q.Body, optionsWeightsJSON).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add question: %w", err)
 		}
 
-		question.ID = createdID
-		createdQuestions = append(createdQuestions, question)
+		q.ID = createdID
+		createdQuestions = append(createdQuestions, q)
 	}
 
 	return createdQuestions, nil
