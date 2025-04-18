@@ -3,29 +3,33 @@ package grpc
 import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"time"
 	"whoami-server/cmd/whoami/internal/services/question"
 	questiongrpc "whoami-server/cmd/whoami/internal/services/question/grpc"
 	questionpg "whoami-server/cmd/whoami/internal/services/question/postgresql"
 	"whoami-server/cmd/whoami/internal/services/quiz"
 	quizgrpc "whoami-server/cmd/whoami/internal/services/quiz/grpc"
 	quizpg "whoami-server/cmd/whoami/internal/services/quiz/postgresql"
+	redisservice "whoami-server/internal/cache/redis"
 	"whoami-server/internal/jwt"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
 )
 
-func NewServer(pool *pgxpool.Pool, historyServiceAddr string) (*grpc.Server, error) {
+func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*grpc.Server, error) {
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(jwt.AuthUnaryInterceptor),
 		grpc.StreamInterceptor(jwt.AuthStreamInterceptor),
 	)
 
+	redisService := redisservice.NewService(redisClient, redisTTL)
 	quizRepo := quizpg.NewRepository(pool)
-	quizService := quiz.NewService(quizRepo)
+	quizService := quiz.NewService(quizRepo, redisService)
 	quizServer := quizgrpc.NewService(quizService)
 	quizpb.RegisterQuizServiceServer(s, quizServer)
 
@@ -41,13 +45,13 @@ func NewServer(pool *pgxpool.Pool, historyServiceAddr string) (*grpc.Server, err
 	return s, nil
 }
 
-func Start(pool *pgxpool.Pool, addr string, historyServiceAddr string) error {
+func Start(pool *pgxpool.Pool, redis *redis.Client, ttl time.Duration, addr string, historyServiceAddr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	s, err := NewServer(pool, historyServiceAddr)
+	s, err := NewServer(pool, redis, ttl, historyServiceAddr)
 	if err != nil {
 		return err
 	}

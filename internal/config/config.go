@@ -3,9 +3,9 @@ package config
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"whoami-server/internal/config/grpc"
-	"whoami-server/internal/config/http"
-	"whoami-server/internal/config/postgresql"
+	"whoami-server/internal/config/api/grpc"
+	"whoami-server/internal/config/api/http"
+	"whoami-server/internal/config/dbs/postgresql"
 )
 
 type Config struct {

@@ -59,7 +59,7 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 }
 
 func (s *QuizService) GetStream(empty *emptypb.Empty, stream pb.QuizService_GetStreamServer) error {
-	quizzes, err := s.service.GetAll()
+	quizzes, err := s.service.GetAll(stream.Context())
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
 	}
@@ -84,7 +84,7 @@ func (s *QuizService) GetStream(empty *emptypb.Empty, stream pb.QuizService_GetS
 }
 
 func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
-	quizzes, err := s.service.GetAll()
+	quizzes, err := s.service.GetAll(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
 	}
