@@ -25,6 +25,12 @@ service UserService {
     };
   }
 
+  rpc Delete(User) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{user_id}"
+    };
+  }
+
   rpc GetCurrent(google.protobuf.Empty) returns (User) {
     option (google.api.http) = {
       get: "/api/v1/users/current"

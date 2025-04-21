@@ -68,6 +68,37 @@ func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 	}, nil
 }
 
+func (s *UserService) Delete(ctx context.Context, request *pb.User) (*emptypb.Empty, error) {
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	requesterID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+	}
+
+	targetUserID, err := uuid.Parse(request.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid target user ID format: %v", err)
+	}
+
+	if requesterID != targetUserID {
+		return nil, status.Errorf(codes.PermissionDenied, "you are not authorized to delete this user")
+	}
+
+	err = s.service.Delete(ctx, targetUserID)
+	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			return nil, status.Errorf(codes.NotFound, "user not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to delete user: %v", err)
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
 	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {

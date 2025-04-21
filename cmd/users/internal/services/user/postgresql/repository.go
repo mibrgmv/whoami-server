@@ -58,6 +58,14 @@ func (r Repository) Add(ctx context.Context, users []models.User) ([]models.User
 	return createdUsers, nil
 }
 
+func (r Repository) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, "delete from users where user_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
+}
+
 func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User, error) {
 	sql := `
 	select user_id,
