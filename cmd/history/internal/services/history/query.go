@@ -1,7 +1,9 @@
 package history
 
+import "github.com/google/uuid"
+
 type Query struct {
-	IDs     []int64
-	UserIDs []int64
-	QuizIDs []int64
+	IDs     []uuid.UUID
+	UserIDs []uuid.UUID
+	QuizIDs []uuid.UUID
 }

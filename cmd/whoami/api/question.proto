@@ -34,8 +34,8 @@ service QuestionService {
 }
 
 message Question {
-  int64 id = 1;
-  int64 quiz_id = 2;
+  string id = 1;
+  string quiz_id = 2;
   string body = 3;
   map<string, OptionWeights> options_weights = 4;
 }
@@ -45,14 +45,14 @@ message OptionWeights {
 }
 
 message Quiz {
-  int64 id = 1;
+  string id = 1;
   string title = 2;
   repeated string results = 3;
 }
 
 message Answer {
-  int64 quiz_id = 1;
-  int64 question_id = 2;
+  string quiz_id = 1;
+  string question_id = 2;
   string body = 3;
 }
 
@@ -67,7 +67,7 @@ message GetBatchResponse {
 }
 
 message GetByQuizIDRequest {
-  int64 quiz_id = 1;
+  string quiz_id = 1;
   int32 page_size = 2;
   string page_token = 3;
 }
@@ -79,7 +79,7 @@ message GetByQuizIDResponse {
 
 message EvaluateAnswersRequest {
   repeated Answer answers = 1;
-  int64 quiz_id = 2;
+  string quiz_id = 2;
 }
 
 message EvaluateAnswersResponse {

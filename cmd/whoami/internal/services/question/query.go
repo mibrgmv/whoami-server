@@ -1,5 +1,7 @@
 package question
 
+import "github.com/google/uuid"
+
 type Query struct {
-	QuizIds []int64
+	QuizIds []uuid.UUID
 }

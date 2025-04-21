@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/quiz"
@@ -35,19 +36,23 @@ func (r *Repository) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Q
 
 	var createdQuizzes []models.Quiz
 
+	// todo
 	for _, q := range quizzes {
 		query := `
-		insert into quizzes (quiz_title, quiz_results)
-		values ($1, $2)
+		insert into quizzes (quiz_id, quiz_title, quiz_results)
+		values ($1, $2, $3)
 		returning quiz_id`
 
-		var createdID int64
-		err = tx.QueryRow(ctx, query, q.Title, q.Results).Scan(&createdID)
+		var createdID string
+		err = tx.QueryRow(ctx, query, uuid.New(), q.Title, q.Results).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add quiz: %w", err)
 		}
 
-		q.ID = createdID
+		q.ID, err = uuid.Parse(createdID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse UUID: %v", err)
+		}
 		createdQuizzes = append(createdQuizzes, q)
 	}
 
@@ -60,9 +65,37 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 		   quiz_title,
 		   quiz_results
 	from quizzes
-	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_id = any ($1))`
+	where (quiz_id > $1)
+	  and ($2::uuid[] is null or cardinality($2) = 0 or quiz_id = any ($2))
+	order by quiz_id asc
+	limit $3`
 
-	rows, err := r.pool.Query(ctx, sql, query.Ids)
+	var args []interface{}
+
+	if query.PageToken != "" {
+		pageToken, err := uuid.Parse(query.PageToken)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page token: %w", err)
+		}
+		args = append(args, pageToken)
+	} else {
+		args = append(args, nil)
+	}
+
+	args = append(args, query.Ids)
+
+	// todo use lib for constructing sql with params
+	// todo hash the pageToken
+	// todo nextPageToken broken
+	var pageSize int32
+	if query.PageSize > 0 {
+		pageSize = query.PageSize + 1
+	} else {
+		pageSize = query.PageSize
+	}
+	args = append(args, pageSize)
+
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}

@@ -1,15 +1,21 @@
 package models
 
-import pb "whoami-server/protogen/golang/question"
+import (
+	"fmt"
+	"github.com/google/uuid"
+	pb "whoami-server/protogen/golang/question"
+)
 
 type Question struct {
-	ID             int64                `json:"id"`
-	QuizID         int64                `json:"quiz_id"`
+	ID             uuid.UUID            `json:"id"`
+	QuizID         uuid.UUID            `json:"quiz_id"`
 	Body           string               `json:"body"`
 	OptionsWeights map[string][]float32 `json:"options_weights"`
 }
 
-func ToModel(protoQuestion *pb.Question) *Question {
+func QuestionToModel(protoQuestion *pb.Question) (*Question, error) {
+	var id, quizID uuid.UUID
+	var err error
 	optionsWeights := make(map[string][]float32)
 
 	for option, protoWeights := range protoQuestion.OptionsWeights {
@@ -21,18 +27,37 @@ func ToModel(protoQuestion *pb.Question) *Question {
 		optionsWeights[option] = weights
 	}
 
+	// todo stinky
+	if protoQuestion.Id == "" {
+		id = uuid.Nil
+	} else {
+		id, err = uuid.Parse(protoQuestion.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse question ID '%s': %w", protoQuestion.Id, err)
+		}
+	}
+
+	if protoQuestion.QuizId == "" {
+		quizID = uuid.Nil
+	} else {
+		quizID, err = uuid.Parse(protoQuestion.QuizId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse question ID '%s': %w", protoQuestion.Id, err)
+		}
+	}
+
 	return &Question{
-		ID:             protoQuestion.Id,
-		QuizID:         protoQuestion.QuizId,
+		ID:             id,
+		QuizID:         quizID,
 		Body:           protoQuestion.Body,
 		OptionsWeights: optionsWeights,
-	}
+	}, nil
 }
 
-func (question *Question) ToProto() *pb.Question {
+func (q *Question) ToProto() *pb.Question {
 	protoOptionsWeights := make(map[string]*pb.OptionWeights)
 
-	for option, weights := range question.OptionsWeights {
+	for option, weights := range q.OptionsWeights {
 		protoWeights := &pb.OptionWeights{
 			Weights: make([]float32, len(weights)),
 		}
@@ -45,9 +70,9 @@ func (question *Question) ToProto() *pb.Question {
 	}
 
 	return &pb.Question{
-		Id:             question.ID,
-		QuizId:         question.QuizID,
-		Body:           question.Body,
+		Id:             q.ID.String(),
+		QuizId:         q.QuizID.String(),
+		Body:           q.Body,
 		OptionsWeights: protoOptionsWeights,
 	}
 }

@@ -163,32 +163,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "username",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "createdAt",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "lastLogin",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
           }
         ],
         "tags": [

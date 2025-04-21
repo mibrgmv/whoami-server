@@ -54,6 +54,9 @@ func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 		if errors.Is(err, user.ErrUserNotFound) {
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
+		if errors.Is(err, user.ErrIncorrectPassword) {
+			return nil, status.Errorf(codes.Unauthenticated, "incorrect password")
+		}
 		return nil, status.Errorf(codes.Internal, "failed to login: %v", err)
 	}
 
@@ -68,7 +71,7 @@ func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 	}, nil
 }
 
-func (s *UserService) Delete(ctx context.Context, request *pb.User) (*emptypb.Empty, error) {
+func (s *UserService) Delete(ctx context.Context, request *pb.DeleteRequest) (*emptypb.Empty, error) {
 	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")

@@ -10,7 +10,10 @@ import (
 	"whoami-server/cmd/users/internal/models"
 )
 
-var ErrUserNotFound = errors.New("user not found")
+var (
+	ErrUserNotFound      = errors.New("user not found")
+	ErrIncorrectPassword = errors.New("incorrect password")
+)
 
 type Service struct {
 	users Repository
@@ -55,10 +58,20 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(users[0].Password), []byte(password)); err != nil {
-		return nil, fmt.Errorf("invalid password")
+		return nil, ErrIncorrectPassword
 	}
 
+	// todo update last login
+
 	return &users[0].ID, nil
+}
+
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	err := s.users.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {

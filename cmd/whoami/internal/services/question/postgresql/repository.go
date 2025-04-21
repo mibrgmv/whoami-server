@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/question"
@@ -44,17 +45,20 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 		}
 
 		query := `
-		insert into questions (quiz_id, question_body, question_options_weights)
-		values ($1, $2, $3)
+		insert into questions (question_id, quiz_id, question_body, question_options_weights)
+		values ($1, $2, $3, $4)
 		returning question_id`
 
-		var createdID int64
-		err = tx.QueryRow(ctx, query, q.QuizID, q.Body, optionsWeightsJSON).Scan(&createdID)
+		var createdID string
+		err = tx.QueryRow(ctx, query, uuid.New(), q.QuizID, q.Body, optionsWeightsJSON).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add question: %w", err)
 		}
 
-		q.ID = createdID
+		q.ID, err = uuid.Parse(createdID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse UUID: %v", err)
+		}
 		createdQuestions = append(createdQuestions, q)
 	}
 
@@ -68,7 +72,7 @@ func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.
 		   question_body,
 		   question_options_weights
 	from questions
-	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_id = any ($1))`
+	where ($1::uuid[] is null or cardinality($1) = 0 or quiz_id = any ($1))`
 
 	rows, err := r.pool.Query(ctx, sql, query.QuizIds)
 	if err != nil {

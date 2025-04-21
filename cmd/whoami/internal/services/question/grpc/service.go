@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
 	"whoami-server/cmd/whoami/internal/models"
@@ -59,12 +59,10 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 			log.Fatalf("receive error %v", err)
 		}
 
-		q := models.ToModel(&pb.Question{
-			Id:             req.Id,
-			QuizId:         req.QuizId,
-			Body:           req.Body,
-			OptionsWeights: req.OptionsWeights,
-		})
+		q, err := models.QuestionToModel(req)
+		if err != nil {
+			log.Fatalf("parse error %v", err)
+		}
 		questions = append(questions, *q)
 	}
 
@@ -82,29 +80,13 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 	return nil
 }
 
-func (s *QuestionService) GetStream(empty *emptypb.Empty, stream pb.QuestionService_GetStreamServer) error {
-	questions, err := s.service.GetAll(stream.Context())
+func (s *QuestionService) GetByQuizID(ctx context.Context, request *pb.GetByQuizIDRequest) (*pb.GetByQuizIDResponse, error) {
+	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
-		return err
+		return nil, status.Errorf(codes.Internal, "invalid quiz ID format: %v", err)
 	}
 
-	done := make(chan bool)
-
-	go func() {
-		defer close(done)
-		for _, q := range questions {
-			if err := stream.Send(q.ToProto()); err != nil {
-				log.Fatalf("can not send %v", err)
-			}
-		}
-	}()
-
-	<-done
-	return nil
-}
-
-func (s *QuestionService) GetByQuizID(ctx context.Context, request *pb.GetByQuizIDRequest) (*pb.GetByQuizIDResponse, error) {
-	questions, err := s.service.GetByQuizID(ctx, request.QuizId)
+	questions, err := s.service.GetByQuizID(ctx, quizID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
 	}
@@ -116,18 +98,18 @@ func (s *QuestionService) GetByQuizID(ctx context.Context, request *pb.GetByQuiz
 
 	return &pb.GetByQuizIDResponse{
 		Questions:     pbQuestions,
-		NextPageToken: "", // todo
+		NextPageToken: "", // todo bring back streaming
 	}, nil
 }
 
 func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {
 	var answers []models.Answer
 	for _, answer := range request.Answers {
-		answers = append(answers, models.Answer{
-			QuizID:     answer.QuizId,
-			QuestionID: answer.QuestionId,
-			Body:       answer.Body,
-		})
+		modelAnswer, err := models.AnswerToModel(answer)
+		if err != nil {
+			fmt.Printf("Error converting answer to model: %v\n", err)
+		}
+		answers = append(answers, *modelAnswer)
 	}
 
 	q, err := s.quizService.GetByID(ctx, request.QuizId)
@@ -140,10 +122,14 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		return nil, err
 	}
 
-	// todo use jwt service
-	userID, ok := ctx.Value("user_id").(int64)
+	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
 	}
 
 	historyError := s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
@@ -157,7 +143,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 	}, nil
 }
 
-func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID int64, result string) error {
+func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
 	stream, err := s.historyClient.Add(ctx)
 	if err != nil {
 		return err
@@ -168,8 +154,8 @@ func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID
 
 	go func() {
 		if err := stream.Send(&pbHistory.QuizCompletionHistoryItem{
-			UserId:     userID,
-			QuizId:     quizID,
+			UserId:     userID.String(),
+			QuizId:     quizID.String(),
 			QuizResult: result,
 		}); err != nil {
 			log.Fatalf("can not send %v", err)

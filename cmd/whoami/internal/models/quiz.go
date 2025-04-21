@@ -1,16 +1,39 @@
 package models
 
-import pb "whoami-server/protogen/golang/quiz"
+import (
+	"github.com/google/uuid"
+	pb "whoami-server/protogen/golang/quiz"
+)
 
 type Quiz struct {
-	ID      int64    `json:"id"`
-	Title   string   `json:"title"`
-	Results []string `json:"results"`
+	ID      uuid.UUID `json:"id"`
+	Title   string    `json:"title"`
+	Results []string  `json:"results"`
 }
 
-func (q Quiz) ToProto() *pb.Quiz {
+func QuizToModel(protoQuiz *pb.Quiz) (*Quiz, error) {
+	var quizID uuid.UUID
+	var err error
+
+	if protoQuiz.Id == "" {
+		quizID = uuid.Nil
+	} else {
+		quizID, err = uuid.Parse(protoQuiz.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Quiz{
+		ID:      quizID,
+		Title:   protoQuiz.Title,
+		Results: protoQuiz.Results,
+	}, nil
+}
+
+func (q *Quiz) ToProto() *pb.Quiz {
 	return &pb.Quiz{
-		Id:      q.ID,
+		Id:      q.ID.String(),
 		Title:   q.Title,
 		Results: q.Results,
 	}

@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"whoami-server/cmd/history/internal/models"
 	"whoami-server/cmd/history/internal/services/history"
@@ -37,17 +38,20 @@ func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletio
 
 	for _, i := range historyItems {
 		query := `
-		insert into quiz_completion_history (user_id, quiz_id, quiz_result)
-		values ($1, $2, $3)
+		insert into quiz_completion_history (quiz_completion_history_item_id, user_id, quiz_id, quiz_result)
+		values ($1, $2, $3, $4)
 		returning quiz_completion_history_item_id`
 
-		var createdID int64
-		err = tx.QueryRow(ctx, query, i.UserID, i.QuizID, i.QuizResult).Scan(&createdID)
+		var createdID string
+		err = tx.QueryRow(ctx, query, uuid.New(), i.UserID, i.QuizID, i.QuizResult).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add user: %w", err)
 		}
 
-		i.ID = createdID
+		i.ID, err = uuid.Parse(createdID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse UUID: %v", err)
+		}
 		createdItems = append(createdItems, i)
 	}
 
@@ -61,9 +65,9 @@ func (r Repository) Query(ctx context.Context, query history.Query) ([]models.Qu
 		   quiz_id,
 		   quiz_result
 	from quiz_completion_history
-	where ($1::bigint[] is null or cardinality($1) = 0 or quiz_completion_history_item_id = any ($1))
-	  and ($2::bigint[] is null or cardinality($2) = 0 or user_id = any ($2))
-	  and ($3::bigint[] is null or cardinality($3) = 0 or quiz_id = any ($3))`
+	where ($1::uuid[] is null or cardinality($1) = 0 or quiz_completion_history_item_id = any ($1))
+	  and ($2::uuid[] is null or cardinality($2) = 0 or user_id = any ($2))
+	  and ($3::uuid[] is null or cardinality($3) = 0 or quiz_id = any ($3))`
 
 	rows, err := r.pool.Query(ctx, sql, query.IDs, query.UserIDs, query.QuizIDs)
 	if err != nil {

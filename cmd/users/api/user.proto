@@ -25,7 +25,7 @@ service UserService {
     };
   }
 
-  rpc Delete(User) returns (google.protobuf.Empty) {
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/api/v1/users/{user_id}"
     };
@@ -67,6 +67,10 @@ message LoginRequest {
 message LoginResponse {
   string token = 1;
   string user_id = 2;
+}
+
+message DeleteRequest {
+  string user_id = 1;
 }
 
 message GetBatchRequest {

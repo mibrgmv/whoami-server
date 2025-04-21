@@ -29,12 +29,12 @@ func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Dura
 
 	redisService := redisservice.NewService(redisClient, redisTTL)
 	quizRepo := quizpg.NewRepository(pool)
-	quizService := quiz.NewService(quizRepo, redisService)
+	quizService := quiz.NewService(quizRepo)
 	quizServer := quizgrpc.NewService(quizService)
 	quizpb.RegisterQuizServiceServer(s, quizServer)
 
 	questionRepo := questionpg.NewRepository(pool)
-	questionService := question.NewService(questionRepo)
+	questionService := question.NewService(questionRepo, redisService)
 	questionServer, err := questiongrpc.NewService(questionService, quizService, historyServiceAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create question service: %w", err)

@@ -80,8 +80,7 @@
             "name": "quizId",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "body",
@@ -119,8 +118,7 @@
             "name": "quizId",
             "in": "path",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "pageSize",
@@ -168,12 +166,10 @@
       "type": "object",
       "properties": {
         "quizId": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "questionId": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "body": {
           "type": "string"
@@ -222,12 +218,10 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "quizId": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "body": {
           "type": "string"

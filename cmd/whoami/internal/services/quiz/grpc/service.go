@@ -5,7 +5,6 @@ import (
 	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
 	"whoami-server/cmd/whoami/internal/models"
@@ -36,8 +35,12 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 			log.Fatalf("receive error %v", err)
 		}
 
-		q := models.Quiz{ID: req.Id, Title: req.Title, Results: req.Results}
-		quizzesToCreate = append(quizzesToCreate, q)
+		q, err := models.QuizToModel(req)
+		if err != nil {
+			log.Fatalf("parse error %v", err)
+		}
+
+		quizzesToCreate = append(quizzesToCreate, *q)
 	}
 
 	createdQuizzes, err := s.service.Add(stream.Context(), quizzesToCreate)
@@ -46,11 +49,7 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 	}
 
 	for _, q := range createdQuizzes {
-		if err := stream.Send(&pb.Quiz{
-			Id:      q.ID,
-			Title:   q.Title,
-			Results: q.Results,
-		}); err != nil {
+		if err := stream.Send(q.ToProto()); err != nil {
 			log.Fatalf("can not send %v", err)
 		}
 	}
@@ -58,33 +57,8 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 	return nil
 }
 
-func (s *QuizService) GetStream(empty *emptypb.Empty, stream pb.QuizService_GetStreamServer) error {
-	quizzes, err := s.service.GetAll(stream.Context())
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
-	}
-
-	done := make(chan bool)
-
-	go func() {
-		defer close(done)
-		for _, q := range quizzes {
-			if err := stream.Send(&pb.Quiz{
-				Id:      q.ID,
-				Title:   q.Title,
-				Results: q.Results,
-			}); err != nil {
-				log.Fatalf("can not send %v", err)
-			}
-		}
-	}()
-
-	<-done
-	return nil
-}
-
 func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
-	quizzes, err := s.service.GetAll(ctx)
+	quizzes, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
 	}
@@ -96,7 +70,7 @@ func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest)
 
 	return &pb.GetBatchResponse{
 		Quizzes:       pbQuizzes,
-		NextPageToken: "", // todo
+		NextPageToken: nextPageToken,
 	}, nil
 }
 

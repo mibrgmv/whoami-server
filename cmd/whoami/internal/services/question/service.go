@@ -4,42 +4,63 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/internal/cache"
+)
+
+const (
+	questionsCacheKeyPrefix = "questions:"
 )
 
 type Service struct {
-	repo Repository
+	repo  Repository
+	cache cache.Interface
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, cache cache.Interface) *Service {
+	return &Service{
+		repo:  repo,
+		cache: cache,
+	}
 }
 
 func (s *Service) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
-	// todo add validation for option weights
+	for _, q := range questions {
+		cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, q.QuizID.String())
+
+		err := s.cache.Delete(ctx, cacheKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return s.repo.Add(ctx, questions)
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]models.Question, error) {
-	questions, err := s.repo.Query(ctx, Query{})
+func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Question, error) {
+	cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, quizID.String())
+
+	var questions []models.Question
+	err := s.cache.Get(ctx, cacheKey, &questions)
+	if err == nil {
+		return questions, nil
+	}
+
+	questions, err = s.repo.Query(ctx, Query{QuizIds: []uuid.UUID{quizID}})
 	if err != nil {
 		return nil, err
 	}
 
-	return questions, nil
-}
-
-func (s *Service) GetByQuizID(ctx context.Context, quizID int64) ([]models.Question, error) {
-	questions, err := s.repo.Query(ctx, Query{QuizIds: []int64{quizID}})
-	if err != nil {
-		return nil, err
+	if err := s.cache.Set(ctx, cacheKey, &questions); err != nil {
+		// todo ignored error
 	}
 
 	return questions, nil
 }
 
 func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz *models.Quiz) (string, error) {
-	questions, err := s.repo.Query(ctx, Query{QuizIds: []int64{quiz.ID}})
+	questions, err := s.repo.Query(ctx, Query{QuizIds: []uuid.UUID{quiz.ID}})
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +74,7 @@ func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, 
 	numResults := len(quiz.Results)
 	results := make([]float32, numResults)
 
-	questionsMap := make(map[int64]models.Question)
+	questionsMap := make(map[uuid.UUID]models.Question)
 	for _, q := range questions {
 		if q.QuizID != quiz.ID {
 			return "", errors.New("question quiz ID does not match quiz ID")

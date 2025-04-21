@@ -1,5 +1,7 @@
 package quiz
 
 type Query struct {
-	Ids []int64
+	Ids       []string
+	PageSize  int32
+	PageToken string
 }

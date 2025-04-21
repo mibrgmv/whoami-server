@@ -2,6 +2,7 @@ package history
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -32,30 +33,30 @@ func (s *Service) Add(stream pb.QuizCompletionHistoryService_AddServer) error {
 			log.Fatalf("receive error %v", err)
 		}
 
-		item := models.QuizCompletionHistoryItem{
-			ID:         req.Id,
-			QuizID:     req.QuizId,
-			UserID:     req.UserId,
-			QuizResult: req.QuizResult,
+		item, err := models.ToModel(req)
+		if err != nil {
+			log.Fatalf("parse error %v", err)
 		}
-		itemsToCreate = append(itemsToCreate, item)
+
+		itemsToCreate = append(itemsToCreate, *item)
 	}
 
-	createdItems, err := s.repo.Add(stream.Context(), itemsToCreate)
+	_, err := s.repo.Add(stream.Context(), itemsToCreate)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to add items: %v", err)
 	}
 
-	for _, quiz := range createdItems {
-		if err := stream.Send(&pb.QuizCompletionHistoryItem{
-			Id:         quiz.ID,
-			QuizId:     quiz.ID,
-			UserId:     quiz.UserID,
-			QuizResult: quiz.QuizResult,
-		}); err != nil {
-			log.Fatalf("can not send %v", err)
-		}
-	}
+	//for _, quiz := range createdItems {
+	//if err := stream.Send(&pb.QuizCompletionHistoryItem{
+	//	Id:         quiz.ID,
+	//	QuizId:     quiz.ID,
+	//	UserId:     quiz.UserID,
+	//	QuizResult: quiz.QuizResult,
+	//}); err != nil {
+	//	log.Fatalf("can not send %v", err)
+	//}
+	// todo
+	//}
 
 	return nil
 }
@@ -71,14 +72,7 @@ func (s *Service) GetAll(empty *emptypb.Empty, stream pb.QuizCompletionHistorySe
 	go func() {
 		defer close(done)
 		for _, item := range items {
-			protoItem := &pb.QuizCompletionHistoryItem{
-				Id:         item.ID,
-				QuizId:     item.QuizID,
-				UserId:     item.UserID,
-				QuizResult: item.QuizResult,
-			}
-
-			if err := stream.Send(protoItem); err != nil {
+			if err := stream.Send(item.ToProto()); err != nil {
 				log.Fatalf("failed to send response: %v", err)
 			}
 		}
@@ -89,7 +83,12 @@ func (s *Service) GetAll(empty *emptypb.Empty, stream pb.QuizCompletionHistorySe
 }
 
 func (s *Service) GetByUserID(request *pb.GetByUserIDRequest, stream pb.QuizCompletionHistoryService_GetByUserIDServer) error {
-	query := Query{UserIDs: []int64{request.UserId}}
+	userID, err := uuid.Parse(request.UserId)
+	if err != nil {
+		return status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+	}
+
+	query := Query{UserIDs: []uuid.UUID{userID}}
 
 	items, err := s.repo.Query(stream.Context(), query)
 	if err != nil {
@@ -101,14 +100,7 @@ func (s *Service) GetByUserID(request *pb.GetByUserIDRequest, stream pb.QuizComp
 	go func() {
 		defer close(done)
 		for _, item := range items {
-			protoItem := &pb.QuizCompletionHistoryItem{
-				Id:         item.ID,
-				QuizId:     item.QuizID,
-				UserId:     item.UserID,
-				QuizResult: item.QuizResult,
-			}
-
-			if err := stream.Send(protoItem); err != nil {
+			if err := stream.Send(item.ToProto()); err != nil {
 				log.Fatalf("failed to send response: %v", err)
 			}
 		}

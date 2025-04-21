@@ -21,16 +21,13 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "userId": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "quizId": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "quizResult": {
           "type": "string"

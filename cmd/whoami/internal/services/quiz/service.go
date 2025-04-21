@@ -3,54 +3,42 @@ package quiz
 import (
 	"context"
 	"errors"
+	"fmt"
 	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/internal/cache"
 )
 
 var ErrQuizNotFound = errors.New("quiz not found")
 
-const (
-	allQuizzesCacheKey = "quizzes:all"
-)
-
 type Service struct {
-	repo  Repository
-	cache cache.Interface
+	repo Repository
 }
 
-func NewService(repo Repository, cache cache.Interface) *Service {
-	return &Service{
-		repo:  repo,
-		cache: cache,
-	}
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
 func (s *Service) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
-	err := s.cache.Delete(ctx, allQuizzesCacheKey)
-	if err != nil {
-		return nil, err
-	}
 	return s.repo.Add(ctx, quizzes)
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]models.Quiz, error) {
-	var quizzes []models.Quiz
-	err := s.cache.Get(ctx, allQuizzesCacheKey, &quizzes)
-	if err == nil {
-		return quizzes, nil
+func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.Quiz, string, error) {
+	quizzes, err := s.repo.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
+
+	if err != nil {
+		return nil, "", err
 	}
 
-	quizzes, err = s.repo.Query(ctx, Query{})
-
-	if err := s.cache.Set(ctx, allQuizzesCacheKey, &quizzes); err != nil {
-		// todo ignored error
+	var nextPageToken string
+	if pageSize > 0 && len(quizzes) > int(pageSize) {
+		nextPageToken = fmt.Sprintf("%d", quizzes[len(quizzes)-1].ID)
+		quizzes = quizzes[:len(quizzes)-1]
 	}
 
-	return quizzes, err
+	return quizzes, nextPageToken, err
 }
 
-func (s *Service) GetByID(ctx context.Context, quizID int64) (*models.Quiz, error) {
-	quizzes, err := s.repo.Query(ctx, Query{Ids: []int64{quizID}})
+func (s *Service) GetByID(ctx context.Context, quizID string) (*models.Quiz, error) {
+	quizzes, err := s.repo.Query(ctx, Query{Ids: []string{quizID}})
 	if err != nil {
 		return nil, err
 	}
