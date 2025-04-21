@@ -16,11 +16,17 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
+	// todo add validation for option weights
 	return s.repo.Add(ctx, questions)
 }
 
-func (s *Service) Query(ctx context.Context, query Query) ([]models.Question, error) {
-	return s.repo.Query(ctx, query)
+func (s *Service) GetAll(ctx context.Context) ([]models.Question, error) {
+	questions, err := s.repo.Query(ctx, Query{})
+	if err != nil {
+		return nil, err
+	}
+
+	return questions, nil
 }
 
 func (s *Service) GetByQuizID(ctx context.Context, quizID int64) ([]models.Question, error) {

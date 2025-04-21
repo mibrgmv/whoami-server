@@ -16,43 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/questions": {
-      "get": {
-        "operationId": "QuestionService_GetBatch",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/questionGetBatchResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "QuestionService"
-        ]
-      }
-    },
     "/api/v1/questions/add": {
       "post": {
         "operationId": "QuestionService_AddStream",
@@ -139,18 +102,9 @@
         "operationId": "QuestionService_GetByQuizID",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/questionQuestion"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of questionQuestion"
+              "$ref": "#/definitions/questionGetByQuizIDResponse"
             }
           },
           "default": {
@@ -167,6 +121,19 @@
             "required": true,
             "type": "string",
             "format": "int64"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -224,7 +191,7 @@
         }
       }
     },
-    "questionGetBatchResponse": {
+    "questionGetByQuizIDResponse": {
       "type": "object",
       "properties": {
         "questions": {

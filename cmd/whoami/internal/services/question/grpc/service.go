@@ -52,11 +52,11 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 
 	for {
 		req, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
 		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			return err
+			log.Fatalf("receive error %v", err)
 		}
 
 		q := models.ToModel(&pb.Question{
@@ -83,7 +83,7 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 }
 
 func (s *QuestionService) GetStream(empty *emptypb.Empty, stream pb.QuestionService_GetStreamServer) error {
-	questions, err := s.service.Query(stream.Context(), question.Query{})
+	questions, err := s.service.GetAll(stream.Context())
 	if err != nil {
 		return err
 	}
@@ -103,10 +103,10 @@ func (s *QuestionService) GetStream(empty *emptypb.Empty, stream pb.QuestionServ
 	return nil
 }
 
-func (s *QuestionService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
-	questions, err := s.service.Query(ctx, question.Query{})
+func (s *QuestionService) GetByQuizID(ctx context.Context, request *pb.GetByQuizIDRequest) (*pb.GetByQuizIDResponse, error) {
+	questions, err := s.service.GetByQuizID(ctx, request.QuizId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get questions: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
 	}
 
 	var pbQuestions []*pb.Question
@@ -114,25 +114,10 @@ func (s *QuestionService) GetBatch(ctx context.Context, request *pb.GetBatchRequ
 		pbQuestions = append(pbQuestions, q.ToProto())
 	}
 
-	return &pb.GetBatchResponse{
+	return &pb.GetByQuizIDResponse{
 		Questions:     pbQuestions,
 		NextPageToken: "", // todo
 	}, nil
-}
-
-func (s *QuestionService) GetByQuizID(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIDServer) error {
-	questions, err := s.service.GetByQuizID(stream.Context(), request.QuizId)
-	if err != nil {
-		return err
-	}
-
-	for _, q := range questions {
-		if err := stream.Send(q.ToProto()); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {
