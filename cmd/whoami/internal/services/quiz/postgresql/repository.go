@@ -79,7 +79,7 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 		}
 		args = append(args, pageToken)
 	} else {
-		args = append(args, nil)
+		args = append(args, uuid.Nil)
 	}
 
 	args = append(args, query.Ids)

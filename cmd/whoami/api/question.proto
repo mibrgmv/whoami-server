@@ -17,7 +17,7 @@ service QuestionService {
     };
   }
 
-  rpc GetByQuizID(GetByQuizIDRequest) returns (GetByQuizIDResponse) {
+  rpc GetByQuizIdStream(GetByQuizIDRequest) returns (stream Question) {
     option (google.api.http) = {
       get: "/api/v1/quizzes/{quiz_id}/questions"
     };
@@ -29,8 +29,6 @@ service QuestionService {
       body: "*"
     };
   }
-
-  rpc GetStream(google.protobuf.Empty) returns (stream Question) {}
 }
 
 message Question {
@@ -56,25 +54,8 @@ message Answer {
   string body = 3;
 }
 
-message GetBatchRequest {
-  int32 page_size = 1;
-  string page_token = 2;
-}
-
-message GetBatchResponse {
-  repeated Question questions = 1;
-  string next_page_token = 2;
-}
-
 message GetByQuizIDRequest {
   string quiz_id = 1;
-  int32 page_size = 2;
-  string page_token = 3;
-}
-
-message GetByQuizIDResponse {
-  repeated Question questions = 1;
-  string next_page_token = 2;
 }
 
 message EvaluateAnswersRequest {

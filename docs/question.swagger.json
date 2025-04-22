@@ -98,12 +98,21 @@
     },
     "/api/v1/quizzes/{quizId}/questions": {
       "get": {
-        "operationId": "QuestionService_GetByQuizID",
+        "operationId": "QuestionService_GetByQuizIdStream",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "A successful response.(streaming responses)",
             "schema": {
-              "$ref": "#/definitions/questionGetByQuizIDResponse"
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/questionQuestion"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of questionQuestion"
             }
           },
           "default": {
@@ -118,19 +127,6 @@
             "name": "quizId",
             "in": "path",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "required": false,
             "type": "string"
           }
         ],
@@ -183,21 +179,6 @@
           "type": "string"
         },
         "description": {
-          "type": "string"
-        }
-      }
-    },
-    "questionGetByQuizIDResponse": {
-      "type": "object",
-      "properties": {
-        "questions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/questionQuestion"
-          }
-        },
-        "nextPageToken": {
           "type": "string"
         }
       }

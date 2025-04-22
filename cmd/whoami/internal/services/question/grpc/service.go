@@ -80,26 +80,29 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 	return nil
 }
 
-func (s *QuestionService) GetByQuizID(ctx context.Context, request *pb.GetByQuizIDRequest) (*pb.GetByQuizIDResponse, error) {
+func (s *QuestionService) GetByQuizIdStream(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIdStreamServer) error {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid quiz ID format: %v", err)
+		return status.Errorf(codes.Internal, "invalid quiz ID format: %v", err)
 	}
 
-	questions, err := s.service.GetByQuizID(ctx, quizID)
+	questions, err := s.service.GetByQuizID(stream.Context(), quizID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
+		return status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
 	}
 
-	var pbQuestions []*pb.Question
-	for _, q := range questions {
-		pbQuestions = append(pbQuestions, q.ToProto())
-	}
+	done := make(chan bool)
+	go func() {
+		defer close(done)
+		for _, q := range questions {
+			if err := stream.Send(q.ToProto()); err != nil {
+				log.Fatalf("can not send %v", err)
+			}
+		}
+	}()
 
-	return &pb.GetByQuizIDResponse{
-		Questions:     pbQuestions,
-		NextPageToken: "", // todo bring back streaming
-	}, nil
+	<-done
+	return nil
 }
 
 func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {

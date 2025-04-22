@@ -30,7 +30,7 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 
 	var nextPageToken string
 	if pageSize > 0 && len(quizzes) > int(pageSize) {
-		nextPageToken = fmt.Sprintf("%d", quizzes[len(quizzes)-1].ID)
+		nextPageToken = fmt.Sprintf("%s", quizzes[len(quizzes)-1].ID)
 		quizzes = quizzes[:len(quizzes)-1]
 	}
 
@@ -38,7 +38,7 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 }
 
 func (s *Service) GetByID(ctx context.Context, quizID string) (*models.Quiz, error) {
-	quizzes, err := s.repo.Query(ctx, Query{Ids: []string{quizID}})
+	quizzes, err := s.repo.Query(ctx, Query{Ids: []string{quizID}, PageSize: 1})
 	if err != nil {
 		return nil, err
 	}
