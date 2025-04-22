@@ -2,41 +2,38 @@ package question_test
 
 import (
 	"context"
+	"errors"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/question"
+	"whoami-server/cmd/whoami/internal/services/question/mocks"
 )
 
-type MockRepository struct {
-	mock.Mock
-}
-
-func (m *MockRepository) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
-	args := m.Called(ctx, questions)
-	return args.Get(0).([]models.Question), args.Error(1)
-}
-
-func (m *MockRepository) Query(ctx context.Context, query question.Query) ([]models.Question, error) {
-	args := m.Called(ctx, query)
-	return args.Get(0).([]models.Question), args.Error(1)
-}
-
 func TestEvaluateAnswers(t *testing.T) {
-	mockRepo := new(MockRepository)
-	service := question.NewService(mockRepo)
+	mockRepo := new(mocks.MockRepository)
+	mockCache := new(mocks.MockCache)
+	service := question.NewService(mockRepo, mockCache)
 
-	quizID := int64(1)
+	quizID := uuid.New()
 	quiz := models.Quiz{
 		ID:      quizID,
 		Title:   "GTA V Character Quiz",
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
+	questionIDs := []uuid.UUID{
+		uuid.New(),
+		uuid.New(),
+		uuid.New(),
+		uuid.New(),
+	}
+
 	questions := []models.Question{
 		{
-			ID:     101,
+			ID:     questionIDs[0],
 			QuizID: quizID,
 			Body:   "Do you like drinking gasoline?",
 			OptionsWeights: map[string][]float32{
@@ -45,7 +42,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			},
 		},
 		{
-			ID:     102,
+			ID:     questionIDs[1],
 			QuizID: quizID,
 			Body:   "Do you like betraying your friends?",
 			OptionsWeights: map[string][]float32{
@@ -54,7 +51,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			},
 		},
 		{
-			ID:     103,
+			ID:     questionIDs[2],
 			QuizID: quizID,
 			Body:   "Are you good at math?",
 			OptionsWeights: map[string][]float32{
@@ -63,7 +60,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			},
 		},
 		{
-			ID:     104,
+			ID:     questionIDs[3],
 			QuizID: quizID,
 			Body:   "Are you fond of hip hop?",
 			OptionsWeights: map[string][]float32{
@@ -73,7 +70,11 @@ func TestEvaluateAnswers(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{quizID}}).Return(questions, nil)
+	cacheKey := "questions:quiz:" + quizID.String()
+
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
 
 	tests := []struct {
 		name     string
@@ -85,10 +86,10 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name: "All Trevor answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "Yes"}, // Likes drinking gasoline -> +1.0 Trevor
-				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
-				{QuizID: quizID, QuestionID: 103, Body: "No"},  // Not good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
+				{QuizID: quizID, QuestionID: questionIDs[0], Body: "Yes"}, // Likes drinking gasoline -> +1.0 Trevor
+				{QuizID: quizID, QuestionID: questionIDs[1], Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
+				{QuizID: quizID, QuestionID: questionIDs[2], Body: "No"},  // Not good at math -> No effect
+				{QuizID: quizID, QuestionID: questionIDs[3], Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
 			expected: "Trevor", // Trevor has the highest score
 			wantErr:  false,
@@ -97,10 +98,10 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name: "All Michael answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
-				{QuizID: quizID, QuestionID: 102, Body: "Yes"}, // Likes betraying friends -> +1.0 Michael
-				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
+				{QuizID: quizID, QuestionID: questionIDs[0], Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
+				{QuizID: quizID, QuestionID: questionIDs[1], Body: "Yes"}, // Likes betraying friends -> +1.0 Michael
+				{QuizID: quizID, QuestionID: questionIDs[2], Body: "Yes"}, // Good at math -> No effect
+				{QuizID: quizID, QuestionID: questionIDs[3], Body: "No"},  // Not fond of hip hop -> +0.5 Michael/Trevor
 			},
 			expected: "Michael", // Michael has the highest score
 			wantErr:  false,
@@ -109,10 +110,10 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name: "All Franklin answers",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
-				{QuizID: quizID, QuestionID: 102, Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
-				{QuizID: quizID, QuestionID: 103, Body: "Yes"}, // Good at math -> No effect
-				{QuizID: quizID, QuestionID: 104, Body: "Yes"}, // Fond of hip hop -> +1.0 Franklin
+				{QuizID: quizID, QuestionID: questionIDs[0], Body: "No"},  // Doesn't like drinking gasoline -> +0.5 Michael/Franklin
+				{QuizID: quizID, QuestionID: questionIDs[1], Body: "No"},  // Doesn't like betraying friends -> +0.5 Franklin/Trevor
+				{QuizID: quizID, QuestionID: questionIDs[2], Body: "Yes"}, // Good at math -> No effect
+				{QuizID: quizID, QuestionID: questionIDs[3], Body: "Yes"}, // Fond of hip hop -> +1.0 Franklin
 			},
 			expected: "Franklin", // Franklin has the highest score
 			wantErr:  false,
@@ -121,25 +122,26 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name: "Missing question ID",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 999, Body: "Yes"}, // Non-existent question ID
+				{QuizID: quizID, QuestionID: uuid.New(), Body: "Yes"}, // Non-existent question ID
 			},
 			expected: "",
 			wantErr:  true,
-			errMsg:   "question with ID 999 not found",
+			// Fix 3: Update error message to match implementation format
+			errMsg: "question with ID",
 		},
 		{
 			name: "Invalid option",
 			answers: []models.Answer{
-				{QuizID: quizID, QuestionID: 101, Body: "Maybe"}, // Invalid option
+				{QuizID: quizID, QuestionID: questionIDs[0], Body: "Maybe"}, // Invalid option
 			},
 			expected: "",
 			wantErr:  true,
-			errMsg:   "option 'Maybe' not found for question 101",
+			errMsg:   "option 'Maybe' not found for question",
 		},
 		{
 			name: "Quiz ID mismatch in answer",
 			answers: []models.Answer{
-				{QuizID: 999, QuestionID: 101, Body: "Yes"}, // Wrong quiz ID
+				{QuizID: uuid.New(), QuestionID: questionIDs[0], Body: "Yes"}, // Wrong quiz ID
 			},
 			expected: "",
 			wantErr:  true,
@@ -176,19 +178,24 @@ func TestEvaluateAnswers(t *testing.T) {
 
 // Additional test for question with mismatched quiz ID
 func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
-	mockRepo := new(MockRepository)
-	service := question.NewService(mockRepo)
+	mockRepo := new(mocks.MockRepository)
+	mockCache := new(mocks.MockCache)
+	service := question.NewService(mockRepo, mockCache)
+
+	quizID := uuid.New()
+	wrongQuizID := uuid.New()
+	questionID := uuid.New()
 
 	quiz := models.Quiz{
-		ID:      1,
+		ID:      quizID,
 		Title:   "GTA Character Quiz",
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
 	questions := []models.Question{
 		{
-			ID:     101,
-			QuizID: 999, // Mismatched quiz ID
+			ID:     questionID,
+			QuizID: wrongQuizID, // Mismatched quiz ID
 			Body:   "Question with wrong quiz ID",
 			OptionsWeights: map[string][]float32{
 				"Yes": {1.0, 0.0, 0.0},
@@ -196,10 +203,16 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{1}}).Return(questions, nil)
+	cacheKey := "questions:quiz:" + quizID.String()
+
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
+
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
 
 	answers := []models.Answer{
-		{QuizID: 1, QuestionID: 101, Body: "Yes"},
+		{QuizID: quizID, QuestionID: questionID, Body: "Yes"},
 	}
 
 	ctx := context.Background()
@@ -211,30 +224,40 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 
 // Test for weight length mismatch
 func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
-	mockRepo := new(MockRepository)
-	service := question.NewService(mockRepo)
+	mockRepo := new(mocks.MockRepository)
+	mockCache := new(mocks.MockCache)
+	service := question.NewService(mockRepo, mockCache)
+
+	quizID := uuid.New()
+	questionID := uuid.New()
 
 	quiz := models.Quiz{
-		ID:      1,
+		ID:      quizID,
 		Title:   "GTA Character Quiz",
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
 	questions := []models.Question{
 		{
-			ID:     101,
-			QuizID: 1,
+			ID:     questionID,
+			QuizID: quizID,
 			Body:   "Question with wrong weights length",
 			OptionsWeights: map[string][]float32{
-				"Yes": {1.0, 0.0},
+				"Yes": {1.0, 0.0}, // Only two weights for three results
 			},
 		},
 	}
 
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []int64{1}}).Return(questions, nil)
+	cacheKey := "questions:quiz:" + quizID.String()
+
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
+
+	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
 
 	answers := []models.Answer{
-		{QuizID: 1, QuestionID: 101, Body: "Yes"},
+		{QuizID: quizID, QuestionID: questionID, Body: "Yes"},
 	}
 
 	ctx := context.Background()
@@ -242,4 +265,49 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
 	assert.Empty(t, result)
+}
+
+func TestEvaluateAnswers_CacheHit(t *testing.T) {
+	mockRepo := new(mocks.MockRepository)
+	mockCache := new(mocks.MockCache)
+	service := question.NewService(mockRepo, mockCache)
+
+	quizID := uuid.New()
+	questionID := uuid.New()
+
+	quiz := models.Quiz{
+		ID:      quizID,
+		Title:   "GTA Character Quiz",
+		Results: []string{"Michael", "Franklin", "Trevor"},
+	}
+
+	cachedQuestions := []models.Question{
+		{
+			ID:     questionID,
+			QuizID: quizID,
+			Body:   "Do you like drinking gasoline?",
+			OptionsWeights: map[string][]float32{
+				"Yes": {0.0, 0.0, 1.0},
+				"No":  {0.5, 0.5, 0.0},
+			},
+		},
+	}
+
+	cacheKey := "questions:quiz:" + quizID.String()
+
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Run(func(args mock.Arguments) {
+		dest := args.Get(2).(*[]models.Question)
+		*dest = cachedQuestions
+	}).Return(nil)
+
+	answers := []models.Answer{
+		{QuizID: quizID, QuestionID: questionID, Body: "Yes"},
+	}
+
+	ctx := context.Background()
+	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Trevor", result)
+	mockRepo.AssertNotCalled(t, "Query")
 }

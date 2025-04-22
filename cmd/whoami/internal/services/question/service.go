@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	questionsCacheKeyPrefix = "questions:"
+	questionsCacheKeyPrefix = "questions:quiz:"
 )
 
 type Service struct {
@@ -60,7 +60,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Q
 }
 
 func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz *models.Quiz) (string, error) {
-	questions, err := s.repo.Query(ctx, Query{QuizIds: []uuid.UUID{quiz.ID}})
+	questions, err := s.GetByQuizID(ctx, quiz.ID)
 	if err != nil {
 		return "", err
 	}
