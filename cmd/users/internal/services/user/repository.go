@@ -8,6 +8,7 @@ import (
 
 type Repository interface {
 	Add(ctx context.Context, users []models.User) ([]models.User, error)
-	Delete(ctx context.Context, id uuid.UUID) error
 	Query(ctx context.Context, query Query) ([]models.User, error)
+	Update(ctx context.Context, users []models.User) ([]models.User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }

@@ -52,7 +52,11 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 }
 
 func (s *Service) Login(ctx context.Context, username, password string) (*uuid.UUID, error) {
-	users, _ := s.users.Query(ctx, Query{Username: &username})
+	users, err := s.users.Query(ctx, Query{Username: &username})
+	if err != nil {
+		return nil, fmt.Errorf("database query failed: %w", err)
+	}
+
 	if len(users) == 0 {
 		return nil, ErrUserNotFound
 	}
@@ -61,7 +65,11 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 		return nil, ErrIncorrectPassword
 	}
 
-	// todo update last login
+	users[0].LastLogin = time.Now()
+	_, err = s.users.Update(ctx, []models.User{users[0]})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update user login: %w", err)
+	}
 
 	return &users[0].ID, nil
 }

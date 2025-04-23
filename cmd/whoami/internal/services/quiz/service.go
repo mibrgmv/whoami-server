@@ -3,7 +3,6 @@ package quiz
 import (
 	"context"
 	"errors"
-	"fmt"
 	"whoami-server/cmd/whoami/internal/models"
 )
 
@@ -30,8 +29,8 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 
 	var nextPageToken string
 	if pageSize > 0 && len(quizzes) > int(pageSize) {
-		nextPageToken = fmt.Sprintf("%s", quizzes[len(quizzes)-1].ID)
 		quizzes = quizzes[:len(quizzes)-1]
+		nextPageToken = quizzes[len(quizzes)-1].ID.String()
 	}
 
 	return quizzes, nextPageToken, err
