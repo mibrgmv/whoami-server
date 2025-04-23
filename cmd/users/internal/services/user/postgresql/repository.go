@@ -66,11 +66,38 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User,
 		   user_created_at,
 		   user_last_login
 	from users
-	where ($1::uuid[] is null or cardinality($1) = 0 or user_id = any ($1))
-	  and ($2::text is null or user_name like $2::text)
+	where (user_id > $1)
+	  and ($2::uuid[] is null or cardinality($2) = 0 or user_id = any ($2))
+	  and ($3::text is null or user_name like $3::text)
+	order by user_id asc
+	limit $4
 	`
 
-	rows, err := r.pool.Query(ctx, sql, query.UserIDs, query.Username)
+	var args []interface{}
+
+	if query.PageToken != "" {
+		pageToken, err := uuid.Parse(query.PageToken)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page token: %w", err)
+		}
+		args = append(args, pageToken)
+	} else {
+		args = append(args, uuid.Nil)
+	}
+
+	args = append(args, query.UserIDs, query.Username)
+
+	// todo use lib for constructing sql with params
+	// todo hash the pageToken
+	var pageSize int32
+	if query.PageSize > 0 {
+		pageSize = query.PageSize + 1
+	} else {
+		pageSize = query.PageSize
+	}
+	args = append(args, pageSize)
+
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}

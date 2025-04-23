@@ -68,7 +68,8 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 	where (quiz_id > $1)
 	  and ($2::uuid[] is null or cardinality($2) = 0 or quiz_id = any ($2))
 	order by quiz_id asc
-	limit $3`
+	limit $3
+	`
 
 	var args []interface{}
 
@@ -86,7 +87,6 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 
 	// todo use lib for constructing sql with params
 	// todo hash the pageToken
-	// todo nextPageToken broken
 	var pageSize int32
 	if query.PageSize > 0 {
 		pageSize = query.PageSize + 1

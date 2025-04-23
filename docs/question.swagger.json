@@ -177,9 +177,6 @@
       "properties": {
         "result": {
           "type": "string"
-        },
-        "description": {
-          "type": "string"
         }
       }
     },

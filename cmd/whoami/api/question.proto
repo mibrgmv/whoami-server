@@ -65,5 +65,4 @@ message EvaluateAnswersRequest {
 
 message EvaluateAnswersResponse {
   string result = 1;
-  string description = 2;
 }

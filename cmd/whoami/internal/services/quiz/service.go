@@ -3,6 +3,7 @@ package quiz
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"whoami-server/cmd/whoami/internal/models"
 )
 
@@ -22,7 +23,6 @@ func (s *Service) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz
 
 func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.Quiz, string, error) {
 	quizzes, err := s.repo.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
-
 	if err != nil {
 		return nil, "", err
 	}
@@ -36,8 +36,8 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 	return quizzes, nextPageToken, err
 }
 
-func (s *Service) GetByID(ctx context.Context, quizID string) (*models.Quiz, error) {
-	quizzes, err := s.repo.Query(ctx, Query{Ids: []string{quizID}, PageSize: 1})
+func (s *Service) GetByID(ctx context.Context, quizID uuid.UUID) (*models.Quiz, error) {
+	quizzes, err := s.repo.Query(ctx, Query{Ids: []uuid.UUID{quizID}, PageSize: 1})
 	if err != nil {
 		return nil, err
 	}

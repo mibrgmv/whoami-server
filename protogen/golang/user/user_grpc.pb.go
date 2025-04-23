@@ -25,7 +25,6 @@ const (
 	UserService_Delete_FullMethodName     = "/user.UserService/Delete"
 	UserService_GetCurrent_FullMethodName = "/user.UserService/GetCurrent"
 	UserService_GetBatch_FullMethodName   = "/user.UserService/GetBatch"
-	UserService_GetStream_FullMethodName  = "/user.UserService/GetStream"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -37,7 +36,6 @@ type UserServiceClient interface {
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetCurrent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
 	GetBatch(ctx context.Context, in *GetBatchRequest, opts ...grpc.CallOption) (*GetBatchResponse, error)
-	GetStream(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[User], error)
 }
 
 type userServiceClient struct {
@@ -98,25 +96,6 @@ func (c *userServiceClient) GetBatch(ctx context.Context, in *GetBatchRequest, o
 	return out, nil
 }
 
-func (c *userServiceClient) GetStream(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[User], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], UserService_GetStream_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[emptypb.Empty, User]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type UserService_GetStreamClient = grpc.ServerStreamingClient[User]
-
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -126,7 +105,6 @@ type UserServiceServer interface {
 	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
 	GetCurrent(context.Context, *emptypb.Empty) (*User, error)
 	GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error)
-	GetStream(*emptypb.Empty, grpc.ServerStreamingServer[User]) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -151,9 +129,6 @@ func (UnimplementedUserServiceServer) GetCurrent(context.Context, *emptypb.Empty
 }
 func (UnimplementedUserServiceServer) GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBatch not implemented")
-}
-func (UnimplementedUserServiceServer) GetStream(*emptypb.Empty, grpc.ServerStreamingServer[User]) error {
-	return status.Errorf(codes.Unimplemented, "method GetStream not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -266,17 +241,6 @@ func _UserService_GetBatch_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(emptypb.Empty)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(UserServiceServer).GetStream(m, &grpc.GenericServerStream[emptypb.Empty, User]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type UserService_GetStreamServer = grpc.ServerStreamingServer[User]
-
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -305,12 +269,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetBatch_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "GetStream",
-			Handler:       _UserService_GetStream_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "user.proto",
 }

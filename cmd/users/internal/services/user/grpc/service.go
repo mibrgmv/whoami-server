@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 	"whoami-server/cmd/users/internal/services/user"
 	"whoami-server/internal/jwt"
 	pb "whoami-server/protogen/golang/user"
@@ -110,7 +109,7 @@ func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
 	}
 
 	usr, err := s.service.GetByID(ctx, userID)
@@ -132,53 +131,21 @@ func (s *UserService) GetBatch(ctx context.Context, request *pb.GetBatchRequest)
 
 	_, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
 	}
 
-	users, err := s.service.GetAll(ctx)
+	users, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get users: %v", err)
 	}
 
 	var pbUsers []*pb.User
-	for _, usr := range users {
-		pbUsers = append(pbUsers, usr.ToProto())
+	for _, u := range users {
+		pbUsers = append(pbUsers, u.ToProto())
 	}
 
 	return &pb.GetBatchResponse{
 		Users:         pbUsers,
-		NextPageToken: "", //todo
+		NextPageToken: nextPageToken,
 	}, nil
-}
-
-func (s *UserService) GetStream(empty *emptypb.Empty, stream pb.UserService_GetStreamServer) error {
-	userIDStr, ok := stream.Context().Value("user_id").(string)
-	if !ok {
-		return status.Errorf(codes.Unauthenticated, "user not authenticated")
-	}
-	// looks like auth check should be in interceptor
-
-	_, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return status.Errorf(codes.Internal, "invalid user ID format: %v", err)
-	}
-
-	users, err := s.service.GetAll(stream.Context())
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to get users: %v", err)
-	}
-
-	done := make(chan bool)
-
-	go func() {
-		defer close(done)
-		for _, u := range users {
-			if err := stream.Send(u.ToProto()); err != nil {
-				log.Fatalf("can not send %v", err)
-			}
-		}
-	}()
-
-	<-done
-	return nil
 }

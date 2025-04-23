@@ -26,7 +26,7 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) Register(ctx context.Context, username, password string) (*models.User, error) {
-	users, _ := s.users.Query(ctx, Query{Username: &username})
+	users, _ := s.users.Query(ctx, Query{Username: &username, PageSize: 1})
 	if len(users) != 0 {
 		return nil, fmt.Errorf("user with username %s already exists", username)
 	}
@@ -52,7 +52,7 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 }
 
 func (s *Service) Login(ctx context.Context, username, password string) (*uuid.UUID, error) {
-	users, err := s.users.Query(ctx, Query{Username: &username})
+	users, err := s.users.Query(ctx, Query{Username: &username, PageSize: 1})
 	if err != nil {
 		return nil, fmt.Errorf("database query failed: %w", err)
 	}
@@ -83,7 +83,7 @@ func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	users, err := s.users.Query(ctx, Query{UserIDs: &[]uuid.UUID{id}})
+	users, err := s.users.Query(ctx, Query{UserIDs: []uuid.UUID{id}, PageSize: 1})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
@@ -95,10 +95,17 @@ func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 	return &users[0], nil
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]models.User, error) {
-	users, err := s.users.Query(ctx, Query{})
+func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.User, string, error) {
+	users, err := s.users.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get all users: %w", err)
+		return nil, "", fmt.Errorf("failed to get users: %w", err)
 	}
-	return users, nil
+
+	var nextPageToken string
+	if pageSize > 0 && len(users) > int(pageSize) {
+		users = users[:len(users)-1]
+		nextPageToken = users[len(users)-1].ID.String()
+	}
+
+	return users, nextPageToken, err
 }

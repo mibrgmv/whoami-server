@@ -83,7 +83,7 @@ func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) e
 func (s *QuestionService) GetByQuizIdStream(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIdStreamServer) error {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
-		return status.Errorf(codes.Internal, "invalid quiz ID format: %v", err)
+		return status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
 	}
 
 	questions, err := s.service.GetByQuizID(stream.Context(), quizID)
@@ -115,7 +115,12 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		answers = append(answers, *modelAnswer)
 	}
 
-	q, err := s.quizService.GetByID(ctx, request.QuizId)
+	quizID, err := uuid.Parse(request.QuizId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+	}
+
+	q, err := s.quizService.GetByID(ctx, quizID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +145,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		return nil, historyError
 	}
 
-	return &pb.EvaluateAnswersResponse{
-		Result:      result,
-		Description: "", // todo
-	}, nil
+	return &pb.EvaluateAnswersResponse{Result: result}, nil
 }
 
 func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {

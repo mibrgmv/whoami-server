@@ -42,8 +42,6 @@ service UserService {
       get: "/api/v1/users"
     };
   }
-
-  rpc GetStream(google.protobuf.Empty) returns (stream User) {}
 }
 
 message User {
