@@ -17,7 +17,7 @@ service QuestionService {
     };
   }
 
-  rpc GetByQuizIdStream(GetByQuizIDRequest) returns (stream Question) {
+  rpc GetByQuizIdStream(GetByQuizIDRequest) returns (stream QuestionResponse) {
     option (google.api.http) = {
       get: "/api/v1/quizzes/{quiz_id}/questions"
     };
@@ -36,6 +36,13 @@ message Question {
   string quiz_id = 2;
   string body = 3;
   map<string, OptionWeights> options_weights = 4;
+}
+
+message QuestionResponse {
+  string id = 1;
+  string quiz_id = 2;
+  string body = 3;
+  repeated string options = 4;
 }
 
 message OptionWeights {

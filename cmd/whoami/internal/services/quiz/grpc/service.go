@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
@@ -75,7 +76,12 @@ func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest)
 }
 
 func (s *QuizService) GetByID(ctx context.Context, request *pb.GetByIDRequest) (*pb.Quiz, error) {
-	q, err := s.service.GetByID(ctx, request.Id)
+	quizID, err := uuid.Parse(request.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+	}
+
+	q, err := s.service.GetByID(ctx, quizID)
 	if err != nil {
 		if errors.Is(err, quiz.ErrQuizNotFound) {
 			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)

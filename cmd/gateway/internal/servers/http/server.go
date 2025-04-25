@@ -9,6 +9,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"net/http"
+	"whoami-server/cmd/gateway/internal/servers/http/cors"
+	"whoami-server/cmd/gateway/internal/servers/http/logging"
+	"whoami-server/cmd/gateway/internal/servers/http/recovery"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
 	userpb "whoami-server/protogen/golang/user"
@@ -78,14 +81,27 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpAddr string
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
+	handler := ApplyMiddleware(mux,
+		recovery.Middleware,
+		logging.Middleware,
+		cors.Middleware,
+	)
+
 	server := &http.Server{
 		Addr:    httpAddr,
-		Handler: mux,
+		Handler: handler,
 	}
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("failed to run HTTP server: %w", err)
+		return fmt.Errorf("failed to serve: %w", err)
 	}
 
 	return nil
+}
+
+func ApplyMiddleware(handler http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
+	for _, middleware := range middlewares {
+		handler = middleware(handler)
+	}
+	return handler
 }

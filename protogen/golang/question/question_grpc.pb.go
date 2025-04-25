@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuestionServiceClient interface {
 	AddStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Question, Question], error)
-	GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Question], error)
+	GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuestionResponse], error)
 	EvaluateAnswers(ctx context.Context, in *EvaluateAnswersRequest, opts ...grpc.CallOption) (*EvaluateAnswersResponse, error)
 }
 
@@ -54,13 +54,13 @@ func (c *questionServiceClient) AddStream(ctx context.Context, opts ...grpc.Call
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type QuestionService_AddStreamClient = grpc.BidiStreamingClient[Question, Question]
 
-func (c *questionServiceClient) GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Question], error) {
+func (c *questionServiceClient) GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuestionResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &QuestionService_ServiceDesc.Streams[1], QuestionService_GetByQuizIdStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetByQuizIDRequest, Question]{ClientStream: stream}
+	x := &grpc.GenericClientStream[GetByQuizIDRequest, QuestionResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *questionServiceClient) GetByQuizIdStream(ctx context.Context, in *GetBy
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_GetByQuizIdStreamClient = grpc.ServerStreamingClient[Question]
+type QuestionService_GetByQuizIdStreamClient = grpc.ServerStreamingClient[QuestionResponse]
 
 func (c *questionServiceClient) EvaluateAnswers(ctx context.Context, in *EvaluateAnswersRequest, opts ...grpc.CallOption) (*EvaluateAnswersResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -88,7 +88,7 @@ func (c *questionServiceClient) EvaluateAnswers(ctx context.Context, in *Evaluat
 // for forward compatibility.
 type QuestionServiceServer interface {
 	AddStream(grpc.BidiStreamingServer[Question, Question]) error
-	GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[Question]) error
+	GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[QuestionResponse]) error
 	EvaluateAnswers(context.Context, *EvaluateAnswersRequest) (*EvaluateAnswersResponse, error)
 	mustEmbedUnimplementedQuestionServiceServer()
 }
@@ -103,7 +103,7 @@ type UnimplementedQuestionServiceServer struct{}
 func (UnimplementedQuestionServiceServer) AddStream(grpc.BidiStreamingServer[Question, Question]) error {
 	return status.Errorf(codes.Unimplemented, "method AddStream not implemented")
 }
-func (UnimplementedQuestionServiceServer) GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[Question]) error {
+func (UnimplementedQuestionServiceServer) GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[QuestionResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method GetByQuizIdStream not implemented")
 }
 func (UnimplementedQuestionServiceServer) EvaluateAnswers(context.Context, *EvaluateAnswersRequest) (*EvaluateAnswersResponse, error) {
@@ -142,11 +142,11 @@ func _QuestionService_GetByQuizIdStream_Handler(srv interface{}, stream grpc.Ser
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(QuestionServiceServer).GetByQuizIdStream(m, &grpc.GenericServerStream[GetByQuizIDRequest, Question]{ServerStream: stream})
+	return srv.(QuestionServiceServer).GetByQuizIdStream(m, &grpc.GenericServerStream[GetByQuizIDRequest, QuestionResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_GetByQuizIdStreamServer = grpc.ServerStreamingServer[Question]
+type QuestionService_GetByQuizIdStreamServer = grpc.ServerStreamingServer[QuestionResponse]
 
 func _QuestionService_EvaluateAnswers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EvaluateAnswersRequest)

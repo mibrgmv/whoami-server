@@ -76,3 +76,17 @@ func (q *Question) ToProto() *pb.Question {
 		OptionsWeights: protoOptionsWeights,
 	}
 }
+
+func (q *Question) ToProtoWithoutWeights() *pb.QuestionResponse {
+	var options []string
+	for option, _ := range q.OptionsWeights {
+		options = append(options, option)
+	}
+
+	return &pb.QuestionResponse{
+		Id:      q.ID.String(),
+		QuizId:  q.QuizID.String(),
+		Body:    q.Body,
+		Options: options,
+	}
+}

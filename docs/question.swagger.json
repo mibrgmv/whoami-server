@@ -106,13 +106,13 @@
               "type": "object",
               "properties": {
                 "result": {
-                  "$ref": "#/definitions/questionQuestion"
+                  "$ref": "#/definitions/questionQuestionResponse"
                 },
                 "error": {
                   "$ref": "#/definitions/rpcStatus"
                 }
               },
-              "title": "Stream result of questionQuestion"
+              "title": "Stream result of questionQuestionResponse"
             }
           },
           "default": {
@@ -208,6 +208,26 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/questionOptionWeights"
+          }
+        }
+      }
+    },
+    "questionQuestionResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "quizId": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }
