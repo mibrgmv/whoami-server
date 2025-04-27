@@ -19,11 +19,12 @@ var (
 var exemptMethods = map[string]bool{
 	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
 
-	"/user.UserService/Register":   true,
-	"/user.UserService/Login":      true,
-	"/user.UserService/GetCurrent": false,
-	"/user.UserService/GetBatch":   false,
-	"/user.UserService/GetStream":  false,
+	"/user.UserService/Register":     true,
+	"/user.UserService/Login":        true,
+	"/user.UserService/RefreshToken": true,
+	"/user.UserService/GetCurrent":   false,
+	"/user.UserService/GetBatch":     false,
+	"/user.UserService/GetStream":    false,
 
 	"/quiz.QuizService/AddStream": false,
 	"/quiz.QuizService/GetBatch":  true,
@@ -58,7 +59,7 @@ func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	}
 
 	tokenString := tokenParts[1]
-	userID, err := ValidateToken(tokenString)
+	userID, err := ValidateAccessToken(tokenString)
 	if err != nil {
 		return nil, errInvalidToken
 	}
@@ -89,7 +90,7 @@ func AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 	}
 
 	tokenString := tokenParts[1]
-	userID, err := ValidateToken(tokenString)
+	userID, err := ValidateAccessToken(tokenString)
 	if err != nil {
 		return errInvalidToken
 	}

@@ -25,9 +25,23 @@ service UserService {
     };
   }
 
+  rpc Update(UpdateRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{user_id}"
+      body: "*"
+    };
+  }
+
   rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/api/v1/users/{user_id}"
+    };
+  }
+
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/refresh"
+      body: "*"
     };
   }
 
@@ -63,12 +77,29 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  string token = 1;
-  string user_id = 2;
+  string access_token = 1;
+  string refresh_token = 2;
+  string user_id = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message UpdateRequest {
+  string user_id = 1;
+  string username = 2;
+  string current_password = 3;
+  string new_password = 4;
 }
 
 message DeleteRequest {
   string user_id = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string user_id = 2;
 }
 
 message GetBatchRequest {

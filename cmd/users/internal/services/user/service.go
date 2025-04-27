@@ -66,12 +66,16 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 	}
 
 	users[0].LastLogin = time.Now()
-	_, err = s.users.Update(ctx, []models.User{users[0]})
+	_, err = s.users.Update(ctx, []*models.User{&users[0]})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user login: %w", err)
 	}
 
 	return &users[0].ID, nil
+}
+
+func (s *Service) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
+	return s.users.Update(ctx, users)
 }
 
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {

@@ -120,7 +120,7 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User,
 	return users, nil
 }
 
-func (r Repository) Update(ctx context.Context, users []models.User) ([]models.User, error) {
+func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -172,9 +172,9 @@ func (r Repository) Update(ctx context.Context, users []models.User) ([]models.U
 	}
 	defer rows.Close()
 
-	updatedUsers := make([]models.User, 0, len(users))
+	updatedUsers := make([]*models.User, 0, len(users))
 	for rows.Next() {
-		var u models.User
+		u := &models.User{}
 		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
 			return nil, fmt.Errorf("failed to scan updated user: %w", err)
 		}
