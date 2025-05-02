@@ -44,3 +44,20 @@ func (s *Service) SetWithTTL(ctx context.Context, key string, value interface{},
 func (s *Service) Delete(ctx context.Context, key string) error {
 	return s.client.Del(ctx, key).Err()
 }
+
+func (s *Service) DeleteByPattern(ctx context.Context, pattern string) error {
+	iter := s.client.Scan(ctx, 0, pattern, 100).Iterator()
+
+	for iter.Next(ctx) {
+		key := iter.Val()
+		if err := s.client.Del(ctx, key).Err(); err != nil {
+			return err
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"time"
 	"whoami-server/cmd/users/internal/models"
+	"whoami-server/internal/cache"
 )
 
 var (
@@ -15,16 +16,24 @@ var (
 	ErrIncorrectPassword = errors.New("incorrect password")
 )
 
+const (
+	usersCacheKeyPattern = "users:list:*"
+	usersCacheKey        = "users:list:%d:%s"
+)
+
 type Service struct {
 	users Repository
+	cache cache.Interface
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo Repository, cache cache.Interface) *Service {
 	return &Service{
 		users: repo,
+		cache: cache,
 	}
 }
 
+// todo rename to create
 func (s *Service) Register(ctx context.Context, username, password string) (*models.User, error) {
 	users, _ := s.users.Query(ctx, Query{Username: &username, PageSize: 1})
 	if len(users) != 0 {
@@ -46,6 +55,10 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 	createdUsers, err := s.users.Add(ctx, []models.User{user})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if err := s.cache.DeleteByPattern(ctx, usersCacheKeyPattern); err != nil {
+		fmt.Printf("failed to invalidate users cache: %v\n", err)
 	}
 
 	return &createdUsers[0], nil
@@ -100,6 +113,18 @@ func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 }
 
 func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.User, string, error) {
+	cacheKey := fmt.Sprintf(usersCacheKey, pageSize, pageToken)
+
+	var result struct {
+		Users         []models.User `json:"users"`
+		NextPageToken string        `json:"next_page_token"`
+	}
+
+	err := s.cache.Get(ctx, cacheKey, &result)
+	if err == nil {
+		return result.Users, result.NextPageToken, nil
+	}
+
 	users, err := s.users.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get users: %w", err)
@@ -111,5 +136,12 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 		nextPageToken = users[len(users)-1].ID.String()
 	}
 
-	return users, nextPageToken, err
+	result.Users = users
+	result.NextPageToken = nextPageToken
+
+	if err := s.cache.Set(ctx, cacheKey, result); err != nil {
+		fmt.Printf("failed to cache users: %v\n", err)
+	}
+
+	return users, nextPageToken, nil
 }

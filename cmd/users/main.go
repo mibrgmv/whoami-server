@@ -8,7 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 	"whoami-server/cmd/users/internal/servers/grpc"
+	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
+	rediscfg "whoami-server/internal/config/cache/redis"
 )
 
 func main() {
@@ -19,6 +21,11 @@ func main() {
 	cfg, err := config.GetDefault("users")
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
+	}
+
+	redisCfg, err := rediscfg.LoadDefault()
+	if err != nil {
+		log.Fatalf("failed to read redis config: %v", err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
@@ -32,8 +39,14 @@ func main() {
 	}
 	log.Println("Connected to database successfully")
 
+	client, err := redis.NewClient(ctx, redisCfg)
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	log.Println("Connected to Redis successfully")
+
 	go func() {
-		if err := grpc.Start(pool, cfg.Grpc.GetAddr()); err != nil {
+		if err := grpc.Start(pool, client, redisCfg.GetTTL(), cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()

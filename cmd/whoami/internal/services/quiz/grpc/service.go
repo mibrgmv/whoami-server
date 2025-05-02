@@ -6,8 +6,6 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"log"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/quiz"
 	pb "whoami-server/protogen/golang/quiz"
@@ -36,40 +34,6 @@ func (s *QuizService) CreateQuiz(ctx context.Context, request *pb.CreateQuizRequ
 	}
 
 	return quizzes[0].ToProto(), nil
-}
-
-func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
-	var quizzesToCreate []*models.Quiz
-
-	for {
-		req, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			log.Fatalf("receive error %v", err)
-		}
-
-		q, err := models.QuizToModel(req)
-		if err != nil {
-			log.Fatalf("parse error %v", err)
-		}
-
-		quizzesToCreate = append(quizzesToCreate, q)
-	}
-
-	createdQuizzes, err := s.service.Add(stream.Context(), quizzesToCreate)
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to add quizzes: %v", err)
-	}
-
-	for _, q := range createdQuizzes {
-		if err := stream.Send(q.ToProto()); err != nil {
-			log.Fatalf("can not send %v", err)
-		}
-	}
-
-	return nil
 }
 
 func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {

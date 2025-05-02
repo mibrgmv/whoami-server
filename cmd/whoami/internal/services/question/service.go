@@ -34,6 +34,7 @@ func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models
 			return nil, err
 		}
 	}
+	// todo pattern match cache
 
 	return s.repo.Add(ctx, quizID, questions)
 }
@@ -53,7 +54,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Q
 	}
 
 	if err := s.cache.Set(ctx, cacheKey, &questions); err != nil {
-		// todo ignored error
+		fmt.Printf("failed to cache questions: %v\n", err)
 	}
 
 	return questions, nil

@@ -68,7 +68,6 @@ func (r *Repository) Add(ctx context.Context, quizID uuid.UUID, questions []*mod
 func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.Question, error) {
 	sql := `
 	select question_id,
-		   quiz_id,
 		   question_body,
 		   question_options_weights
 	from questions

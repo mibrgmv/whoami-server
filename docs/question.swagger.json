@@ -256,9 +256,6 @@
         "id": {
           "type": "string"
         },
-        "quizId": {
-          "type": "string"
-        },
         "body": {
           "type": "string"
         },
