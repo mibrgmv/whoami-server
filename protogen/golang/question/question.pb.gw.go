@@ -35,52 +35,51 @@ var (
 	_ = metadata.Join
 )
 
-func request_QuestionService_AddStream_0(ctx context.Context, marshaler runtime.Marshaler, client QuestionServiceClient, req *http.Request, pathParams map[string]string) (QuestionService_AddStreamClient, runtime.ServerMetadata, error) {
-	var metadata runtime.ServerMetadata
-	stream, err := client.AddStream(ctx)
+func request_QuestionService_BatchCreateQuestions_0(ctx context.Context, marshaler runtime.Marshaler, client QuestionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq BatchCreateQuestionsRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["quiz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "quiz_id")
+	}
+	protoReq.QuizId, err = runtime.String(val)
 	if err != nil {
-		grpclog.Errorf("Failed to start streaming: %v", err)
-		return nil, metadata, err
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quiz_id", err)
 	}
-	dec := marshaler.NewDecoder(req.Body)
-	handleSend := func() error {
-		var protoReq Question
-		err := dec.Decode(&protoReq)
-		if errors.Is(err, io.EOF) {
-			return err
-		}
-		if err != nil {
-			grpclog.Errorf("Failed to decode request: %v", err)
-			return status.Errorf(codes.InvalidArgument, "Failed to decode request: %v", err)
-		}
-		if err := stream.Send(&protoReq); err != nil {
-			grpclog.Errorf("Failed to send request: %v", err)
-			return err
-		}
-		return nil
-	}
-	go func() {
-		for {
-			if err := handleSend(); err != nil {
-				break
-			}
-		}
-		if err := stream.CloseSend(); err != nil {
-			grpclog.Errorf("Failed to terminate client stream: %v", err)
-		}
-	}()
-	header, err := stream.Header()
-	if err != nil {
-		grpclog.Errorf("Failed to get header from client: %v", err)
-		return nil, metadata, err
-	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
+	msg, err := client.BatchCreateQuestions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
 }
 
-func request_QuestionService_GetByQuizIdStream_0(ctx context.Context, marshaler runtime.Marshaler, client QuestionServiceClient, req *http.Request, pathParams map[string]string) (QuestionService_GetByQuizIdStreamClient, runtime.ServerMetadata, error) {
+func local_request_QuestionService_BatchCreateQuestions_0(ctx context.Context, marshaler runtime.Marshaler, server QuestionServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetByQuizIDRequest
+		protoReq BatchCreateQuestionsRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["quiz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "quiz_id")
+	}
+	protoReq.QuizId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quiz_id", err)
+	}
+	msg, err := server.BatchCreateQuestions(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_QuestionService_BatchGetQuestions_0(ctx context.Context, marshaler runtime.Marshaler, client QuestionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq BatchGetQuestionsRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -93,16 +92,26 @@ func request_QuestionService_GetByQuizIdStream_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quiz_id", err)
 	}
-	stream, err := client.GetByQuizIdStream(ctx, &protoReq)
-	if err != nil {
-		return nil, metadata, err
+	msg, err := client.BatchGetQuestions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_QuestionService_BatchGetQuestions_0(ctx context.Context, marshaler runtime.Marshaler, server QuestionServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq BatchGetQuestionsRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["quiz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "quiz_id")
 	}
-	header, err := stream.Header()
+	protoReq.QuizId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, err
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quiz_id", err)
 	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
+	msg, err := server.BatchGetQuestions(ctx, &protoReq)
+	return msg, metadata, err
 }
 
 func request_QuestionService_EvaluateAnswers_0(ctx context.Context, marshaler runtime.Marshaler, client QuestionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -153,18 +162,45 @@ func local_request_QuestionService_EvaluateAnswers_0(ctx context.Context, marsha
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterQuestionServiceHandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterQuestionServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server QuestionServiceServer) error {
-	mux.Handle(http.MethodPost, pattern_QuestionService_AddStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
-		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-		return
+	mux.Handle(http.MethodPost, pattern_QuestionService_BatchCreateQuestions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_QuestionService_BatchCreateQuestions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_QuestionService_BatchCreateQuestions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-
-	mux.Handle(http.MethodGet, pattern_QuestionService_GetByQuizIdStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
-		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-		return
+	mux.Handle(http.MethodGet, pattern_QuestionService_BatchGetQuestions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_QuestionService_BatchGetQuestions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_QuestionService_BatchGetQuestions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_QuestionService_EvaluateAnswers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -226,39 +262,39 @@ func RegisterQuestionServiceHandler(ctx context.Context, mux *runtime.ServeMux, 
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "QuestionServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterQuestionServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client QuestionServiceClient) error {
-	mux.Handle(http.MethodPost, pattern_QuestionService_AddStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_QuestionService_BatchCreateQuestions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/AddStream", runtime.WithHTTPPathPattern("/api/v1/questions/add"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_QuestionService_AddStream_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_QuestionService_BatchCreateQuestions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuestionService_AddStream_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		forward_QuestionService_BatchCreateQuestions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_QuestionService_GetByQuizIdStream_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_QuestionService_BatchGetQuestions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/GetByQuizIdStream", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_QuestionService_GetByQuizIdStream_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_QuestionService_BatchGetQuestions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuestionService_GetByQuizIdStream_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		forward_QuestionService_BatchGetQuestions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_QuestionService_EvaluateAnswers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -281,13 +317,13 @@ func RegisterQuestionServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_QuestionService_AddStream_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "questions", "add"}, ""))
-	pattern_QuestionService_GetByQuizIdStream_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "quizzes", "quiz_id", "questions"}, ""))
-	pattern_QuestionService_EvaluateAnswers_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "quizzes", "quiz_id", "evaluate"}, ""))
+	pattern_QuestionService_BatchCreateQuestions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "quizzes", "quiz_id", "questions"}, ""))
+	pattern_QuestionService_BatchGetQuestions_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "quizzes", "quiz_id", "questions"}, ""))
+	pattern_QuestionService_EvaluateAnswers_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "quizzes", "quiz_id", "evaluate"}, ""))
 )
 
 var (
-	forward_QuestionService_AddStream_0         = runtime.ForwardResponseStream
-	forward_QuestionService_GetByQuizIdStream_0 = runtime.ForwardResponseStream
-	forward_QuestionService_EvaluateAnswers_0   = runtime.ForwardResponseMessage
+	forward_QuestionService_BatchCreateQuestions_0 = runtime.ForwardResponseMessage
+	forward_QuestionService_BatchGetQuestions_0    = runtime.ForwardResponseMessage
+	forward_QuestionService_EvaluateAnswers_0      = runtime.ForwardResponseMessage
 )

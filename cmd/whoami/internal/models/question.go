@@ -1,21 +1,17 @@
 package models
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	pb "whoami-server/protogen/golang/question"
 )
 
 type Question struct {
 	ID             uuid.UUID            `json:"id"`
-	QuizID         uuid.UUID            `json:"quiz_id"`
 	Body           string               `json:"body"`
 	OptionsWeights map[string][]float32 `json:"options_weights"`
 }
 
-func QuestionToModel(protoQuestion *pb.Question) (*Question, error) {
-	var id, quizID uuid.UUID
-	var err error
+func QuestionToModel(protoQuestion *pb.CreateQuestionRequest) (*Question, error) {
 	optionsWeights := make(map[string][]float32)
 
 	for option, protoWeights := range protoQuestion.OptionsWeights {
@@ -27,28 +23,7 @@ func QuestionToModel(protoQuestion *pb.Question) (*Question, error) {
 		optionsWeights[option] = weights
 	}
 
-	// todo stinky
-	if protoQuestion.Id == "" {
-		id = uuid.Nil
-	} else {
-		id, err = uuid.Parse(protoQuestion.Id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse question ID '%s': %w", protoQuestion.Id, err)
-		}
-	}
-
-	if protoQuestion.QuizId == "" {
-		quizID = uuid.Nil
-	} else {
-		quizID, err = uuid.Parse(protoQuestion.QuizId)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse question ID '%s': %w", protoQuestion.Id, err)
-		}
-	}
-
 	return &Question{
-		ID:             id,
-		QuizID:         quizID,
 		Body:           protoQuestion.Body,
 		OptionsWeights: optionsWeights,
 	}, nil
@@ -71,7 +46,6 @@ func (q *Question) ToProto() *pb.Question {
 
 	return &pb.Question{
 		Id:             q.ID.String(),
-		QuizId:         q.QuizID.String(),
 		Body:           q.Body,
 		OptionsWeights: protoOptionsWeights,
 	}
@@ -85,7 +59,6 @@ func (q *Question) ToProtoWithoutWeights() *pb.QuestionResponse {
 
 	return &pb.QuestionResponse{
 		Id:      q.ID.String(),
-		QuizId:  q.QuizID.String(),
 		Body:    q.Body,
 		Options: options,
 	}

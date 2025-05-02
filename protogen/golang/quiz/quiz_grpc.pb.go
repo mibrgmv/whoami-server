@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,20 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizService_AddStream_FullMethodName = "/quiz.QuizService/AddStream"
-	QuizService_GetBatch_FullMethodName  = "/quiz.QuizService/GetBatch"
-	QuizService_GetByID_FullMethodName   = "/quiz.QuizService/GetByID"
-	QuizService_GetStream_FullMethodName = "/quiz.QuizService/GetStream"
+	QuizService_CreateQuiz_FullMethodName = "/quiz.QuizService/CreateQuiz"
+	QuizService_GetBatch_FullMethodName   = "/quiz.QuizService/GetBatch"
+	QuizService_GetByID_FullMethodName    = "/quiz.QuizService/GetByID"
 )
 
 // QuizServiceClient is the client API for QuizService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuizServiceClient interface {
-	AddStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Quiz, Quiz], error)
+	CreateQuiz(ctx context.Context, in *CreateQuizRequest, opts ...grpc.CallOption) (*Quiz, error)
 	GetBatch(ctx context.Context, in *GetBatchRequest, opts ...grpc.CallOption) (*GetBatchResponse, error)
 	GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Quiz, error)
-	GetStream(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Quiz], error)
 }
 
 type quizServiceClient struct {
@@ -44,18 +41,15 @@ func NewQuizServiceClient(cc grpc.ClientConnInterface) QuizServiceClient {
 	return &quizServiceClient{cc}
 }
 
-func (c *quizServiceClient) AddStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Quiz, Quiz], error) {
+func (c *quizServiceClient) CreateQuiz(ctx context.Context, in *CreateQuizRequest, opts ...grpc.CallOption) (*Quiz, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuizService_ServiceDesc.Streams[0], QuizService_AddStream_FullMethodName, cOpts...)
+	out := new(Quiz)
+	err := c.cc.Invoke(ctx, QuizService_CreateQuiz_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Quiz, Quiz]{ClientStream: stream}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizService_AddStreamClient = grpc.BidiStreamingClient[Quiz, Quiz]
 
 func (c *quizServiceClient) GetBatch(ctx context.Context, in *GetBatchRequest, opts ...grpc.CallOption) (*GetBatchResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -77,33 +71,13 @@ func (c *quizServiceClient) GetByID(ctx context.Context, in *GetByIDRequest, opt
 	return out, nil
 }
 
-func (c *quizServiceClient) GetStream(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Quiz], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuizService_ServiceDesc.Streams[1], QuizService_GetStream_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[emptypb.Empty, Quiz]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizService_GetStreamClient = grpc.ServerStreamingClient[Quiz]
-
 // QuizServiceServer is the server API for QuizService service.
 // All implementations must embed UnimplementedQuizServiceServer
 // for forward compatibility.
 type QuizServiceServer interface {
-	AddStream(grpc.BidiStreamingServer[Quiz, Quiz]) error
+	CreateQuiz(context.Context, *CreateQuizRequest) (*Quiz, error)
 	GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error)
 	GetByID(context.Context, *GetByIDRequest) (*Quiz, error)
-	GetStream(*emptypb.Empty, grpc.ServerStreamingServer[Quiz]) error
 	mustEmbedUnimplementedQuizServiceServer()
 }
 
@@ -114,17 +88,14 @@ type QuizServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedQuizServiceServer struct{}
 
-func (UnimplementedQuizServiceServer) AddStream(grpc.BidiStreamingServer[Quiz, Quiz]) error {
-	return status.Errorf(codes.Unimplemented, "method AddStream not implemented")
+func (UnimplementedQuizServiceServer) CreateQuiz(context.Context, *CreateQuizRequest) (*Quiz, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateQuiz not implemented")
 }
 func (UnimplementedQuizServiceServer) GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBatch not implemented")
 }
 func (UnimplementedQuizServiceServer) GetByID(context.Context, *GetByIDRequest) (*Quiz, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetByID not implemented")
-}
-func (UnimplementedQuizServiceServer) GetStream(*emptypb.Empty, grpc.ServerStreamingServer[Quiz]) error {
-	return status.Errorf(codes.Unimplemented, "method GetStream not implemented")
 }
 func (UnimplementedQuizServiceServer) mustEmbedUnimplementedQuizServiceServer() {}
 func (UnimplementedQuizServiceServer) testEmbeddedByValue()                     {}
@@ -147,12 +118,23 @@ func RegisterQuizServiceServer(s grpc.ServiceRegistrar, srv QuizServiceServer) {
 	s.RegisterService(&QuizService_ServiceDesc, srv)
 }
 
-func _QuizService_AddStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(QuizServiceServer).AddStream(&grpc.GenericServerStream[Quiz, Quiz]{ServerStream: stream})
+func _QuizService_CreateQuiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateQuizRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuizServiceServer).CreateQuiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuizService_CreateQuiz_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizServiceServer).CreateQuiz(ctx, req.(*CreateQuizRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizService_AddStreamServer = grpc.BidiStreamingServer[Quiz, Quiz]
 
 func _QuizService_GetBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBatchRequest)
@@ -190,17 +172,6 @@ func _QuizService_GetByID_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QuizService_GetStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(emptypb.Empty)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(QuizServiceServer).GetStream(m, &grpc.GenericServerStream[emptypb.Empty, Quiz]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizService_GetStreamServer = grpc.ServerStreamingServer[Quiz]
-
 // QuizService_ServiceDesc is the grpc.ServiceDesc for QuizService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -208,6 +179,10 @@ var QuizService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "quiz.QuizService",
 	HandlerType: (*QuizServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateQuiz",
+			Handler:    _QuizService_CreateQuiz_Handler,
+		},
 		{
 			MethodName: "GetBatch",
 			Handler:    _QuizService_GetBatch_Handler,
@@ -217,18 +192,6 @@ var QuizService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _QuizService_GetByID_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "AddStream",
-			Handler:       _QuizService_AddStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "GetStream",
-			Handler:       _QuizService_GetStream_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "quiz.proto",
 }

@@ -25,9 +25,9 @@ func NewService(repo Repository, cache cache.Interface) *Service {
 	}
 }
 
-func (s *Service) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
-	for _, q := range questions {
-		cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, q.QuizID.String())
+func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
+	for range questions {
+		cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, quizID.String())
 
 		err := s.cache.Delete(ctx, cacheKey)
 		if err != nil {
@@ -35,7 +35,7 @@ func (s *Service) Add(ctx context.Context, questions []models.Question) ([]model
 		}
 	}
 
-	return s.repo.Add(ctx, questions)
+	return s.repo.Add(ctx, quizID, questions)
 }
 
 func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Question, error) {
@@ -76,9 +76,6 @@ func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, 
 
 	questionsMap := make(map[uuid.UUID]models.Question)
 	for _, q := range questions {
-		if q.QuizID != quiz.ID {
-			return "", errors.New("question quiz ID does not match quiz ID")
-		}
 		questionsMap[q.ID] = q
 	}
 

@@ -17,7 +17,7 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
+func (s *Service) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.Quiz, error) {
 	return s.repo.Add(ctx, quizzes)
 }
 

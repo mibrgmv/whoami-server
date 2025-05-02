@@ -47,64 +47,68 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 	}, nil
 }
 
-func (s *QuestionService) AddStream(stream pb.QuestionService_AddStreamServer) error {
-	var questions []models.Question
-
-	for {
-		req, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			log.Fatalf("receive error %v", err)
-		}
-
-		q, err := models.QuestionToModel(req)
+func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.BatchCreateQuestionsRequest) (*pb.BatchCreateQuestionsResponse, error) {
+	var questionsToCreate []*models.Question
+	for _, pbq := range request.Questions {
+		q, err := models.QuestionToModel(pbq)
 		if err != nil {
 			log.Fatalf("parse error %v", err)
 		}
-		questions = append(questions, *q)
+		// todo use key prefix
+
+		questionsToCreate = append(questionsToCreate, q)
 	}
 
-	addedQuestions, err := s.service.Add(stream.Context(), questions)
-	if err != nil {
-		return err
-	}
-
-	for _, q := range addedQuestions {
-		if err := stream.Send(q.ToProto()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *QuestionService) GetByQuizIdStream(request *pb.GetByQuizIDRequest, stream pb.QuestionService_GetByQuizIdStreamServer) error {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
 	}
 
-	questions, err := s.service.GetByQuizID(stream.Context(), quizID)
+	_, err = s.quizService.GetByID(ctx, quizID)
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
+		if errors.Is(err, quiz.ErrQuizNotFound) {
+			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get quiz: %v", err)
 	}
 
-	done := make(chan bool)
-	go func() {
-		defer close(done)
-		for _, q := range questions {
-			if err := stream.Send(q.ToProto()); err != nil {
-				log.Fatalf("can not send %v", err)
-			}
-		}
-	}()
+	createdQuestions, err := s.service.Add(ctx, quizID, questionsToCreate)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error creating questions: %v", err)
+	}
 
-	<-done
-	return nil
+	var pbCreatedQuestions []*pb.Question
+	for _, q := range createdQuestions {
+		pbCreatedQuestions = append(pbCreatedQuestions, q.ToProto())
+	}
+
+	return &pb.BatchCreateQuestionsResponse{
+		Questions: pbCreatedQuestions,
+	}, nil
 }
 
+func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *pb.BatchGetQuestionsRequest) (*pb.BatchGetQuestionsResponse, error) {
+	quizID, err := uuid.Parse(request.QuizId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+	}
+
+	questions, err := s.service.GetByQuizID(ctx, quizID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
+	}
+
+	var pbQuestions []*pb.QuestionResponse
+	for _, q := range questions {
+		pbQuestions = append(pbQuestions, q.ToProtoWithoutWeights())
+	}
+
+	return &pb.BatchGetQuestionsResponse{
+		Questions: pbQuestions,
+	}, nil
+}
+
+// todo remove quiz and make answer stream NO DONT USE STREAMS FOR NOTHING
 func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {
 	var answers []models.Answer
 	for _, answer := range request.Answers {
@@ -122,7 +126,10 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 
 	q, err := s.quizService.GetByID(ctx, quizID)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, quiz.ErrQuizNotFound) {
+			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get quiz: %v", err)
 	}
 
 	result, err := s.service.EvaluateAnswers(ctx, answers, q)
@@ -130,20 +137,20 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		return nil, err
 	}
 
-	userIDStr, ok := ctx.Value("user_id").(string)
-	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
-	}
+	//userIDStr, ok := ctx.Value("user_id").(string)
+	//if !ok {
+	//	return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	//}
+	//
+	//userID, err := uuid.Parse(userIDStr)
+	//if err != nil {
+	//	return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
+	//}
 
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
-	}
-
-	historyError := s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
-	if historyError != nil {
-		return nil, historyError
-	}
+	//historyError := s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
+	//if historyError != nil {
+	//	return nil, historyError // todo error codes
+	//}
 
 	return &pb.EvaluateAnswersResponse{Result: result}, nil
 }

@@ -10,14 +10,14 @@ import "google/api/http.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 service QuestionService {
-  rpc AddStream(stream Question) returns (stream Question) {
+  rpc BatchCreateQuestions(BatchCreateQuestionsRequest) returns (BatchCreateQuestionsResponse) {
     option (google.api.http) = {
-      post: "/api/v1/questions/add"
+      post: "/api/v1/quizzes/{quiz_id}/questions"
       body: "*"
     };
   }
 
-  rpc GetByQuizIdStream(GetByQuizIDRequest) returns (stream QuestionResponse) {
+  rpc BatchGetQuestions(BatchGetQuestionsRequest) returns (BatchGetQuestionsResponse) {
     option (google.api.http) = {
       get: "/api/v1/quizzes/{quiz_id}/questions"
     };
@@ -31,11 +31,38 @@ service QuestionService {
   }
 }
 
+message OptionWeights {
+  repeated float weights = 1;
+}
+
 message Question {
   string id = 1;
   string quiz_id = 2;
   string body = 3;
   map<string, OptionWeights> options_weights = 4;
+}
+
+message CreateQuestionRequest {
+  string quiz_id = 1;
+  string body = 2;
+  map<string, OptionWeights> options_weights = 3;
+}
+
+message BatchCreateQuestionsRequest {
+  string quiz_id = 1;
+  repeated CreateQuestionRequest questions = 2;
+}
+
+message BatchCreateQuestionsResponse {
+  repeated Question questions = 1;
+}
+
+message BatchGetQuestionsRequest {
+  string quiz_id = 1;
+}
+
+message BatchGetQuestionsResponse {
+  repeated QuestionResponse questions = 1;
 }
 
 message QuestionResponse {
@@ -45,24 +72,10 @@ message QuestionResponse {
   repeated string options = 4;
 }
 
-message OptionWeights {
-  repeated float weights = 1;
-}
-
-message Quiz {
-  string id = 1;
-  string title = 2;
-  repeated string results = 3;
-}
-
 message Answer {
   string quiz_id = 1;
   string question_id = 2;
   string body = 3;
-}
-
-message GetByQuizIDRequest {
-  string quiz_id = 1;
 }
 
 message EvaluateAnswersRequest {

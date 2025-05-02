@@ -19,17 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuestionService_AddStream_FullMethodName         = "/question.QuestionService/AddStream"
-	QuestionService_GetByQuizIdStream_FullMethodName = "/question.QuestionService/GetByQuizIdStream"
-	QuestionService_EvaluateAnswers_FullMethodName   = "/question.QuestionService/EvaluateAnswers"
+	QuestionService_BatchCreateQuestions_FullMethodName = "/question.QuestionService/BatchCreateQuestions"
+	QuestionService_BatchGetQuestions_FullMethodName    = "/question.QuestionService/BatchGetQuestions"
+	QuestionService_EvaluateAnswers_FullMethodName      = "/question.QuestionService/EvaluateAnswers"
 )
 
 // QuestionServiceClient is the client API for QuestionService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuestionServiceClient interface {
-	AddStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Question, Question], error)
-	GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuestionResponse], error)
+	BatchCreateQuestions(ctx context.Context, in *BatchCreateQuestionsRequest, opts ...grpc.CallOption) (*BatchCreateQuestionsResponse, error)
+	BatchGetQuestions(ctx context.Context, in *BatchGetQuestionsRequest, opts ...grpc.CallOption) (*BatchGetQuestionsResponse, error)
 	EvaluateAnswers(ctx context.Context, in *EvaluateAnswersRequest, opts ...grpc.CallOption) (*EvaluateAnswersResponse, error)
 }
 
@@ -41,37 +41,25 @@ func NewQuestionServiceClient(cc grpc.ClientConnInterface) QuestionServiceClient
 	return &questionServiceClient{cc}
 }
 
-func (c *questionServiceClient) AddStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Question, Question], error) {
+func (c *questionServiceClient) BatchCreateQuestions(ctx context.Context, in *BatchCreateQuestionsRequest, opts ...grpc.CallOption) (*BatchCreateQuestionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuestionService_ServiceDesc.Streams[0], QuestionService_AddStream_FullMethodName, cOpts...)
+	out := new(BatchCreateQuestionsResponse)
+	err := c.cc.Invoke(ctx, QuestionService_BatchCreateQuestions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Question, Question]{ClientStream: stream}
-	return x, nil
+	return out, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_AddStreamClient = grpc.BidiStreamingClient[Question, Question]
-
-func (c *questionServiceClient) GetByQuizIdStream(ctx context.Context, in *GetByQuizIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuestionResponse], error) {
+func (c *questionServiceClient) BatchGetQuestions(ctx context.Context, in *BatchGetQuestionsRequest, opts ...grpc.CallOption) (*BatchGetQuestionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuestionService_ServiceDesc.Streams[1], QuestionService_GetByQuizIdStream_FullMethodName, cOpts...)
+	out := new(BatchGetQuestionsResponse)
+	err := c.cc.Invoke(ctx, QuestionService_BatchGetQuestions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetByQuizIDRequest, QuestionResponse]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_GetByQuizIdStreamClient = grpc.ServerStreamingClient[QuestionResponse]
 
 func (c *questionServiceClient) EvaluateAnswers(ctx context.Context, in *EvaluateAnswersRequest, opts ...grpc.CallOption) (*EvaluateAnswersResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -87,8 +75,8 @@ func (c *questionServiceClient) EvaluateAnswers(ctx context.Context, in *Evaluat
 // All implementations must embed UnimplementedQuestionServiceServer
 // for forward compatibility.
 type QuestionServiceServer interface {
-	AddStream(grpc.BidiStreamingServer[Question, Question]) error
-	GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[QuestionResponse]) error
+	BatchCreateQuestions(context.Context, *BatchCreateQuestionsRequest) (*BatchCreateQuestionsResponse, error)
+	BatchGetQuestions(context.Context, *BatchGetQuestionsRequest) (*BatchGetQuestionsResponse, error)
 	EvaluateAnswers(context.Context, *EvaluateAnswersRequest) (*EvaluateAnswersResponse, error)
 	mustEmbedUnimplementedQuestionServiceServer()
 }
@@ -100,11 +88,11 @@ type QuestionServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedQuestionServiceServer struct{}
 
-func (UnimplementedQuestionServiceServer) AddStream(grpc.BidiStreamingServer[Question, Question]) error {
-	return status.Errorf(codes.Unimplemented, "method AddStream not implemented")
+func (UnimplementedQuestionServiceServer) BatchCreateQuestions(context.Context, *BatchCreateQuestionsRequest) (*BatchCreateQuestionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchCreateQuestions not implemented")
 }
-func (UnimplementedQuestionServiceServer) GetByQuizIdStream(*GetByQuizIDRequest, grpc.ServerStreamingServer[QuestionResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method GetByQuizIdStream not implemented")
+func (UnimplementedQuestionServiceServer) BatchGetQuestions(context.Context, *BatchGetQuestionsRequest) (*BatchGetQuestionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchGetQuestions not implemented")
 }
 func (UnimplementedQuestionServiceServer) EvaluateAnswers(context.Context, *EvaluateAnswersRequest) (*EvaluateAnswersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EvaluateAnswers not implemented")
@@ -130,23 +118,41 @@ func RegisterQuestionServiceServer(s grpc.ServiceRegistrar, srv QuestionServiceS
 	s.RegisterService(&QuestionService_ServiceDesc, srv)
 }
 
-func _QuestionService_AddStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(QuestionServiceServer).AddStream(&grpc.GenericServerStream[Question, Question]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_AddStreamServer = grpc.BidiStreamingServer[Question, Question]
-
-func _QuestionService_GetByQuizIdStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetByQuizIDRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _QuestionService_BatchCreateQuestions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchCreateQuestionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(QuestionServiceServer).GetByQuizIdStream(m, &grpc.GenericServerStream[GetByQuizIDRequest, QuestionResponse]{ServerStream: stream})
+	if interceptor == nil {
+		return srv.(QuestionServiceServer).BatchCreateQuestions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuestionService_BatchCreateQuestions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuestionServiceServer).BatchCreateQuestions(ctx, req.(*BatchCreateQuestionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuestionService_GetByQuizIdStreamServer = grpc.ServerStreamingServer[QuestionResponse]
+func _QuestionService_BatchGetQuestions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetQuestionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuestionServiceServer).BatchGetQuestions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuestionService_BatchGetQuestions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuestionServiceServer).BatchGetQuestions(ctx, req.(*BatchGetQuestionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 func _QuestionService_EvaluateAnswers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EvaluateAnswersRequest)
@@ -174,22 +180,18 @@ var QuestionService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*QuestionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "BatchCreateQuestions",
+			Handler:    _QuestionService_BatchCreateQuestions_Handler,
+		},
+		{
+			MethodName: "BatchGetQuestions",
+			Handler:    _QuestionService_BatchGetQuestions_Handler,
+		},
+		{
 			MethodName: "EvaluateAnswers",
 			Handler:    _QuestionService_EvaluateAnswers_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "AddStream",
-			Handler:       _QuestionService_AddStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "GetByQuizIdStream",
-			Handler:       _QuestionService_GetByQuizIdStream_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "question.proto",
 }

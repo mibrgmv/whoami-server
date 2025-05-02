@@ -10,6 +10,7 @@ type Config struct {
 	CORS            CORS   `mapstructure:"cors"`
 }
 
+// todo unused
 type CORS struct {
 	AllowedOrigins   []string `mapstructure:"allowed_origins"`
 	AllowedMethods   []string `mapstructure:"allowed_methods"`

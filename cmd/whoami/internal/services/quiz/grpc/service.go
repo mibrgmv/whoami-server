@@ -24,8 +24,22 @@ func NewService(service *quiz.Service) *QuizService {
 	}
 }
 
+func (s *QuizService) CreateQuiz(ctx context.Context, request *pb.CreateQuizRequest) (*pb.Quiz, error) {
+	var q = &models.Quiz{
+		Title:   request.Title,
+		Results: request.Results,
+	}
+
+	quizzes, err := s.service.Add(ctx, []*models.Quiz{q})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create quiz: %v", err)
+	}
+
+	return quizzes[0].ToProto(), nil
+}
+
 func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
-	var quizzesToCreate []models.Quiz
+	var quizzesToCreate []*models.Quiz
 
 	for {
 		req, err := stream.Recv()
@@ -41,7 +55,7 @@ func (s *QuizService) AddStream(stream pb.QuizService_AddStreamServer) error {
 			log.Fatalf("parse error %v", err)
 		}
 
-		quizzesToCreate = append(quizzesToCreate, *q)
+		quizzesToCreate = append(quizzesToCreate, q)
 	}
 
 	createdQuizzes, err := s.service.Add(stream.Context(), quizzesToCreate)

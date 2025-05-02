@@ -17,7 +17,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Quiz, error) {
+func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.Quiz, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -53,7 +53,7 @@ func (r *Repository) Add(ctx context.Context, quizzes []models.Quiz) ([]models.Q
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse UUID: %v", err)
 		}
-		createdQuizzes = append(createdQuizzes, q)
+		createdQuizzes = append(createdQuizzes, *q)
 	}
 
 	return createdQuizzes, nil

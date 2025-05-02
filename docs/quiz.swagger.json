@@ -51,25 +51,14 @@
         "tags": [
           "QuizService"
         ]
-      }
-    },
-    "/api/v1/quizzes/add": {
+      },
       "post": {
-        "operationId": "QuizService_AddStream",
+        "operationId": "QuizService_CreateQuiz",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/quizQuiz"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of quizQuiz"
+              "$ref": "#/definitions/quizQuiz"
             }
           },
           "default": {
@@ -82,11 +71,10 @@
         "parameters": [
           {
             "name": "body",
-            "description": " (streaming inputs)",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/quizQuiz"
+              "$ref": "#/definitions/quizCreateQuizRequest"
             }
           }
         ],
@@ -136,6 +124,23 @@
       },
       "additionalProperties": {}
     },
+    "quizCreateQuizRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "imageUrl": {
+          "type": "string"
+        }
+      }
+    },
     "quizGetBatchResponse": {
       "type": "object",
       "properties": {
@@ -165,6 +170,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "imageUrl": {
+          "type": "string"
         }
       }
     },

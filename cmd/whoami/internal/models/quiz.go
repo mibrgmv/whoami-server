@@ -6,9 +6,10 @@ import (
 )
 
 type Quiz struct {
-	ID      uuid.UUID `json:"id"`
-	Title   string    `json:"title"`
-	Results []string  `json:"results"`
+	ID       uuid.UUID `json:"id"`
+	Title    string    `json:"title"`
+	Results  []string  `json:"results"`
+	ImageURL string    `json:"image_url"`
 }
 
 func QuizToModel(protoQuiz *pb.Quiz) (*Quiz, error) {
@@ -25,16 +26,18 @@ func QuizToModel(protoQuiz *pb.Quiz) (*Quiz, error) {
 	}
 
 	return &Quiz{
-		ID:      quizID,
-		Title:   protoQuiz.Title,
-		Results: protoQuiz.Results,
+		ID:       quizID,
+		Title:    protoQuiz.Title,
+		Results:  protoQuiz.Results,
+		ImageURL: protoQuiz.ImageUrl,
 	}, nil
 }
 
 func (q *Quiz) ToProto() *pb.Quiz {
 	return &pb.Quiz{
-		Id:      q.ID.String(),
-		Title:   q.Title,
-		Results: q.Results,
+		Id:       q.ID.String(),
+		Title:    q.Title,
+		Results:  q.Results,
+		ImageUrl: q.ImageURL,
 	}
 }

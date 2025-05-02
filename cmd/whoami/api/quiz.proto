@@ -10,9 +10,9 @@ import "google/api/http.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 service QuizService {
-  rpc AddStream(stream Quiz) returns (stream Quiz) {
+  rpc CreateQuiz(CreateQuizRequest) returns (Quiz) {
     option (google.api.http) = {
-      post: "/api/v1/quizzes/add"
+      post: "/api/v1/quizzes"
       body: "*"
     };
   }
@@ -28,14 +28,19 @@ service QuizService {
       get: "/api/v1/quizzes/{id}"
     };
   }
-
-  rpc GetStream(google.protobuf.Empty) returns (stream Quiz) {}
 }
 
 message Quiz {
   string id = 1;
   string title = 2;
   repeated string results = 3;
+  string image_url = 4;
+}
+
+message CreateQuizRequest {
+  string title = 1;
+  repeated string results = 2;
+  string image_url = 3;
 }
 
 message GetBatchRequest {

@@ -18,7 +18,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]models.Question, error) {
+func (r *Repository) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -36,7 +36,7 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 
 	}()
 
-	var createdQuestions []models.Question
+	var createdQuestions []*models.Question
 
 	for _, q := range questions {
 		optionsWeightsJSON, err := json.Marshal(q.OptionsWeights)
@@ -50,7 +50,7 @@ func (r *Repository) Add(ctx context.Context, questions []models.Question) ([]mo
 		returning question_id`
 
 		var createdID string
-		err = tx.QueryRow(ctx, query, uuid.New(), q.QuizID, q.Body, optionsWeightsJSON).Scan(&createdID)
+		err = tx.QueryRow(ctx, query, uuid.New(), quizID, q.Body, optionsWeightsJSON).Scan(&createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add question: %w", err)
 		}
@@ -85,7 +85,7 @@ func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.
 		var q models.Question
 		var optionsWeightsJSON []byte
 
-		if err := rows.Scan(&q.ID, &q.QuizID, &q.Body, &optionsWeightsJSON); err != nil {
+		if err := rows.Scan(&q.ID, &q.Body, &optionsWeightsJSON); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
