@@ -45,14 +45,14 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 		return nil, fmt.Errorf("internal error")
 	}
 
-	user := models.User{
+	user := &models.User{
 		Name:      username,
 		Password:  string(hashedPassword),
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
 
-	createdUsers, err := s.users.Add(ctx, []models.User{user})
+	createdUsers, err := s.users.Add(ctx, []*models.User{user})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -61,7 +61,7 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 		fmt.Printf("failed to invalidate users cache: %v\n", err)
 	}
 
-	return &createdUsers[0], nil
+	return createdUsers[0], nil
 }
 
 func (s *Service) Login(ctx context.Context, username, password string) (*uuid.UUID, error) {
@@ -79,7 +79,7 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 	}
 
 	users[0].LastLogin = time.Now()
-	_, err = s.users.Update(ctx, []*models.User{&users[0]})
+	_, err = s.users.Update(ctx, []*models.User{users[0]})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user login: %w", err)
 	}
@@ -91,7 +91,7 @@ func (s *Service) Update(ctx context.Context, users []*models.User) ([]*models.U
 	return s.users.Update(ctx, users)
 }
 
-func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *Service) Delete(ctx context.Context, id *uuid.UUID) error {
 	err := s.users.Delete(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -109,15 +109,15 @@ func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 		return nil, ErrUserNotFound
 	}
 
-	return &users[0], nil
+	return users[0], nil
 }
 
-func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.User, string, error) {
+func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]*models.User, string, error) {
 	cacheKey := fmt.Sprintf(usersCacheKey, pageSize, pageToken)
 
 	var result struct {
-		Users         []models.User `json:"users"`
-		NextPageToken string        `json:"next_page_token"`
+		Users         []*models.User `json:"users"`
+		NextPageToken string         `json:"next_page_token"`
 	}
 
 	err := s.cache.Get(ctx, cacheKey, &result)

@@ -18,7 +18,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r Repository) Add(ctx context.Context, users []models.User) ([]models.User, error) {
+func (r Repository) Add(ctx context.Context, users []*models.User) ([]*models.User, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -35,7 +35,7 @@ func (r Repository) Add(ctx context.Context, users []models.User) ([]models.User
 		}
 	}()
 
-	createdUsers := make([]models.User, 0, len(users))
+	createdUsers := make([]*models.User, 0, len(users))
 	for _, u := range users {
 		query := `
 		insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
@@ -58,7 +58,7 @@ func (r Repository) Add(ctx context.Context, users []models.User) ([]models.User
 	return createdUsers, nil
 }
 
-func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User, error) {
+func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User, error) {
 	sql := `
 	select user_id,
 		   user_name,
@@ -103,14 +103,14 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]models.User,
 	}
 
 	defer rows.Close()
-	var users []models.User
+	var users []*models.User
 	for rows.Next() {
 		var u models.User
 		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		users = append(users, u)
+		users = append(users, &u)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -188,7 +188,7 @@ func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models
 	return updatedUsers, nil
 }
 
-func (r Repository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repository) Delete(ctx context.Context, id *uuid.UUID) error {
 	_, err := r.pool.Exec(ctx, "delete from users where user_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)

@@ -137,7 +137,7 @@ func (s *UserService) Delete(ctx context.Context, request *pb.DeleteRequest) (*e
 		return nil, status.Errorf(codes.PermissionDenied, "you are not authorized to delete this user")
 	}
 
-	err = s.service.Delete(ctx, targetUserID)
+	err = s.service.Delete(ctx, &targetUserID)
 	if err != nil {
 		if errors.Is(err, user.ErrUserNotFound) {
 			return nil, status.Errorf(codes.NotFound, "user not found")

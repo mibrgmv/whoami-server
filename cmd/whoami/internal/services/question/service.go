@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	questionsCacheKeyPrefix = "questions:quiz:"
+	questionsCacheKey = "questions:quiz:%s"
 )
 
 type Service struct {
@@ -26,21 +26,18 @@ func NewService(repo Repository, cache cache.Interface) *Service {
 }
 
 func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
-	for range questions {
-		cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, quizID.String())
+	cacheKey := fmt.Sprintf(questionsCacheKey, quizID)
 
-		err := s.cache.Delete(ctx, cacheKey)
-		if err != nil {
-			return nil, err
-		}
+	err := s.cache.Delete(ctx, cacheKey)
+	if err != nil {
+		return nil, err
 	}
-	// todo pattern match cache
 
 	return s.repo.Add(ctx, quizID, questions)
 }
 
 func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Question, error) {
-	cacheKey := fmt.Sprintf("%s%s", questionsCacheKeyPrefix, quizID.String())
+	cacheKey := fmt.Sprintf(questionsCacheKey, quizID)
 
 	var questions []models.Question
 	err := s.cache.Get(ctx, cacheKey, &questions)
