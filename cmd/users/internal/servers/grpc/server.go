@@ -13,14 +13,21 @@ import (
 	usergrpc "whoami-server/cmd/users/internal/services/user/grpc"
 	pg "whoami-server/cmd/users/internal/services/user/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
-	"whoami-server/internal/jwt"
+	"whoami-server/internal/interceptors"
 	userpb "whoami-server/protogen/golang/user"
 )
 
 func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration) *grpc.Server {
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(jwt.AuthUnaryInterceptor),
-		grpc.StreamInterceptor(jwt.AuthStreamInterceptor),
+		grpc.ChainUnaryInterceptor(
+			interceptors.AuthUnaryInterceptor,
+			interceptors.CacheControlUnaryInterceptor,
+			interceptors.ETagUnaryInterceptor,
+		),
+		grpc.ChainStreamInterceptor(
+			interceptors.AuthStreamInterceptor,
+			interceptors.CacheControlStreamInterceptor,
+		),
 	)
 
 	redisService := redisservice.NewService(redisClient, redisTTL)

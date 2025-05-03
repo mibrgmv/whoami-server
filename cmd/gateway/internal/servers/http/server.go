@@ -20,9 +20,27 @@ import (
 func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.ServeMux, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
-			return metadata.New(map[string]string{
+			md := metadata.New(map[string]string{
 				"authorization": req.Header.Get("Authorization"),
 			})
+
+			if ifNoneMatch := req.Header.Get("If-None-Match"); ifNoneMatch != "" {
+				md.Set("if-none-match", ifNoneMatch)
+			}
+
+			return md
+		}),
+		runtime.WithOutgoingHeaderMatcher(func(key string) (string, bool) {
+			switch key {
+			case "etag":
+				return "ETag", true
+			case "cache-control":
+				return "Cache-Control", true
+			case "authorization":
+				return "Authorization", true
+			default:
+				return runtime.DefaultHeaderMatcher(key)
+			}
 		}),
 	)
 
@@ -62,7 +80,8 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	mux.HandleFunc("/api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization, If-None-Match, If-Modified-Since")
+		w.Header().Set("Access-Control-Expose-Headers", "ETag, Cache-Control")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

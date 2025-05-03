@@ -1,4 +1,4 @@
-package jwt
+package interceptors
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"strings"
+	"whoami-server/internal/jwt"
 )
 
 var (
@@ -59,7 +60,7 @@ func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	}
 
 	tokenString := tokenParts[1]
-	userID, err := ValidateAccessToken(tokenString)
+	userID, err := jwt.ValidateAccessToken(tokenString)
 	if err != nil {
 		return nil, errInvalidToken
 	}
@@ -90,7 +91,7 @@ func AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 	}
 
 	tokenString := tokenParts[1]
-	userID, err := ValidateAccessToken(tokenString)
+	userID, err := jwt.ValidateAccessToken(tokenString)
 	if err != nil {
 		return errInvalidToken
 	}

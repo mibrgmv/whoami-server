@@ -33,7 +33,7 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(15 * time.Minute) // todo
+	accessExpiration := time.Now().Add(5 * time.Minute) // todo
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
@@ -130,7 +130,7 @@ func RefreshAccessToken(refreshToken string) (string, error) {
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(15 * time.Minute) // todo
+	accessExpiration := time.Now().Add(5 * time.Minute) // todo
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
