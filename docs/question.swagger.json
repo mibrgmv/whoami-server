@@ -125,7 +125,7 @@
     "QuestionServiceBatchCreateQuestionsBody": {
       "type": "object",
       "properties": {
-        "questions": {
+        "requests": {
           "type": "array",
           "items": {
             "type": "object",
@@ -256,6 +256,9 @@
         "id": {
           "type": "string"
         },
+        "quizId": {
+          "type": "string"
+        },
         "body": {
           "type": "string"
         },
@@ -265,7 +268,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "title": "todo quiz_id inconsistency"
     },
     "rpcStatus": {
       "type": "object",

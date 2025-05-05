@@ -18,12 +18,12 @@
   "paths": {
     "/api/v1/quizzes": {
       "get": {
-        "operationId": "QuizService_GetBatch",
+        "operationId": "QuizService_BatchGetQuizzes",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/quizGetBatchResponse"
+              "$ref": "#/definitions/quizBatchGetQuizzesResponse"
             }
           },
           "default": {
@@ -85,7 +85,7 @@
     },
     "/api/v1/quizzes/{id}": {
       "get": {
-        "operationId": "QuizService_GetByID",
+        "operationId": "QuizService_GetQuiz",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -124,6 +124,21 @@
       },
       "additionalProperties": {}
     },
+    "quizBatchGetQuizzesResponse": {
+      "type": "object",
+      "properties": {
+        "quizzes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/quizQuiz"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      }
+    },
     "quizCreateQuizRequest": {
       "type": "object",
       "properties": {
@@ -137,21 +152,6 @@
           }
         },
         "imageUrl": {
-          "type": "string"
-        }
-      }
-    },
-    "quizGetBatchResponse": {
-      "type": "object",
-      "properties": {
-        "quizzes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/quizQuiz"
-          }
-        },
-        "nextPageToken": {
           "type": "string"
         }
       }

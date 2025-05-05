@@ -36,24 +36,7 @@ func (s *QuizService) CreateQuiz(ctx context.Context, request *pb.CreateQuizRequ
 	return quizzes[0].ToProto(), nil
 }
 
-func (s *QuizService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
-	quizzes, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
-	}
-
-	var pbQuizzes []*pb.Quiz
-	for _, q := range quizzes {
-		pbQuizzes = append(pbQuizzes, q.ToProto())
-	}
-
-	return &pb.GetBatchResponse{
-		Quizzes:       pbQuizzes,
-		NextPageToken: nextPageToken,
-	}, nil
-}
-
-func (s *QuizService) GetByID(ctx context.Context, request *pb.GetByIDRequest) (*pb.Quiz, error) {
+func (s *QuizService) GetQuiz(ctx context.Context, request *pb.GetQuizRequest) (*pb.Quiz, error) {
 	quizID, err := uuid.Parse(request.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
@@ -68,4 +51,21 @@ func (s *QuizService) GetByID(ctx context.Context, request *pb.GetByIDRequest) (
 	}
 
 	return q.ToProto(), nil
+}
+
+func (s *QuizService) BatchGetQuizzes(ctx context.Context, request *pb.BatchGetQuizzesRequest) (*pb.BatchGetQuizzesResponse, error) {
+	quizzes, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get quizzes: %v", err)
+	}
+
+	var pbQuizzes []*pb.Quiz
+	for _, q := range quizzes {
+		pbQuizzes = append(pbQuizzes, q.ToProto())
+	}
+
+	return &pb.BatchGetQuizzesResponse{
+		Quizzes:       pbQuizzes,
+		NextPageToken: nextPageToken,
+	}, nil
 }

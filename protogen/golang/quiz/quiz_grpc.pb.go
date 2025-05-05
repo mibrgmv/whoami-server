@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizService_CreateQuiz_FullMethodName = "/quiz.QuizService/CreateQuiz"
-	QuizService_GetBatch_FullMethodName   = "/quiz.QuizService/GetBatch"
-	QuizService_GetByID_FullMethodName    = "/quiz.QuizService/GetByID"
+	QuizService_CreateQuiz_FullMethodName      = "/quiz.QuizService/CreateQuiz"
+	QuizService_GetQuiz_FullMethodName         = "/quiz.QuizService/GetQuiz"
+	QuizService_BatchGetQuizzes_FullMethodName = "/quiz.QuizService/BatchGetQuizzes"
 )
 
 // QuizServiceClient is the client API for QuizService service.
@@ -29,8 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuizServiceClient interface {
 	CreateQuiz(ctx context.Context, in *CreateQuizRequest, opts ...grpc.CallOption) (*Quiz, error)
-	GetBatch(ctx context.Context, in *GetBatchRequest, opts ...grpc.CallOption) (*GetBatchResponse, error)
-	GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Quiz, error)
+	GetQuiz(ctx context.Context, in *GetQuizRequest, opts ...grpc.CallOption) (*Quiz, error)
+	BatchGetQuizzes(ctx context.Context, in *BatchGetQuizzesRequest, opts ...grpc.CallOption) (*BatchGetQuizzesResponse, error)
 }
 
 type quizServiceClient struct {
@@ -51,20 +51,20 @@ func (c *quizServiceClient) CreateQuiz(ctx context.Context, in *CreateQuizReques
 	return out, nil
 }
 
-func (c *quizServiceClient) GetBatch(ctx context.Context, in *GetBatchRequest, opts ...grpc.CallOption) (*GetBatchResponse, error) {
+func (c *quizServiceClient) GetQuiz(ctx context.Context, in *GetQuizRequest, opts ...grpc.CallOption) (*Quiz, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetBatchResponse)
-	err := c.cc.Invoke(ctx, QuizService_GetBatch_FullMethodName, in, out, cOpts...)
+	out := new(Quiz)
+	err := c.cc.Invoke(ctx, QuizService_GetQuiz_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *quizServiceClient) GetByID(ctx context.Context, in *GetByIDRequest, opts ...grpc.CallOption) (*Quiz, error) {
+func (c *quizServiceClient) BatchGetQuizzes(ctx context.Context, in *BatchGetQuizzesRequest, opts ...grpc.CallOption) (*BatchGetQuizzesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Quiz)
-	err := c.cc.Invoke(ctx, QuizService_GetByID_FullMethodName, in, out, cOpts...)
+	out := new(BatchGetQuizzesResponse)
+	err := c.cc.Invoke(ctx, QuizService_BatchGetQuizzes_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func (c *quizServiceClient) GetByID(ctx context.Context, in *GetByIDRequest, opt
 // for forward compatibility.
 type QuizServiceServer interface {
 	CreateQuiz(context.Context, *CreateQuizRequest) (*Quiz, error)
-	GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error)
-	GetByID(context.Context, *GetByIDRequest) (*Quiz, error)
+	GetQuiz(context.Context, *GetQuizRequest) (*Quiz, error)
+	BatchGetQuizzes(context.Context, *BatchGetQuizzesRequest) (*BatchGetQuizzesResponse, error)
 	mustEmbedUnimplementedQuizServiceServer()
 }
 
@@ -91,11 +91,11 @@ type UnimplementedQuizServiceServer struct{}
 func (UnimplementedQuizServiceServer) CreateQuiz(context.Context, *CreateQuizRequest) (*Quiz, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateQuiz not implemented")
 }
-func (UnimplementedQuizServiceServer) GetBatch(context.Context, *GetBatchRequest) (*GetBatchResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBatch not implemented")
+func (UnimplementedQuizServiceServer) GetQuiz(context.Context, *GetQuizRequest) (*Quiz, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetQuiz not implemented")
 }
-func (UnimplementedQuizServiceServer) GetByID(context.Context, *GetByIDRequest) (*Quiz, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetByID not implemented")
+func (UnimplementedQuizServiceServer) BatchGetQuizzes(context.Context, *BatchGetQuizzesRequest) (*BatchGetQuizzesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchGetQuizzes not implemented")
 }
 func (UnimplementedQuizServiceServer) mustEmbedUnimplementedQuizServiceServer() {}
 func (UnimplementedQuizServiceServer) testEmbeddedByValue()                     {}
@@ -136,38 +136,38 @@ func _QuizService_CreateQuiz_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QuizService_GetBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBatchRequest)
+func _QuizService_GetQuiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetQuizRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QuizServiceServer).GetBatch(ctx, in)
+		return srv.(QuizServiceServer).GetQuiz(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: QuizService_GetBatch_FullMethodName,
+		FullMethod: QuizService_GetQuiz_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QuizServiceServer).GetBatch(ctx, req.(*GetBatchRequest))
+		return srv.(QuizServiceServer).GetQuiz(ctx, req.(*GetQuizRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _QuizService_GetByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetByIDRequest)
+func _QuizService_BatchGetQuizzes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetQuizzesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QuizServiceServer).GetByID(ctx, in)
+		return srv.(QuizServiceServer).BatchGetQuizzes(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: QuizService_GetByID_FullMethodName,
+		FullMethod: QuizService_BatchGetQuizzes_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QuizServiceServer).GetByID(ctx, req.(*GetByIDRequest))
+		return srv.(QuizServiceServer).BatchGetQuizzes(ctx, req.(*BatchGetQuizzesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -184,12 +184,12 @@ var QuizService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _QuizService_CreateQuiz_Handler,
 		},
 		{
-			MethodName: "GetBatch",
-			Handler:    _QuizService_GetBatch_Handler,
+			MethodName: "GetQuiz",
+			Handler:    _QuizService_GetQuiz_Handler,
 		},
 		{
-			MethodName: "GetByID",
-			Handler:    _QuizService_GetByID_Handler,
+			MethodName: "BatchGetQuizzes",
+			Handler:    _QuizService_BatchGetQuizzes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -17,15 +17,15 @@ service QuizService {
     };
   }
 
-  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse) {
+  rpc GetQuiz(GetQuizRequest) returns (Quiz) {
     option (google.api.http) = {
-      get: "/api/v1/quizzes"
+      get: "/api/v1/quizzes/{id}"
     };
   }
 
-  rpc GetByID(GetByIDRequest) returns (Quiz) {
+  rpc BatchGetQuizzes(BatchGetQuizzesRequest) returns (BatchGetQuizzesResponse) {
     option (google.api.http) = {
-      get: "/api/v1/quizzes/{id}"
+      get: "/api/v1/quizzes"
     };
   }
 }
@@ -43,16 +43,16 @@ message CreateQuizRequest {
   string image_url = 3;
 }
 
-message GetBatchRequest {
+message GetQuizRequest {
+  string id = 1;
+}
+
+message BatchGetQuizzesRequest {
   int32 page_size = 1;
   string page_token = 2;
 }
 
-message GetBatchResponse {
+message BatchGetQuizzesResponse {
   repeated Quiz quizzes = 1;
   string next_page_token = 2;
-}
-
-message GetByIDRequest {
-  string id = 1;
 }

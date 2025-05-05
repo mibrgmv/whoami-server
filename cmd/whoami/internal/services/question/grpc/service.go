@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"io"
 	"log"
 	"whoami-server/cmd/whoami/internal/models"
 	"whoami-server/cmd/whoami/internal/services/question"
@@ -49,7 +48,7 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 
 func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.BatchCreateQuestionsRequest) (*pb.BatchCreateQuestionsResponse, error) {
 	var questionsToCreate []*models.Question
-	for _, pbq := range request.Questions {
+	for _, pbq := range request.Requests {
 		q, err := models.QuestionToModel(pbq)
 		if err != nil {
 			log.Fatalf("parse error %v", err)
@@ -108,13 +107,12 @@ func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *pb.Bat
 	}, nil
 }
 
-// todo remove quiz and make answer stream NO DONT USE STREAMS FOR NOTHING
 func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {
 	var answers []models.Answer
 	for _, answer := range request.Answers {
 		modelAnswer, err := models.AnswerToModel(answer)
 		if err != nil {
-			fmt.Printf("Error converting answer to model: %v\n", err)
+			return nil, status.Errorf(codes.InvalidArgument, "invalid answer format: %v", err)
 		}
 		answers = append(answers, *modelAnswer)
 	}
@@ -134,69 +132,42 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 
 	result, err := s.service.EvaluateAnswers(ctx, answers, q)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to evaluate answers: %v", err)
 	}
 
-	//userIDStr, ok := ctx.Value("user_id").(string)
-	//if !ok {
-	//	return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
-	//}
-	//
-	//userID, err := uuid.Parse(userIDStr)
-	//if err != nil {
-	//	return nil, status.Errorf(codes.Internal, "invalid user ID format: %v", err)
-	//}
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
 
-	//historyError := s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
-	//if historyError != nil {
-	//	return nil, historyError // todo error codes
-	//}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
+	}
+
+	err = s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
+	if err != nil {
+		// todo do something -> retry
+	}
 
 	return &pb.EvaluateAnswersResponse{Result: result}, nil
 }
 
 func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
-	stream, err := s.historyClient.Add(ctx)
-	if err != nil {
-		return err
+	historyItem := &pbHistory.QuizCompletionHistoryItem{
+		UserId:     userID.String(),
+		QuizId:     quizID.String(),
+		QuizResult: result,
 	}
 
-	var createdItems []pbHistory.QuizCompletionHistoryItem
-	done := make(chan bool)
+	request := &pbHistory.CreateItemRequest{
+		Item: historyItem,
+	}
 
-	go func() {
-		if err := stream.Send(&pbHistory.QuizCompletionHistoryItem{
-			UserId:     userID.String(),
-			QuizId:     quizID.String(),
-			QuizResult: result,
-		}); err != nil {
-			log.Fatalf("can not send %v", err)
-		}
-		if err := stream.CloseSend(); err != nil {
-			log.Fatalf("can not close %v", err)
-		}
-	}()
+	_, err := s.historyClient.CreateItem(ctx, request)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to add quiz history: %v", err)
+	}
 
-	// todo read result ignored
-	go func() {
-		for {
-			resp, err := stream.Recv()
-			if errors.Is(err, io.EOF) {
-				done <- true
-				return
-			}
-			if err != nil {
-				log.Fatalf("cannot receive %v", err)
-			}
-			createdItems = append(createdItems, pbHistory.QuizCompletionHistoryItem{
-				Id:         resp.Id,
-				UserId:     resp.UserId,
-				QuizId:     resp.QuizId,
-				QuizResult: resp.QuizResult,
-			})
-		}
-	}()
-
-	<-done
 	return nil
 }

@@ -50,7 +50,7 @@ message CreateQuestionRequest {
 
 message BatchCreateQuestionsRequest {
   string quiz_id = 1;
-  repeated CreateQuestionRequest questions = 2;
+  repeated CreateQuestionRequest requests = 2;
 }
 
 message BatchCreateQuestionsResponse {
@@ -68,8 +68,9 @@ message BatchGetQuestionsResponse {
 // todo quiz_id inconsistency 
 message QuestionResponse {
   string id = 1;
-  string body = 2;
-  repeated string options = 3;
+  string quiz_id = 2;
+  string body = 3;
+  repeated string options = 4;
 }
 
 message Answer {
@@ -79,8 +80,8 @@ message Answer {
 }
 
 message EvaluateAnswersRequest {
-  repeated Answer answers = 1;
-  string quiz_id = 2;
+  string quiz_id = 1;
+  repeated Answer answers = 2;
 }
 
 message EvaluateAnswersResponse {
