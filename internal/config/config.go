@@ -14,7 +14,7 @@ type Config struct {
 	Postgres postgresql.Config
 }
 
-func GetDefault(serviceName string) (*Config, error) {
+func GetDefaultForService(serviceName string) (*Config, error) {
 	viper.SetConfigName("default")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("configs")

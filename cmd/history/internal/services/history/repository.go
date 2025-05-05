@@ -6,6 +6,6 @@ import (
 )
 
 type Repository interface {
-	Add(ctx context.Context, historyItems []models.QuizCompletionHistoryItem) ([]models.QuizCompletionHistoryItem, error)
-	Query(ctx context.Context, query Query) ([]models.QuizCompletionHistoryItem, error)
+	Add(ctx context.Context, historyItems []*models.QuizCompletionHistoryItem) ([]*models.QuizCompletionHistoryItem, error)
+	Query(ctx context.Context, query Query) ([]*models.QuizCompletionHistoryItem, error)
 }

@@ -110,7 +110,7 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		users = append(users, &u)
+		users = append(users, &u) // todo may not be optimal way to acquire user pointer
 	}
 
 	if err := rows.Err(); err != nil {

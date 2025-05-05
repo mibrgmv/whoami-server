@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,18 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizCompletionHistoryService_Add_FullMethodName         = "/history.QuizCompletionHistoryService/Add"
-	QuizCompletionHistoryService_GetAll_FullMethodName      = "/history.QuizCompletionHistoryService/GetAll"
-	QuizCompletionHistoryService_GetByUserID_FullMethodName = "/history.QuizCompletionHistoryService/GetByUserID"
+	QuizCompletionHistoryService_CreateItem_FullMethodName    = "/history.QuizCompletionHistoryService/CreateItem"
+	QuizCompletionHistoryService_BatchGetItems_FullMethodName = "/history.QuizCompletionHistoryService/BatchGetItems"
 )
 
 // QuizCompletionHistoryServiceClient is the client API for QuizCompletionHistoryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuizCompletionHistoryServiceClient interface {
-	Add(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[QuizCompletionHistoryItem, QuizCompletionHistoryItem], error)
-	GetAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuizCompletionHistoryItem], error)
-	GetByUserID(ctx context.Context, in *GetByUserIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuizCompletionHistoryItem], error)
+	CreateItem(ctx context.Context, in *CreateItemRequest, opts ...grpc.CallOption) (*QuizCompletionHistoryItem, error)
+	BatchGetItems(ctx context.Context, in *BatchGetItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error)
 }
 
 type quizCompletionHistoryServiceClient struct {
@@ -42,64 +39,32 @@ func NewQuizCompletionHistoryServiceClient(cc grpc.ClientConnInterface) QuizComp
 	return &quizCompletionHistoryServiceClient{cc}
 }
 
-func (c *quizCompletionHistoryServiceClient) Add(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[QuizCompletionHistoryItem, QuizCompletionHistoryItem], error) {
+func (c *quizCompletionHistoryServiceClient) CreateItem(ctx context.Context, in *CreateItemRequest, opts ...grpc.CallOption) (*QuizCompletionHistoryItem, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuizCompletionHistoryService_ServiceDesc.Streams[0], QuizCompletionHistoryService_Add_FullMethodName, cOpts...)
+	out := new(QuizCompletionHistoryItem)
+	err := c.cc.Invoke(ctx, QuizCompletionHistoryService_CreateItem_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[QuizCompletionHistoryItem, QuizCompletionHistoryItem]{ClientStream: stream}
-	return x, nil
+	return out, nil
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_AddClient = grpc.BidiStreamingClient[QuizCompletionHistoryItem, QuizCompletionHistoryItem]
-
-func (c *quizCompletionHistoryServiceClient) GetAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuizCompletionHistoryItem], error) {
+func (c *quizCompletionHistoryServiceClient) BatchGetItems(ctx context.Context, in *BatchGetItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuizCompletionHistoryService_ServiceDesc.Streams[1], QuizCompletionHistoryService_GetAll_FullMethodName, cOpts...)
+	out := new(BatchGetItemsResponse)
+	err := c.cc.Invoke(ctx, QuizCompletionHistoryService_BatchGetItems_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[emptypb.Empty, QuizCompletionHistoryItem]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_GetAllClient = grpc.ServerStreamingClient[QuizCompletionHistoryItem]
-
-func (c *quizCompletionHistoryServiceClient) GetByUserID(ctx context.Context, in *GetByUserIDRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[QuizCompletionHistoryItem], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &QuizCompletionHistoryService_ServiceDesc.Streams[2], QuizCompletionHistoryService_GetByUserID_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[GetByUserIDRequest, QuizCompletionHistoryItem]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_GetByUserIDClient = grpc.ServerStreamingClient[QuizCompletionHistoryItem]
 
 // QuizCompletionHistoryServiceServer is the server API for QuizCompletionHistoryService service.
 // All implementations must embed UnimplementedQuizCompletionHistoryServiceServer
 // for forward compatibility.
 type QuizCompletionHistoryServiceServer interface {
-	Add(grpc.BidiStreamingServer[QuizCompletionHistoryItem, QuizCompletionHistoryItem]) error
-	GetAll(*emptypb.Empty, grpc.ServerStreamingServer[QuizCompletionHistoryItem]) error
-	GetByUserID(*GetByUserIDRequest, grpc.ServerStreamingServer[QuizCompletionHistoryItem]) error
+	CreateItem(context.Context, *CreateItemRequest) (*QuizCompletionHistoryItem, error)
+	BatchGetItems(context.Context, *BatchGetItemsRequest) (*BatchGetItemsResponse, error)
 	mustEmbedUnimplementedQuizCompletionHistoryServiceServer()
 }
 
@@ -110,14 +75,11 @@ type QuizCompletionHistoryServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedQuizCompletionHistoryServiceServer struct{}
 
-func (UnimplementedQuizCompletionHistoryServiceServer) Add(grpc.BidiStreamingServer[QuizCompletionHistoryItem, QuizCompletionHistoryItem]) error {
-	return status.Errorf(codes.Unimplemented, "method Add not implemented")
+func (UnimplementedQuizCompletionHistoryServiceServer) CreateItem(context.Context, *CreateItemRequest) (*QuizCompletionHistoryItem, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateItem not implemented")
 }
-func (UnimplementedQuizCompletionHistoryServiceServer) GetAll(*emptypb.Empty, grpc.ServerStreamingServer[QuizCompletionHistoryItem]) error {
-	return status.Errorf(codes.Unimplemented, "method GetAll not implemented")
-}
-func (UnimplementedQuizCompletionHistoryServiceServer) GetByUserID(*GetByUserIDRequest, grpc.ServerStreamingServer[QuizCompletionHistoryItem]) error {
-	return status.Errorf(codes.Unimplemented, "method GetByUserID not implemented")
+func (UnimplementedQuizCompletionHistoryServiceServer) BatchGetItems(context.Context, *BatchGetItemsRequest) (*BatchGetItemsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchGetItems not implemented")
 }
 func (UnimplementedQuizCompletionHistoryServiceServer) mustEmbedUnimplementedQuizCompletionHistoryServiceServer() {
 }
@@ -141,34 +103,41 @@ func RegisterQuizCompletionHistoryServiceServer(s grpc.ServiceRegistrar, srv Qui
 	s.RegisterService(&QuizCompletionHistoryService_ServiceDesc, srv)
 }
 
-func _QuizCompletionHistoryService_Add_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(QuizCompletionHistoryServiceServer).Add(&grpc.GenericServerStream[QuizCompletionHistoryItem, QuizCompletionHistoryItem]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_AddServer = grpc.BidiStreamingServer[QuizCompletionHistoryItem, QuizCompletionHistoryItem]
-
-func _QuizCompletionHistoryService_GetAll_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(emptypb.Empty)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _QuizCompletionHistoryService_CreateItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(QuizCompletionHistoryServiceServer).GetAll(m, &grpc.GenericServerStream[emptypb.Empty, QuizCompletionHistoryItem]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_GetAllServer = grpc.ServerStreamingServer[QuizCompletionHistoryItem]
-
-func _QuizCompletionHistoryService_GetByUserID_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetByUserIDRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+	if interceptor == nil {
+		return srv.(QuizCompletionHistoryServiceServer).CreateItem(ctx, in)
 	}
-	return srv.(QuizCompletionHistoryServiceServer).GetByUserID(m, &grpc.GenericServerStream[GetByUserIDRequest, QuizCompletionHistoryItem]{ServerStream: stream})
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuizCompletionHistoryService_CreateItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizCompletionHistoryServiceServer).CreateItem(ctx, req.(*CreateItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type QuizCompletionHistoryService_GetByUserIDServer = grpc.ServerStreamingServer[QuizCompletionHistoryItem]
+func _QuizCompletionHistoryService_BatchGetItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetItemsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuizCompletionHistoryServiceServer).BatchGetItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuizCompletionHistoryService_BatchGetItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizCompletionHistoryServiceServer).BatchGetItems(ctx, req.(*BatchGetItemsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // QuizCompletionHistoryService_ServiceDesc is the grpc.ServiceDesc for QuizCompletionHistoryService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -176,24 +145,16 @@ type QuizCompletionHistoryService_GetByUserIDServer = grpc.ServerStreamingServer
 var QuizCompletionHistoryService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "history.QuizCompletionHistoryService",
 	HandlerType: (*QuizCompletionHistoryServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
+	Methods: []grpc.MethodDesc{
 		{
-			StreamName:    "Add",
-			Handler:       _QuizCompletionHistoryService_Add_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
+			MethodName: "CreateItem",
+			Handler:    _QuizCompletionHistoryService_CreateItem_Handler,
 		},
 		{
-			StreamName:    "GetAll",
-			Handler:       _QuizCompletionHistoryService_GetAll_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "GetByUserID",
-			Handler:       _QuizCompletionHistoryService_GetByUserID_Handler,
-			ServerStreams: true,
+			MethodName: "BatchGetItems",
+			Handler:    _QuizCompletionHistoryService_BatchGetItems_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "history.proto",
 }
