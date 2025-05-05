@@ -17,7 +17,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletionHistoryItem) ([]models.QuizCompletionHistoryItem, error) {
+func (r Repository) Add(ctx context.Context, historyItems []*models.QuizCompletionHistoryItem) ([]*models.QuizCompletionHistoryItem, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -34,8 +34,7 @@ func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletio
 		}
 	}()
 
-	var createdItems []models.QuizCompletionHistoryItem
-
+	var createdItems []*models.QuizCompletionHistoryItem
 	for _, i := range historyItems {
 		query := `
 		insert into quiz_completion_history (quiz_completion_history_item_id, user_id, quiz_id, quiz_result)
@@ -58,31 +57,56 @@ func (r Repository) Add(ctx context.Context, historyItems []models.QuizCompletio
 	return createdItems, nil
 }
 
-func (r Repository) Query(ctx context.Context, query history.Query) ([]models.QuizCompletionHistoryItem, error) {
+func (r Repository) Query(ctx context.Context, query history.Query) ([]*models.QuizCompletionHistoryItem, error) {
 	sql := `
 	select quiz_completion_history_item_id,
 		   user_id,
 		   quiz_id,
 		   quiz_result
 	from quiz_completion_history
-	where ($1::uuid[] is null or cardinality($1) = 0 or quiz_completion_history_item_id = any ($1))
+	where (quiz_completion_history_item_id > $1)
 	  and ($2::uuid[] is null or cardinality($2) = 0 or user_id = any ($2))
-	  and ($3::uuid[] is null or cardinality($3) = 0 or quiz_id = any ($3))`
+	  and ($3::uuid[] is null or cardinality($3) = 0 or quiz_id = any ($3))
+	order by quiz_completion_history asc
+	limit $4
+	`
 
-	rows, err := r.pool.Query(ctx, sql, query.IDs, query.UserIDs, query.QuizIDs)
+	var args []interface{}
+
+	if query.PageToken != "" {
+		pageToken, err := uuid.Parse(query.PageToken)
+		if err != nil {
+			return nil, fmt.Errorf("invalid page token: %w", err)
+		}
+		args = append(args, pageToken)
+	} else {
+		args = append(args, uuid.Nil)
+	}
+
+	args = append(args, query.UserIDs, query.QuizIDs)
+
+	var pageSize int32
+	if query.PageSize > 0 {
+		pageSize = query.PageSize + 1
+	} else {
+		pageSize = query.PageSize
+	}
+	args = append(args, pageSize)
+
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 
 	defer rows.Close()
-	var items []models.QuizCompletionHistoryItem
+	var items []*models.QuizCompletionHistoryItem
 	for rows.Next() {
 		var i models.QuizCompletionHistoryItem
 		if err := rows.Scan(&i.ID, &i.UserID, &i.QuizID, &i.QuizResult); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		items = append(items, i)
+		items = append(items, &i)
 	}
 
 	if err := rows.Err(); err != nil {
