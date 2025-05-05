@@ -12,6 +12,7 @@ import (
 	"whoami-server/cmd/gateway/internal/servers/http/cors"
 	"whoami-server/cmd/gateway/internal/servers/http/logging"
 	"whoami-server/cmd/gateway/internal/servers/http/recovery"
+	httpcfg "whoami-server/internal/config/api/http"
 	historypb "whoami-server/protogen/golang/history"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
@@ -86,7 +87,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	return mux, nil
 }
 
-func Start(ctx context.Context, grpcAddresses map[string]string, httpAddr string) error {
+func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig httpcfg.Config) error {
 	mux, err := NewServer(ctx, grpcAddresses)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
@@ -99,7 +100,7 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpAddr string
 	)
 
 	server := &http.Server{
-		Addr:    httpAddr,
+		Addr:    httpConfig.GetAddr(),
 		Handler: handler,
 	}
 
