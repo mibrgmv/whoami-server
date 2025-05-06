@@ -33,7 +33,7 @@ func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models
 		return nil, err
 	}
 
-	return s.repo.Add(ctx, quizID, questions)
+	return s.repo.Add(ctx, questions)
 }
 
 func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.Question, error) {

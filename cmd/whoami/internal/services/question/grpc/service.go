@@ -57,7 +57,6 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.
 		if err != nil {
 			log.Fatalf("parse error %v", err)
 		}
-		// todo use key prefix
 
 		questionsToCreate = append(questionsToCreate, q)
 	}

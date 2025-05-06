@@ -18,7 +18,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
+func (r *Repository) Add(ctx context.Context, questions []*models.Question) ([]*models.Question, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -36,30 +36,58 @@ func (r *Repository) Add(ctx context.Context, quizID uuid.UUID, questions []*mod
 
 	}()
 
-	var createdQuestions []*models.Question
+	sql := `
+	insert into questions (question_id, quiz_id, question_body, question_options_weights)
+	select question_id,
+	       quiz_id,
+	       question_body,
+	       question_options_weights
+	from unnest($1::uuid[], $2::uuid[], $3::text[], $4::jsonb[])
+	    as source (question_id, quiz_id, question_body, question_options_weights)
+	returning question_id
+	`
 
-	for _, q := range questions {
+	questionIDs := make([]uuid.UUID, len(questions))
+	quizIDs := make([]uuid.UUID, len(questions))
+	bodies := make([]string, len(questions))
+	optionWeights := make([][]byte, len(questions))
+
+	for i, q := range questions {
+		questionIDs[i] = uuid.New()
+		quizIDs[i] = q.QuizID
+		bodies[i] = q.Body
 		optionsWeightsJSON, err := json.Marshal(q.OptionsWeights)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal options_weights: %w", err)
 		}
+		optionWeights[i] = optionsWeightsJSON
+	}
 
-		query := `
-		insert into questions (question_id, quiz_id, question_body, question_options_weights)
-		values ($1, $2, $3, $4)
-		returning question_id`
+	rows, err := tx.Query(ctx, sql, questionIDs, quizIDs, bodies, optionWeights)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert questions: %w", err)
+	}
+	defer rows.Close()
 
+	createdQuestions := make([]*models.Question, 0, len(questions))
+	i := 0
+	for rows.Next() {
 		var createdID string
-		err = tx.QueryRow(ctx, query, uuid.New(), quizID, q.Body, optionsWeightsJSON).Scan(&createdID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add question: %w", err)
+		if err := rows.Scan(&createdID); err != nil {
+			return nil, fmt.Errorf("failed to scan returned question_id: %w", err)
 		}
 
-		q.ID, err = uuid.Parse(createdID)
+		questions[i].ID, err = uuid.Parse(createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse UUID: %v", err)
 		}
-		createdQuestions = append(createdQuestions, q)
+
+		createdQuestions = append(createdQuestions, questions[i])
+		i++
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
 	return createdQuestions, nil

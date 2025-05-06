@@ -35,16 +35,17 @@ func (r Repository) Add(ctx context.Context, users []*models.User) ([]*models.Us
 		}
 	}()
 
-	query := `
-		insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
-		select user_id,
-		       user_name,
-		       user_password,
-		       user_created_at,
-		       user_last_login
-		from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[], $5::timestamptz[])
-		as source (user_id, user_name, user_password, user_created_at, user_last_login)
-		returning user_id`
+	sql := `
+	insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
+	select user_id,
+		   user_name,
+		   user_password,
+		   user_created_at,
+		   user_last_login
+	from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[], $5::timestamptz[])
+	    as source (user_id, user_name, user_password, user_created_at, user_last_login)
+	returning user_id
+	`
 
 	userIDs := make([]uuid.UUID, len(users))
 	userNames := make([]string, len(users))
@@ -60,7 +61,7 @@ func (r Repository) Add(ctx context.Context, users []*models.User) ([]*models.Us
 		userLastLogins[i] = u.LastLogin
 	}
 
-	rows, err := tx.Query(ctx, query, userIDs, userNames, userPasswords, userCreatedAts, userLastLogins)
+	rows, err := tx.Query(ctx, sql, userIDs, userNames, userPasswords, userCreatedAts, userLastLogins)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert users: %w", err)
 	}

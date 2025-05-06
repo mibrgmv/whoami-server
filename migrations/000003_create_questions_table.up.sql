@@ -1,6 +1,6 @@
 create table questions
 (
-    question_id              bigint primary key generated always as identity,
+    question_id              uuid primary key,
 
     quiz_id                  uuid  not null references quizzes (quiz_id),
     question_body            text  not null,
