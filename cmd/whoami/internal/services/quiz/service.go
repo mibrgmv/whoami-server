@@ -3,8 +3,10 @@ package quiz
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/internal/tools"
 )
 
 var ErrQuizNotFound = errors.New("quiz not found")
@@ -22,7 +24,12 @@ func (s *Service) Add(ctx context.Context, quizzes []*models.Quiz) ([]*models.Qu
 }
 
 func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]*models.Quiz, string, error) {
-	quizzes, err := s.repo.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
+	parsedToken, err := tools.ParsePageToken(pageToken)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	quizzes, err := s.repo.Query(ctx, Query{PageSize: pageSize, PageToken: parsedToken})
 	if err != nil {
 		return nil, "", err
 	}
@@ -30,7 +37,8 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 	var nextPageToken string
 	if pageSize > 0 && len(quizzes) > int(pageSize) {
 		quizzes = quizzes[:len(quizzes)-1]
-		nextPageToken = quizzes[len(quizzes)-1].ID.String()
+		lastQuizID := quizzes[len(quizzes)-1].ID
+		nextPageToken = tools.CreatePageToken(lastQuizID)
 	}
 
 	return quizzes, nextPageToken, err

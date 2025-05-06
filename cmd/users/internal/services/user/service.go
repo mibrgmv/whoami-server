@@ -130,7 +130,7 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 		return result.Users, result.NextPageToken, nil
 	}
 
-	users, err := s.users.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
+	users, err := s.users.Query(ctx, Query{PageSize: pageSize, PageToken: parsedToken})
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get users: %w", err)
 	}

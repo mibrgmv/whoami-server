@@ -11,10 +11,14 @@ func CreatePageToken(userID uuid.UUID) string {
 	return encoded
 }
 
-func ParsePageToken(token string) (uuid.UUID, error) {
+func ParsePageToken(token string) (string, error) {
 	decoded, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid page token: %w", err)
+		return "", fmt.Errorf("invalid page token: %w", err)
 	}
-	return uuid.Parse(string(decoded))
+	decodedToken, err := uuid.Parse(string(decoded))
+	if err != nil {
+		return "", fmt.Errorf("could not parse uuid: %w", err)
+	}
+	return decodedToken.String(), nil
 }

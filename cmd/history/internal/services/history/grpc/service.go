@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/status"
 	"whoami-server/cmd/history/internal/models"
 	"whoami-server/cmd/history/internal/services/history"
+	"whoami-server/internal/tools"
 	pb "whoami-server/protogen/golang/history"
 )
 
@@ -33,7 +34,12 @@ func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) 
 }
 
 func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsRequest) (*pb.BatchGetItemsResponse, error) {
-	items, err := s.repo.Query(ctx, history.Query{PageSize: request.PageSize, PageToken: request.PageToken})
+	parsedToken, err := tools.ParsePageToken(request.PageToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
+	}
+
+	items, err := s.repo.Query(ctx, history.Query{PageSize: request.PageSize, PageToken: parsedToken})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
@@ -41,7 +47,8 @@ func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsReq
 	var nextPageToken string
 	if request.PageSize > 0 && len(items) > int(request.PageSize) {
 		items = items[:len(items)-1]
-		nextPageToken = items[len(items)-1].ID.String()
+		lastItemID := items[len(items)-1].ID
+		nextPageToken = tools.CreatePageToken(lastItemID)
 	}
 
 	protoItems := make([]*pb.QuizCompletionHistoryItem, len(items))

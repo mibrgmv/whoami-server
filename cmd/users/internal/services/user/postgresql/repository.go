@@ -115,7 +115,6 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 
 	args = append(args, query.UserIDs, query.Username)
 
-	// todo squirrel
 	var pageSize int32
 	if query.PageSize > 0 {
 		pageSize = query.PageSize + 1
@@ -147,6 +146,7 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 	return users, nil
 }
 
+// todo bulk
 func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
