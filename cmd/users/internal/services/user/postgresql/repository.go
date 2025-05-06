@@ -35,24 +35,56 @@ func (r Repository) Add(ctx context.Context, users []*models.User) ([]*models.Us
 		}
 	}()
 
-	createdUsers := make([]*models.User, 0, len(users))
-	for _, u := range users {
-		query := `
+	query := `
 		insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
-		values ($1, $2, $3, $4, $5)
+		select user_id,
+		       user_name,
+		       user_password,
+		       user_created_at,
+		       user_last_login
+		from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[], $5::timestamptz[])
+		as source (user_id, user_name, user_password, user_created_at, user_last_login)
 		returning user_id`
 
+	userIDs := make([]uuid.UUID, len(users))
+	userNames := make([]string, len(users))
+	userPasswords := make([]string, len(users))
+	userCreatedAts := make([]time.Time, len(users))
+	userLastLogins := make([]time.Time, len(users))
+
+	for i, u := range users {
+		userIDs[i] = uuid.New()
+		userNames[i] = u.Name
+		userPasswords[i] = u.Password
+		userCreatedAts[i] = u.CreatedAt
+		userLastLogins[i] = u.LastLogin
+	}
+
+	rows, err := tx.Query(ctx, query, userIDs, userNames, userPasswords, userCreatedAts, userLastLogins)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert users: %w", err)
+	}
+	defer rows.Close()
+
+	createdUsers := make([]*models.User, 0, len(users))
+	i := 0
+	for rows.Next() {
 		var createdID string
-		err = tx.QueryRow(ctx, query, uuid.New(), u.Name, u.Password, u.CreatedAt, u.LastLogin).Scan(&createdID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add user: %w", err)
+		if err := rows.Scan(&createdID); err != nil {
+			return nil, fmt.Errorf("failed to scan returned user_id: %w", err)
 		}
 
-		u.ID, err = uuid.Parse(createdID)
+		users[i].ID, err = uuid.Parse(createdID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse UUID: %v", err)
 		}
-		createdUsers = append(createdUsers, u)
+
+		createdUsers = append(createdUsers, users[i])
+		i++
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
 	return createdUsers, nil
@@ -76,19 +108,14 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 	var args []interface{}
 
 	if query.PageToken != "" {
-		pageToken, err := uuid.Parse(query.PageToken)
-		if err != nil {
-			return nil, fmt.Errorf("invalid page token: %w", err)
-		}
-		args = append(args, pageToken)
+		args = append(args, query.PageToken)
 	} else {
 		args = append(args, uuid.Nil)
 	}
 
 	args = append(args, query.UserIDs, query.Username)
 
-	// todo use lib for constructing sql with params
-	// todo hash the pageToken
+	// todo squirrel
 	var pageSize int32
 	if query.PageSize > 0 {
 		pageSize = query.PageSize + 1
@@ -105,12 +132,12 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 	defer rows.Close()
 	var users []*models.User
 	for rows.Next() {
-		var u models.User
+		u := new(models.User)
 		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		users = append(users, &u) // todo may not be optimal way to acquire user pointer
+		users = append(users, u)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -174,7 +201,7 @@ func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models
 
 	updatedUsers := make([]*models.User, 0, len(users))
 	for rows.Next() {
-		u := &models.User{}
+		u := new(models.User)
 		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
 			return nil, fmt.Errorf("failed to scan updated user: %w", err)
 		}

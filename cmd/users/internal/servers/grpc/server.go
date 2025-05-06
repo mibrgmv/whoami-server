@@ -21,12 +21,9 @@ func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Dura
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			interceptors.AuthUnaryInterceptor,
-			interceptors.CacheControlUnaryInterceptor,
-			interceptors.ETagUnaryInterceptor,
 		),
 		grpc.ChainStreamInterceptor(
 			interceptors.AuthStreamInterceptor,
-			interceptors.CacheControlStreamInterceptor,
 		),
 	)
 

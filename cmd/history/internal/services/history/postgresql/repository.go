@@ -101,12 +101,12 @@ func (r Repository) Query(ctx context.Context, query history.Query) ([]*models.Q
 	defer rows.Close()
 	var items []*models.QuizCompletionHistoryItem
 	for rows.Next() {
-		var i models.QuizCompletionHistoryItem
+		i := new(models.QuizCompletionHistoryItem)
 		if err := rows.Scan(&i.ID, &i.UserID, &i.QuizID, &i.QuizResult); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
-		items = append(items, &i)
+		items = append(items, i)
 	}
 
 	if err := rows.Err(); err != nil {

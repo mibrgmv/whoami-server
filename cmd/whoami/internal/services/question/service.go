@@ -36,10 +36,10 @@ func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models
 	return s.repo.Add(ctx, quizID, questions)
 }
 
-func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]models.Question, error) {
+func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.Question, error) {
 	cacheKey := fmt.Sprintf(questionsCacheKey, quizID)
 
-	var questions []models.Question
+	var questions []*models.Question
 	err := s.cache.Get(ctx, cacheKey, &questions)
 	if err == nil {
 		return questions, nil
@@ -72,7 +72,7 @@ func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, 
 	numResults := len(quiz.Results)
 	results := make([]float32, numResults)
 
-	questionsMap := make(map[uuid.UUID]models.Question)
+	questionsMap := make(map[uuid.UUID]*models.Question)
 	for _, q := range questions {
 		questionsMap[q.ID] = q
 	}

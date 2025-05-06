@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/cmd/users/internal/services/user"
-	"whoami-server/internal/jwt"
+	"whoami-server/internal/tools/jwt"
 	pb "whoami-server/protogen/golang/user"
 )
 
@@ -137,7 +137,6 @@ func (s *UserService) CreateUser(ctx context.Context, request *pb.CreateUserRequ
 	return &pb.User{
 		UserId:    usr.ID.String(),
 		Username:  usr.Name,
-		Password:  usr.Password,
 		CreatedAt: timestamppb.New(usr.CreatedAt),
 		LastLogin: timestamppb.New(usr.LastLogin),
 	}, nil
@@ -182,7 +181,6 @@ func (s *UserService) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 	return &pb.User{
 		UserId:    updatedUser.ID.String(),
 		Username:  updatedUser.Name,
-		Password:  updatedUser.Password,
 		CreatedAt: timestamppb.New(updatedUser.CreatedAt),
 		LastLogin: timestamppb.New(updatedUser.LastLogin),
 	}, nil

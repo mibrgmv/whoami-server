@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"strings"
-	"whoami-server/internal/jwt"
+	"whoami-server/internal/tools/jwt"
 )
 
 var (
@@ -20,23 +20,21 @@ var (
 var exemptMethods = map[string]bool{
 	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
 
-	"/user.UserService/Register":     true,
-	"/user.UserService/Login":        true,
-	"/user.UserService/RefreshToken": true,
-	"/user.UserService/GetCurrent":   false,
-	"/user.UserService/GetBatch":     false,
-	"/user.UserService/GetStream":    false,
+	"/user.UserService/GetCurrentUser": false,
+	"/user.UserService/LoginUser":      true,
+	"/user.UserService/RefreshToken":   true,
+	"/user.UserService/BatchGetUsers":  false,
+	"/user.UserService/CreateUser":     true,
+	"/user.UserService/UpdateUser":     false,
+	"/user.UserService/DeleteUser":     false,
 
-	"/quiz.QuizService/AddStream": false,
-	"/quiz.QuizService/GetBatch":  true,
-	"/quiz.QuizService/GetByID":   false,
-	"/quiz.QuizService/GetStream": true,
+	"/quiz.QuizService/CreateQuiz":      false,
+	"/quiz.QuizService/GetQuiz":         false,
+	"/quiz.QuizService/BatchGetQuizzes": true,
 
-	"/question.QuestionService/AddStream":       false,
-	"/question.QuestionService/GetBatch":        false,
-	"/question.QuestionService/GetByQuizID":     false,
-	"/question.QuestionService/EvaluateAnswers": false,
-	"/question.QuestionService/GetStream":       false,
+	"/question.QuestionService/BatchCreateQuestions": false,
+	"/question.QuestionService/BatchGetQuestions":    false,
+	"/question.QuestionService/EvaluateAnswers":      false,
 }
 
 func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

@@ -65,7 +65,7 @@ func (r *Repository) Add(ctx context.Context, quizID uuid.UUID, questions []*mod
 	return createdQuestions, nil
 }
 
-func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.Question, error) {
+func (r *Repository) Query(ctx context.Context, query question.Query) ([]*models.Question, error) {
 	sql := `
 	select question_id,
 		   question_body,
@@ -79,9 +79,9 @@ func (r *Repository) Query(ctx context.Context, query question.Query) ([]models.
 	}
 	defer rows.Close()
 
-	var questions []models.Question
+	var questions []*models.Question
 	for rows.Next() {
-		var q models.Question
+		q := new(models.Question)
 		var optionsWeightsJSON []byte
 
 		if err := rows.Scan(&q.ID, &q.Body, &optionsWeightsJSON); err != nil {

@@ -17,7 +17,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.Quiz, error) {
+func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]*models.Quiz, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -34,7 +34,7 @@ func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.
 		}
 	}()
 
-	var createdQuizzes []models.Quiz
+	var createdQuizzes []*models.Quiz
 
 	// todo
 	for _, q := range quizzes {
@@ -53,13 +53,13 @@ func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse UUID: %v", err)
 		}
-		createdQuizzes = append(createdQuizzes, *q)
+		createdQuizzes = append(createdQuizzes, q)
 	}
 
 	return createdQuizzes, nil
 }
 
-func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz, error) {
+func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]*models.Quiz, error) {
 	sql := `
 	select quiz_id,
 		   quiz_title,
@@ -85,8 +85,6 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 
 	args = append(args, query.Ids)
 
-	// todo use lib for constructing sql with params
-	// todo hash the pageToken
 	var pageSize int32
 	if query.PageSize > 0 {
 		pageSize = query.PageSize + 1
@@ -101,9 +99,9 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]models.Quiz
 	}
 
 	defer rows.Close()
-	var quizzes []models.Quiz
+	var quizzes []*models.Quiz
 	for rows.Next() {
-		var q models.Quiz
+		q := new(models.Quiz)
 		if err := rows.Scan(&q.ID, &q.Title, &q.Results); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}

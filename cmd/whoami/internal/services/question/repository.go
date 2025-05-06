@@ -8,5 +8,5 @@ import (
 
 type Repository interface {
 	Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error)
-	Query(ctx context.Context, query Query) ([]models.Question, error)
+	Query(ctx context.Context, query Query) ([]*models.Question, error)
 }

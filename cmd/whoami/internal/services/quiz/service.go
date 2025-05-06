@@ -17,11 +17,11 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Add(ctx context.Context, quizzes []*models.Quiz) ([]models.Quiz, error) {
+func (s *Service) Add(ctx context.Context, quizzes []*models.Quiz) ([]*models.Quiz, error) {
 	return s.repo.Add(ctx, quizzes)
 }
 
-func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]models.Quiz, string, error) {
+func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]*models.Quiz, string, error) {
 	quizzes, err := s.repo.Query(ctx, Query{PageSize: pageSize, PageToken: pageToken})
 	if err != nil {
 		return nil, "", err
@@ -46,5 +46,5 @@ func (s *Service) GetByID(ctx context.Context, quizID uuid.UUID) (*models.Quiz, 
 		return nil, ErrQuizNotFound
 	}
 
-	return &quizzes[0], nil
+	return quizzes[0], nil
 }

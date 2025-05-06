@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"whoami-server/cmd/history/internal/services/history"
+	history "whoami-server/cmd/history/internal/services/history/grpc"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
 	pb "whoami-server/protogen/golang/history"
 )

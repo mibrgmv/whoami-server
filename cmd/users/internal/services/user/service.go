@@ -9,6 +9,7 @@ import (
 	"time"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/internal/cache"
+	"whoami-server/internal/tools"
 )
 
 var (
@@ -33,7 +34,6 @@ func NewService(repo Repository, cache cache.Interface) *Service {
 	}
 }
 
-// todo rename to create
 func (s *Service) Register(ctx context.Context, username, password string) (*models.User, error) {
 	users, _ := s.users.Query(ctx, Query{Username: &username, PageSize: 1})
 	if len(users) != 0 {
@@ -113,14 +113,19 @@ func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*models.User, erro
 }
 
 func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]*models.User, string, error) {
-	cacheKey := fmt.Sprintf(usersCacheKey, pageSize, pageToken)
+	parsedToken, err := tools.ParsePageToken(pageToken)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	cacheKey := fmt.Sprintf(usersCacheKey, pageSize, parsedToken)
 
 	var result struct {
 		Users         []*models.User `json:"users"`
 		NextPageToken string         `json:"next_page_token"`
 	}
 
-	err := s.cache.Get(ctx, cacheKey, &result)
+	err = s.cache.Get(ctx, cacheKey, &result)
 	if err == nil {
 		return result.Users, result.NextPageToken, nil
 	}
@@ -133,7 +138,8 @@ func (s *Service) Get(ctx context.Context, pageSize int32, pageToken string) ([]
 	var nextPageToken string
 	if pageSize > 0 && len(users) > int(pageSize) {
 		users = users[:len(users)-1]
-		nextPageToken = users[len(users)-1].ID.String()
+		lastUserID := users[len(users)-1].ID
+		nextPageToken = tools.CreatePageToken(lastUserID)
 	}
 
 	result.Users = users
