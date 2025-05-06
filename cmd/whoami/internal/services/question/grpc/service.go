@@ -48,8 +48,12 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 
 func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.BatchCreateQuestionsRequest) (*pb.BatchCreateQuestionsResponse, error) {
 	var questionsToCreate []*models.Question
-	for _, pbq := range request.Requests {
-		q, err := models.QuestionToModel(pbq)
+	for _, req := range request.Requests {
+		if req.QuizId != request.QuizId {
+			return nil, status.Error(codes.InvalidArgument, "quiz id does not match request quiz id")
+		}
+
+		q, err := models.QuestionToModel(req)
 		if err != nil {
 			log.Fatalf("parse error %v", err)
 		}

@@ -380,7 +380,6 @@ func (x *BatchGetQuestionsResponse) GetQuestions() []*QuestionResponse {
 	return nil
 }
 
-// todo quiz_id inconsistency
 type QuestionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`

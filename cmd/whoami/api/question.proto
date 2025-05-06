@@ -65,7 +65,6 @@ message BatchGetQuestionsResponse {
   repeated QuestionResponse questions = 1;
 }
 
-// todo quiz_id inconsistency 
 message QuestionResponse {
   string id = 1;
   string quiz_id = 2;

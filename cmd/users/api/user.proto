@@ -11,30 +11,17 @@ import "google/api/http.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 service UserService {
-  rpc Register(RegisterRequest) returns (User) {
+  // todo auth service
+  rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
     option (google.api.http) = {
-      post: "/api/v1/register"
-      body: "*"
+      get: "/api/v1/users/current"
     };
   }
 
-  rpc Login(LoginRequest) returns (LoginResponse) {
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
     option (google.api.http) = {
       post: "/api/v1/login"
       body: "*"
-    };
-  }
-
-  rpc Update(UpdateRequest) returns (User) {
-    option (google.api.http) = {
-      put: "/api/v1/users/{user_id}"
-      body: "*"
-    };
-  }
-
-  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      delete: "/api/v1/users/{user_id}"
     };
   }
 
@@ -44,20 +31,35 @@ service UserService {
       body: "*"
     };
   }
-
-  rpc GetCurrent(google.protobuf.Empty) returns (User) {
-    option (google.api.http) = {
-      get: "/api/v1/users/current"
-    };
-  }
-
-  rpc GetBatch(GetBatchRequest) returns (GetBatchResponse) {
+  // todo creation service
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {
     option (google.api.http) = {
       get: "/api/v1/users"
     };
   }
+
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/api/v1/users"
+      body: "*"
+    };
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{user_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{user_id}"
+    };
+  }
 }
 
+// todo make two services: auth and creation
 message User {
   string user_id = 1;
   string username = 2;
@@ -66,17 +68,12 @@ message User {
   google.protobuf.Timestamp last_login = 5;
 }
 
-message RegisterRequest {
+message LoginUserRequest {
   string username = 1;
   string password = 2;
 }
 
-message LoginRequest {
-  string username = 1;
-  string password = 2;
-}
-
-message LoginResponse {
+message LoginUserResponse {
   string access_token = 1;
   string refresh_token = 2;
   string user_id = 3;
@@ -86,28 +83,32 @@ message RefreshTokenRequest {
   string refresh_token = 1;
 }
 
-message UpdateRequest {
+message RefreshTokenResponse {
+  string access_token = 1;
+  string user_id = 2;
+}
+
+message CreateUserRequest {
+  User user = 1;
+}
+
+message UpdateUserRequest {
   string user_id = 1;
   string username = 2;
   string current_password = 3;
   string new_password = 4;
 }
 
-message DeleteRequest {
+message DeleteUserRequest {
   string user_id = 1;
 }
 
-message RefreshTokenResponse {
-  string access_token = 1;
-  string user_id = 2;
-}
-
-message GetBatchRequest {
+message BatchGetUsersRequest {
   int32 page_size = 1;
   string page_token = 2;
 }
 
-message GetBatchResponse {
+message BatchGetUsersResponse {
   repeated User users = 1;
   string next_page_token = 2;
 }

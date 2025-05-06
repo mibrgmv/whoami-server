@@ -268,8 +268,7 @@
             "type": "string"
           }
         }
-      },
-      "title": "todo quiz_id inconsistency"
+      }
     },
     "rpcStatus": {
       "type": "object",

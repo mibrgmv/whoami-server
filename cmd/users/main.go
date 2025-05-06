@@ -18,7 +18,7 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefault("users")
+	cfg, err := config.GetDefaultForService("users")
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}

@@ -18,12 +18,12 @@
   "paths": {
     "/api/v1/login": {
       "post": {
-        "operationId": "UserService_Login",
+        "operationId": "UserService_LoginUser",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userLoginResponse"
+              "$ref": "#/definitions/userLoginUserResponse"
             }
           },
           "default": {
@@ -39,7 +39,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/userLoginRequest"
+              "$ref": "#/definitions/userLoginUserRequest"
             }
           }
         ],
@@ -80,46 +80,15 @@
         ]
       }
     },
-    "/api/v1/register": {
-      "post": {
-        "operationId": "UserService_Register",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userUser"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/userRegisterRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
     "/api/v1/users": {
       "get": {
-        "operationId": "UserService_GetBatch",
+        "summary": "todo creation service",
+        "operationId": "UserService_BatchGetUsers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/userGetBatchResponse"
+              "$ref": "#/definitions/userBatchGetUsersResponse"
             }
           },
           "default": {
@@ -147,11 +116,42 @@
         "tags": [
           "UserService"
         ]
+      },
+      "post": {
+        "operationId": "UserService_CreateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userCreateUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
       }
     },
     "/api/v1/users/current": {
       "get": {
-        "operationId": "UserService_GetCurrent",
+        "summary": "todo auth service",
+        "operationId": "UserService_GetCurrentUser",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -173,7 +173,7 @@
     },
     "/api/v1/users/{userId}": {
       "delete": {
-        "operationId": "UserService_Delete",
+        "operationId": "UserService_DeleteUser",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -202,7 +202,7 @@
         ]
       },
       "put": {
-        "operationId": "UserService_Update",
+        "operationId": "UserService_UpdateUser",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -229,7 +229,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UserServiceUpdateBody"
+              "$ref": "#/definitions/UserServiceUpdateUserBody"
             }
           }
         ],
@@ -240,7 +240,7 @@
     }
   },
   "definitions": {
-    "UserServiceUpdateBody": {
+    "UserServiceUpdateUserBody": {
       "type": "object",
       "properties": {
         "username": {
@@ -282,7 +282,7 @@
         }
       }
     },
-    "userGetBatchResponse": {
+    "userBatchGetUsersResponse": {
       "type": "object",
       "properties": {
         "users": {
@@ -297,7 +297,15 @@
         }
       }
     },
-    "userLoginRequest": {
+    "userCreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/userUser"
+        }
+      }
+    },
+    "userLoginUserRequest": {
       "type": "object",
       "properties": {
         "username": {
@@ -308,7 +316,7 @@
         }
       }
     },
-    "userLoginResponse": {
+    "userLoginUserResponse": {
       "type": "object",
       "properties": {
         "accessToken": {
@@ -341,17 +349,6 @@
         }
       }
     },
-    "userRegisterRequest": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
     "userUser": {
       "type": "object",
       "properties": {
@@ -372,7 +369,8 @@
           "type": "string",
           "format": "date-time"
         }
-      }
+      },
+      "title": "todo make two services: auth and creation"
     }
   }
 }

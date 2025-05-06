@@ -1,19 +1,20 @@
-package history
+package grpc
 
 import (
 	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"whoami-server/cmd/history/internal/models"
+	"whoami-server/cmd/history/internal/services/history"
 	pb "whoami-server/protogen/golang/history"
 )
 
 type Service struct {
-	repo Repository
+	repo history.Repository
 	pb.UnimplementedQuizCompletionHistoryServiceServer
 }
 
-func NewService(repo Repository) *Service {
+func NewService(repo history.Repository) *Service {
 	return &Service{repo: repo}
 }
 
@@ -32,7 +33,7 @@ func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) 
 }
 
 func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsRequest) (*pb.BatchGetItemsResponse, error) {
-	items, err := s.repo.Query(ctx, Query{PageSize: request.PageSize, PageToken: request.PageToken})
+	items, err := s.repo.Query(ctx, history.Query{PageSize: request.PageSize, PageToken: request.PageToken})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}

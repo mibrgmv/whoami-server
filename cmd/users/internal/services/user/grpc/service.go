@@ -26,26 +26,29 @@ func NewUserService(service *user.Service) *UserService {
 	}
 }
 
-func (s *UserService) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.User, error) {
-	if request.Username == "" || request.Password == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
+func (s *UserService) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	usr, err := s.service.Register(ctx, request.Username, request.Password)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to register user: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
 	}
 
-	return &pb.User{
-		UserId:    usr.ID.String(),
-		Username:  usr.Name,
-		Password:  usr.Password,
-		CreatedAt: timestamppb.New(usr.CreatedAt),
-		LastLogin: timestamppb.New(usr.LastLogin),
-	}, nil
+	usr, err := s.service.GetByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			return nil, status.Errorf(codes.NotFound, "user not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
+	}
+
+	return usr.ToProto(), nil
 }
 
-func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (s *UserService) LoginUser(ctx context.Context, request *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	if request.Username == "" || request.Password == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
 	}
@@ -66,14 +69,81 @@ func (s *UserService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 		return nil, status.Errorf(codes.Internal, "failed to generate tokens: %v", err)
 	}
 
-	return &pb.LoginResponse{
+	return &pb.LoginUserResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		UserId:       userID.String(),
 	}, nil
 }
 
-func (s *UserService) Update(ctx context.Context, request *pb.UpdateRequest) (*pb.User, error) {
+func (s *UserService) RefreshToken(ctx context.Context, request *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
+	if request.RefreshToken == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
+	}
+
+	userID, _, err := jwt.ValidateRefreshToken(request.RefreshToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid refresh token: %v", err)
+	}
+
+	accessToken, err := jwt.RefreshAccessToken(request.RefreshToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate new access token: %v", err)
+	}
+
+	return &pb.RefreshTokenResponse{
+		AccessToken: accessToken,
+		UserId:      userID,
+	}, nil
+}
+
+func (s *UserService) BatchGetUsers(ctx context.Context, request *pb.BatchGetUsersRequest) (*pb.BatchGetUsersResponse, error) {
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	_, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
+	}
+
+	users, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get users: %v", err)
+	}
+
+	var pbUsers []*pb.User
+	for _, u := range users {
+		pbUsers = append(pbUsers, u.ToProto())
+	}
+
+	return &pb.BatchGetUsersResponse{
+		Users:         pbUsers,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
+func (s *UserService) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.User, error) {
+	if request.User.Username == "" || request.User.Password == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
+	}
+
+	usr, err := s.service.Register(ctx, request.User.Username, request.User.Password)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to register user: %v", err)
+	}
+
+	return &pb.User{
+		UserId:    usr.ID.String(),
+		Username:  usr.Name,
+		Password:  usr.Password,
+		CreatedAt: timestamppb.New(usr.CreatedAt),
+		LastLogin: timestamppb.New(usr.LastLogin),
+	}, nil
+}
+
+func (s *UserService) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest) (*pb.User, error) {
 	userID, err := uuid.Parse(request.UserId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
@@ -101,6 +171,7 @@ func (s *UserService) Update(ctx context.Context, request *pb.UpdateRequest) (*p
 	}
 
 	// todo username change does not work
+	// todo use field mask
 	updatedUsers, err := s.service.Update(ctx, []*models.User{&usr})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update user: %v", err)
@@ -117,7 +188,7 @@ func (s *UserService) Update(ctx context.Context, request *pb.UpdateRequest) (*p
 	}, nil
 }
 
-func (s *UserService) Delete(ctx context.Context, request *pb.DeleteRequest) (*emptypb.Empty, error) {
+func (s *UserService) DeleteUser(ctx context.Context, request *pb.DeleteUserRequest) (*emptypb.Empty, error) {
 	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
@@ -146,74 +217,4 @@ func (s *UserService) Delete(ctx context.Context, request *pb.DeleteRequest) (*e
 	}
 
 	return &emptypb.Empty{}, nil
-}
-
-func (s *UserService) RefreshToken(ctx context.Context, request *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
-	if request.RefreshToken == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
-	}
-
-	userID, _, err := jwt.ValidateRefreshToken(request.RefreshToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid refresh token: %v", err)
-	}
-
-	accessToken, err := jwt.RefreshAccessToken(request.RefreshToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate new access token: %v", err)
-	}
-
-	return &pb.RefreshTokenResponse{
-		AccessToken: accessToken,
-		UserId:      userID,
-	}, nil
-}
-
-func (s *UserService) GetCurrent(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
-	userIDStr, ok := ctx.Value("user_id").(string)
-	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
-	}
-
-	usr, err := s.service.GetByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
-			return nil, status.Errorf(codes.NotFound, "user not found")
-		}
-		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
-	}
-
-	return usr.ToProto(), nil
-}
-
-func (s *UserService) GetBatch(ctx context.Context, request *pb.GetBatchRequest) (*pb.GetBatchResponse, error) {
-	userIDStr, ok := ctx.Value("user_id").(string)
-	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
-	}
-
-	_, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
-	}
-
-	users, nextPageToken, err := s.service.Get(ctx, request.PageSize, request.PageToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get users: %v", err)
-	}
-
-	var pbUsers []*pb.User
-	for _, u := range users {
-		pbUsers = append(pbUsers, u.ToProto())
-	}
-
-	return &pb.GetBatchResponse{
-		Users:         pbUsers,
-		NextPageToken: nextPageToken,
-	}, nil
 }

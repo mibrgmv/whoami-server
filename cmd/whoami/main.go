@@ -20,7 +20,7 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefault("whoami")
+	cfg, err := config.GetDefaultForService("whoami")
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}
