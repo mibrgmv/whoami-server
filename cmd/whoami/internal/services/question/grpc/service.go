@@ -89,7 +89,6 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.
 	}, nil
 }
 
-// todo not paginated -> fix api
 func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *pb.BatchGetQuestionsRequest) (*pb.BatchGetQuestionsResponse, error) {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
