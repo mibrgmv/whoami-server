@@ -10,11 +10,11 @@ type Config struct {
 	CORS            CORS   `mapstructure:"cors"`
 }
 
-// todo unused
 type CORS struct {
 	AllowedOrigins   []string `mapstructure:"allowed_origins"`
 	AllowedMethods   []string `mapstructure:"allowed_methods"`
 	AllowedHeaders   []string `mapstructure:"allowed_headers"`
+	ExposeHeaders    []string `mapstructure:"expose_headers"`
 	AllowCredentials bool     `mapstructure:"allow_credentials"`
 	MaxAge           int      `mapstructure:"max_age"`
 }

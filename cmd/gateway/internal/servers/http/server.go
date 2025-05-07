@@ -69,20 +69,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	}
 
 	mux := http.NewServeMux()
-
-	// todo use config
-	mux.HandleFunc("/api/v1/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		gwmux.ServeHTTP(w, r)
-	})
+	mux.Handle("/api/v1/", gwmux)
 
 	return mux, nil
 }
@@ -96,7 +83,7 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig http
 	handler := ApplyMiddleware(mux,
 		recovery.Middleware,
 		logging.Middleware,
-		cors.Middleware,
+		cors.Middleware(httpConfig.CORS),
 	)
 
 	server := &http.Server{

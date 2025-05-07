@@ -151,7 +151,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 
 	err = s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
 	if err != nil {
-		// todo do something -> retry
+		log.Printf("failed to add to quiz completion history: %v", err)
 	}
 
 	return &pb.EvaluateAnswersResponse{Result: result}, nil

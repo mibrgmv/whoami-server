@@ -12,6 +12,9 @@ func CreatePageToken(userID uuid.UUID) string {
 }
 
 func ParsePageToken(token string) (string, error) {
+	if len(token) == 0 {
+		return "", nil
+	}
 	decoded, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
 		return "", fmt.Errorf("invalid page token: %w", err)
