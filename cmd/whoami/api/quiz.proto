@@ -34,13 +34,11 @@ message Quiz {
   string id = 1;
   string title = 2;
   repeated string results = 3;
-  string image_url = 4;
 }
 
 message CreateQuizRequest {
   string title = 1;
   repeated string results = 2;
-  string image_url = 3;
 }
 
 message GetQuizRequest {

@@ -28,12 +28,12 @@ func (s *QuizService) CreateQuiz(ctx context.Context, request *pb.CreateQuizRequ
 		Results: request.Results,
 	}
 
-	quizzes, err := s.service.Add(ctx, []*models.Quiz{q})
+	createdQuiz, err := s.service.Add(ctx, q)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create quiz: %v", err)
 	}
 
-	return quizzes[0].ToProto(), nil
+	return createdQuiz.ToProto(), nil
 }
 
 func (s *QuizService) GetQuiz(ctx context.Context, request *pb.GetQuizRequest) (*pb.Quiz, error) {

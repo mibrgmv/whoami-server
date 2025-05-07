@@ -17,7 +17,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]*models.Quiz, error) {
+func (r *Repository) Add(ctx context.Context, quiz *models.Quiz) (*models.Quiz, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -34,29 +34,32 @@ func (r *Repository) Add(ctx context.Context, quizzes []*models.Quiz) ([]*models
 		}
 	}()
 
-	var createdQuizzes []*models.Quiz
+	sql := `
+	insert into quizzes (quiz_id, quiz_title, quiz_results)
+	values ($1, $2, $3)
+	returning quiz_id
+	`
 
-	// todo
-	for _, q := range quizzes {
-		query := `
-		insert into quizzes (quiz_id, quiz_title, quiz_results)
-		values ($1, $2, $3)
-		returning quiz_id`
+	rows, err := tx.Query(ctx, sql, uuid.New(), quiz.Title, quiz.Results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert quizzes: %w", err)
+	}
+	defer rows.Close()
 
-		var createdID string
-		err = tx.QueryRow(ctx, query, uuid.New(), q.Title, q.Results).Scan(&createdID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add quiz: %w", err)
+	for i := 0; rows.Next(); i++ {
+		var createdID uuid.UUID
+		if err := rows.Scan(&createdID); err != nil {
+			return nil, fmt.Errorf("failed to scan returned quiz_id: %w", err)
 		}
 
-		q.ID, err = uuid.Parse(createdID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse UUID: %v", err)
-		}
-		createdQuizzes = append(createdQuizzes, q)
+		quiz.ID = createdID
 	}
 
-	return createdQuizzes, nil
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return quiz, nil
 }
 
 func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]*models.Quiz, error) {
@@ -97,8 +100,8 @@ func (r *Repository) Query(ctx context.Context, query quiz.Query) ([]*models.Qui
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
-
 	defer rows.Close()
+
 	var quizzes []*models.Quiz
 	for rows.Next() {
 		q := new(models.Quiz)

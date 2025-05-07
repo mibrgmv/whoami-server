@@ -70,20 +70,14 @@ func (r *Repository) Add(ctx context.Context, questions []*models.Question) ([]*
 	defer rows.Close()
 
 	createdQuestions := make([]*models.Question, 0, len(questions))
-	i := 0
-	for rows.Next() {
-		var createdID string
+	for i := 0; rows.Next(); i++ {
+		var createdID uuid.UUID
 		if err := rows.Scan(&createdID); err != nil {
 			return nil, fmt.Errorf("failed to scan returned question_id: %w", err)
 		}
 
-		questions[i].ID, err = uuid.Parse(createdID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse UUID: %v", err)
-		}
-
+		questions[i].ID = createdID
 		createdQuestions = append(createdQuestions, questions[i])
-		i++
 	}
 
 	if err := rows.Err(); err != nil {

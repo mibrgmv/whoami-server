@@ -150,9 +150,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "imageUrl": {
-          "type": "string"
         }
       }
     },
@@ -170,9 +167,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "imageUrl": {
-          "type": "string"
         }
       }
     },
