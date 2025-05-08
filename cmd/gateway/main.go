@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"whoami-server/cmd/gateway/internal/servers/http"
 	"whoami-server/internal/config"
+	jwtcfg "whoami-server/internal/config/auth/jwt"
+	"whoami-server/internal/tools/jwt"
 )
 
 func main() {
@@ -34,6 +36,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to get history config: %v", err)
 	}
+
+	jwtCfg, err := jwtcfg.LoadDefault()
+	if err != nil {
+		log.Fatalf("failed to read jwt config: %v", err)
+	}
+	jwt.Init(jwtCfg)
 
 	grpcAddresses := map[string]string{
 		"whoami":  whoamiCfg.Grpc.GetAddr(),

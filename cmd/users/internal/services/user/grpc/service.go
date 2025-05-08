@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/cmd/users/internal/services/user"
-	"whoami-server/internal/tools/jwt"
 	pb "whoami-server/protogen/golang/user"
 )
 
@@ -24,77 +23,6 @@ func NewUserService(service *user.Service) *UserService {
 	return &UserService{
 		service: service,
 	}
-}
-
-func (s *UserService) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
-	userIDStr, ok := ctx.Value("user_id").(string)
-	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
-	}
-
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
-	}
-
-	usr, err := s.service.GetByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
-			return nil, status.Errorf(codes.NotFound, "user not found")
-		}
-		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
-	}
-
-	return usr.ToProto(), nil
-}
-
-func (s *UserService) LoginUser(ctx context.Context, request *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	if request.Username == "" || request.Password == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
-	}
-
-	userID, err := s.service.Login(ctx, request.Username, request.Password)
-	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
-			return nil, status.Errorf(codes.NotFound, "user not found")
-		}
-		if errors.Is(err, user.ErrIncorrectPassword) {
-			return nil, status.Errorf(codes.Unauthenticated, "incorrect password")
-		}
-		return nil, status.Errorf(codes.Internal, "failed to login: %v", err)
-	}
-
-	accessToken, refreshToken, err := jwt.GenerateTokenPair(userID.String())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate tokens: %v", err)
-	}
-
-	return &pb.LoginUserResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		UserId:       userID.String(),
-	}, nil
-}
-
-func (s *UserService) RefreshToken(ctx context.Context, request *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
-	if request.RefreshToken == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
-	}
-
-	userID, _, err := jwt.ValidateRefreshToken(request.RefreshToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid refresh token: %v", err)
-	}
-
-	accessToken, err := jwt.RefreshAccessToken(request.RefreshToken)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate new access token: %v", err)
-	}
-
-	return &pb.RefreshTokenResponse{
-		AccessToken: accessToken,
-		UserId:      userID,
-	}, nil
 }
 
 func (s *UserService) BatchGetUsers(ctx context.Context, request *pb.BatchGetUsersRequest) (*pb.BatchGetUsersResponse, error) {
@@ -122,6 +50,28 @@ func (s *UserService) BatchGetUsers(ctx context.Context, request *pb.BatchGetUse
 		Users:         pbUsers,
 		NextPageToken: nextPageToken,
 	}, nil
+}
+
+func (s *UserService) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) (*pb.User, error) {
+	userIDStr, ok := ctx.Value("user_id").(string)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
+	}
+
+	usr, err := s.service.GetByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			return nil, status.Errorf(codes.NotFound, "user not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
+	}
+
+	return usr.ToProto(), nil
 }
 
 func (s *UserService) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.User, error) {

@@ -122,8 +122,8 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
-
 	defer rows.Close()
+
 	var users []*models.User
 	for rows.Next() {
 		u := new(models.User)

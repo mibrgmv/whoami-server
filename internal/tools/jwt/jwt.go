@@ -5,12 +5,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"time"
+	jwtcfg "whoami-server/internal/config/auth/jwt"
 )
 
 var (
-	AccessTokenKey  = []byte("access_secret_key")
-	RefreshTokenKey = []byte("refresh_secret_key")
+	accessTokenSecret  []byte
+	refreshTokenSecret []byte
+	accessTokenExpiry  time.Duration
+	refreshTokenExpiry time.Duration
 )
+
+func Init(cfg *jwtcfg.Config) {
+	accessTokenSecret = []byte(cfg.AccessSecret)
+	refreshTokenSecret = []byte(cfg.RefreshSecret)
+	accessTokenExpiry = cfg.GetAccessExpiry()
+	refreshTokenExpiry = cfg.GetRefreshExpiry()
+}
 
 type TokenType string
 
@@ -33,7 +43,7 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(5 * time.Minute) // todo
+	accessExpiration := time.Now().Add(accessTokenExpiry)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
@@ -46,13 +56,13 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessToken, err = accessJWT.SignedString(AccessTokenKey)
+	accessToken, err = accessJWT.SignedString(accessTokenSecret)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to sign access token: %w", err)
 	}
 
 	refreshTokenID := uuid.New().String()
-	refreshExpiration := time.Now().Add(7 * 24 * time.Hour) // todo
+	refreshExpiration := time.Now().Add(refreshTokenExpiry)
 	refreshClaims := &Claims{
 		UserID:    userID,
 		TokenID:   refreshTokenID,
@@ -65,7 +75,7 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshToken, err = refreshJWT.SignedString(RefreshTokenKey)
+	refreshToken, err = refreshJWT.SignedString(refreshTokenSecret)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to sign refresh token: %w", err)
 	}
@@ -79,7 +89,7 @@ func ValidateAccessToken(tokenString string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return AccessTokenKey, nil
+		return accessTokenSecret, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -104,7 +114,7 @@ func ValidateRefreshToken(tokenString string) (string, string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return RefreshTokenKey, nil
+		return refreshTokenSecret, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -130,7 +140,7 @@ func RefreshAccessToken(refreshToken string) (string, error) {
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(5 * time.Minute) // todo
+	accessExpiration := time.Now().Add(accessTokenExpiry)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
@@ -143,5 +153,5 @@ func RefreshAccessToken(refreshToken string) (string, error) {
 	}
 
 	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	return accessJWT.SignedString(AccessTokenKey)
+	return accessJWT.SignedString(accessTokenSecret)
 }

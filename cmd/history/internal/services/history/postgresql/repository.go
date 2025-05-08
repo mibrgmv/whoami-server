@@ -97,8 +97,8 @@ func (r Repository) Query(ctx context.Context, query history.Query) ([]*models.Q
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
-
 	defer rows.Close()
+
 	var items []*models.QuizCompletionHistoryItem
 	for rows.Next() {
 		i := new(models.QuizCompletionHistoryItem)

@@ -16,73 +16,8 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/login": {
-      "post": {
-        "operationId": "UserService_LoginUser",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userLoginUserResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/userLoginUserRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
-    "/api/v1/refresh": {
-      "post": {
-        "operationId": "UserService_RefreshToken",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/userRefreshTokenResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/userRefreshTokenRequest"
-            }
-          }
-        ],
-        "tags": [
-          "UserService"
-        ]
-      }
-    },
     "/api/v1/users": {
       "get": {
-        "summary": "todo creation service",
         "operationId": "UserService_BatchGetUsers",
         "responses": {
           "200": {
@@ -150,7 +85,6 @@
     },
     "/api/v1/users/current": {
       "get": {
-        "summary": "todo auth service",
         "operationId": "UserService_GetCurrentUser",
         "responses": {
           "200": {
@@ -305,50 +239,6 @@
         }
       }
     },
-    "userLoginUserRequest": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    },
-    "userLoginUserResponse": {
-      "type": "object",
-      "properties": {
-        "accessToken": {
-          "type": "string"
-        },
-        "refreshToken": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        }
-      }
-    },
-    "userRefreshTokenRequest": {
-      "type": "object",
-      "properties": {
-        "refreshToken": {
-          "type": "string"
-        }
-      }
-    },
-    "userRefreshTokenResponse": {
-      "type": "object",
-      "properties": {
-        "accessToken": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        }
-      }
-    },
     "userUser": {
       "type": "object",
       "properties": {
@@ -369,8 +259,7 @@
           "type": "string",
           "format": "date-time"
         }
-      },
-      "title": "todo make two services: auth and creation"
+      }
     }
   }
 }

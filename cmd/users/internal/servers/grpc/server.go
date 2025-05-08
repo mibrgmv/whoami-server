@@ -9,11 +9,13 @@ import (
 	"log"
 	"net"
 	"time"
+	authgrpc "whoami-server/cmd/users/internal/services/auth/grpc"
 	"whoami-server/cmd/users/internal/services/user"
 	usergrpc "whoami-server/cmd/users/internal/services/user/grpc"
 	pg "whoami-server/cmd/users/internal/services/user/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
 	"whoami-server/internal/interceptors"
+	authpb "whoami-server/protogen/golang/auth"
 	userpb "whoami-server/protogen/golang/user"
 )
 
@@ -29,9 +31,14 @@ func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Dura
 
 	redisService := redisservice.NewService(redisClient, redisTTL)
 	repo := pg.NewRepository(pool)
-	service := user.NewService(repo, redisService)
-	server := usergrpc.NewUserService(service)
-	userpb.RegisterUserServiceServer(s, server)
+	userService := user.NewService(repo, redisService)
+
+	userGrpcServer := usergrpc.NewUserService(userService)
+	userpb.RegisterUserServiceServer(s, userGrpcServer)
+
+	authGrpcServer := authgrpc.NewAuthService(userService)
+	authpb.RegisterAuthorizationServiceServer(s, authGrpcServer)
+
 	reflection.Register(s)
 	return s
 }

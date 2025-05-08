@@ -21,9 +21,14 @@ func LoadDefault() (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
+	redisConfig := viper.Sub("redis")
+	if redisConfig == nil {
+		return nil, fmt.Errorf("redis configuration section not found")
+	}
+
 	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	if err := redisConfig.Unmarshal(&cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal redis config: %w", err)
 	}
 
 	return &cfg, nil

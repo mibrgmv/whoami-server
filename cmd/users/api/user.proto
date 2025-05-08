@@ -11,30 +11,15 @@ import "google/api/http.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 service UserService {
-  // todo auth service
-  rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
-    option (google.api.http) = {
-      get: "/api/v1/users/current"
-    };
-  }
-
-  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
-    option (google.api.http) = {
-      post: "/api/v1/login"
-      body: "*"
-    };
-  }
-
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
-    option (google.api.http) = {
-      post: "/api/v1/refresh"
-      body: "*"
-    };
-  }
-  // todo creation service
   rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {
     option (google.api.http) = {
       get: "/api/v1/users"
+    };
+  }
+
+  rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/users/current"
     };
   }
 
@@ -59,33 +44,12 @@ service UserService {
   }
 }
 
-// todo make two services: auth and creation
 message User {
   string user_id = 1;
   string username = 2;
   string password = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp last_login = 5;
-}
-
-message LoginUserRequest {
-  string username = 1;
-  string password = 2;
-}
-
-message LoginUserResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  string user_id = 3;
-}
-
-message RefreshTokenRequest {
-  string refresh_token = 1;
-}
-
-message RefreshTokenResponse {
-  string access_token = 1;
-  string user_id = 2;
 }
 
 message CreateUserRequest {

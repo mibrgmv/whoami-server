@@ -1,3 +1,9 @@
+jwt:
+  access_secret: "DE%^iuIBihu&TF"
+  refresh_secret: "567fuOIYvg9tuv"
+  access_expiry: 1h
+  refresh_expiry: 72h
+
 gateway:
   http:
     host: 0.0.0.0

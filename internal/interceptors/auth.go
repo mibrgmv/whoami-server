@@ -20,10 +20,11 @@ var (
 var exemptMethods = map[string]bool{
 	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
 
-	"/user.UserService/GetCurrentUser": false,
-	"/user.UserService/LoginUser":      true,
-	"/user.UserService/RefreshToken":   true,
+	"/auth.AuthorizationService/Login":        true,
+	"/user.AuthorizationService/RefreshToken": true,
+
 	"/user.UserService/BatchGetUsers":  false,
+	"/user.UserService/GetCurrentUser": false,
 	"/user.UserService/CreateUser":     true,
 	"/user.UserService/UpdateUser":     false,
 	"/user.UserService/DeleteUser":     false,

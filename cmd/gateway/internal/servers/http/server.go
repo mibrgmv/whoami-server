@@ -13,6 +13,7 @@ import (
 	"whoami-server/cmd/gateway/internal/servers/http/logging"
 	"whoami-server/cmd/gateway/internal/servers/http/recovery"
 	httpcfg "whoami-server/internal/config/api/http"
+	authpb "whoami-server/protogen/golang/auth"
 	historypb "whoami-server/protogen/golang/history"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
@@ -30,6 +31,15 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	if err := authpb.RegisterAuthorizationServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		grpcAddresses["users"],
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register user service: %w", err)
 	}
 
 	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
