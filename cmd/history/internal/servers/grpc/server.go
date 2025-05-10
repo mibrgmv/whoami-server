@@ -7,7 +7,8 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	history "whoami-server/cmd/history/internal/services/history/grpc"
+	"whoami-server/cmd/history/internal/services/history"
+	historygrpc "whoami-server/cmd/history/internal/services/history/grpc"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
 	pb "whoami-server/protogen/golang/history"
 )
@@ -16,7 +17,8 @@ func NewServer(pool *pgxpool.Pool) *grpc.Server {
 	s := grpc.NewServer()
 	repo := pg.NewRepository(pool)
 	service := history.NewService(repo)
-	pb.RegisterQuizCompletionHistoryServiceServer(s, service)
+	grpcServer := historygrpc.NewService(service)
+	pb.RegisterQuizCompletionHistoryServiceServer(s, grpcServer)
 	reflection.Register(s)
 	return s
 }

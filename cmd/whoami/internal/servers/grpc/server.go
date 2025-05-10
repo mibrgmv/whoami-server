@@ -21,7 +21,12 @@ import (
 	quizpb "whoami-server/protogen/golang/quiz"
 )
 
-func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*grpc.Server, error) {
+type Server struct {
+	grpcServer     *grpc.Server
+	questionServer *questiongrpc.QuestionService
+}
+
+func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*Server, error) {
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			interceptors.AuthUnaryInterceptor,
@@ -46,24 +51,34 @@ func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Dura
 	questionpb.RegisterQuestionServiceServer(s, questionServer)
 
 	reflection.Register(s)
-	return s, nil
+	return &Server{
+		grpcServer:     s,
+		questionServer: questionServer,
+	}, nil
 }
 
-func Start(pool *pgxpool.Pool, redis *redis.Client, ttl time.Duration, addr string, historyServiceAddr string) error {
+func (s *Server) Start(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	s, err := NewServer(pool, redis, ttl, historyServiceAddr)
-	if err != nil {
-		return err
-	}
-
 	log.Println("Serving gRPC on", lis.Addr())
-	if err := s.Serve(lis); err != nil {
+	if err := s.grpcServer.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}
 
 	return nil
+}
+
+func (s *Server) Stop() {
+	s.grpcServer.GracefulStop()
+
+	if s.questionServer != nil {
+		if err := s.questionServer.Close(); err != nil {
+			log.Printf("Error closing history service connection: %v", err)
+		}
+	}
+
+	log.Println("gRPC server stopped")
 }

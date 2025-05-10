@@ -18,8 +18,8 @@ var (
 func Init(cfg *jwtcfg.Config) {
 	accessTokenSecret = []byte(cfg.AccessSecret)
 	refreshTokenSecret = []byte(cfg.RefreshSecret)
-	accessTokenExpiry = cfg.GetAccessExpiry()
-	refreshTokenExpiry = cfg.GetRefreshExpiry()
+	accessTokenExpiry = cfg.AccessExpiry
+	refreshTokenExpiry = cfg.RefreshExpiry
 }
 
 type TokenType string

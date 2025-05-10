@@ -34,11 +34,3 @@ func LoadDefault() (*Config, error) {
 
 	return &cfg, nil
 }
-
-func (c *Config) GetAccessExpiry() time.Duration {
-	return c.AccessExpiry
-}
-
-func (c *Config) GetRefreshExpiry() time.Duration {
-	return c.RefreshExpiry
-}

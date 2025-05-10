@@ -14,11 +14,6 @@ type QuizCompletionHistoryItem struct {
 }
 
 func ToModel(protoItem *pb.QuizCompletionHistoryItem) (*QuizCompletionHistoryItem, error) {
-	id, err := uuid.Parse(protoItem.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse ID '%s': %w", protoItem.Id, err)
-	}
-
 	userID, err := uuid.Parse(protoItem.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse UserID '%s': %w", protoItem.UserId, err)
@@ -30,7 +25,6 @@ func ToModel(protoItem *pb.QuizCompletionHistoryItem) (*QuizCompletionHistoryIte
 	}
 
 	return &QuizCompletionHistoryItem{
-		ID:         id,
 		UserID:     userID,
 		QuizID:     quizID,
 		QuizResult: protoItem.QuizResult,

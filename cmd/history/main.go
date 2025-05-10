@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"whoami-server/cmd/history/internal/servers/grpc"
 	"whoami-server/internal/config"
+	jwtcfg "whoami-server/internal/config/auth/jwt"
+	"whoami-server/internal/tools/jwt"
 )
 
 func main() {
@@ -20,6 +22,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}
+
+	jwtCfg, err := jwtcfg.LoadDefault()
+	if err != nil {
+		log.Fatalf("failed to read jwt config: %v", err)
+	}
+	jwt.Init(jwtCfg)
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
 	if err != nil {

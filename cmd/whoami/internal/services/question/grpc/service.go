@@ -21,6 +21,7 @@ type QuestionService struct {
 	service       *question.Service
 	quizService   *quiz.Service
 	historyClient pbHistory.QuizCompletionHistoryServiceClient
+	historyConn   *grpc.ClientConn
 	pb.UnimplementedQuestionServiceServer
 }
 
@@ -30,20 +31,25 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 		return nil, fmt.Errorf("failed to connect to history service: %w", err)
 	}
 
-	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
-			fmt.Printf("failed to close connection to history service: %v", err)
-		}
-	}(conn)
-
 	historyClient := pbHistory.NewQuizCompletionHistoryServiceClient(conn)
 
 	return &QuestionService{
 		service:       service,
 		quizService:   quizService,
 		historyClient: historyClient,
+		historyConn:   conn,
 	}, nil
+}
+
+func (s *QuestionService) Close() error {
+	if s.historyConn != nil {
+		err := s.historyConn.Close()
+		if err != nil {
+			return fmt.Errorf("failed to close connection to history service: %w", err)
+		}
+		log.Printf("closed connection with quiz completion history")
+	}
+	return nil
 }
 
 func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.BatchCreateQuestionsRequest) (*pb.BatchCreateQuestionsResponse, error) {

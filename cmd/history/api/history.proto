@@ -32,8 +32,8 @@ message CreateItemRequest {
 }
 
 message BatchGetItemsRequest {
-  google.protobuf.StringValue user_id = 1;
-  google.protobuf.StringValue quiz_id = 2;
+  repeated google.protobuf.StringValue user_ids = 1;
+  repeated google.protobuf.StringValue quiz_ids = 2;
   int32 page_size = 3;
   string page_token = 4;
 }

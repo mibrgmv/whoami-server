@@ -10,10 +10,10 @@ import (
 	"whoami-server/cmd/whoami/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
+	jwtcfg "whoami-server/internal/config/auth/jwt"
 	rediscfg "whoami-server/internal/config/cache/redis"
+	"whoami-server/internal/tools/jwt"
 )
-
-var historyServiceAddr = "localhost:50053"
 
 func main() {
 	ctx := context.Background()
@@ -25,10 +25,21 @@ func main() {
 		log.Fatalf("failed to read config: %v", err)
 	}
 
+	historyCfg, err := config.GetDefaultForService("history")
+	if err != nil {
+		log.Fatalf("failed to get history config: %v", err)
+	}
+
 	redisCfg, err := rediscfg.LoadDefault()
 	if err != nil {
 		log.Fatalf("failed to read redis config: %v", err)
 	}
+
+	jwtCfg, err := jwtcfg.LoadDefault()
+	if err != nil {
+		log.Fatalf("failed to read jwt config: %v", err)
+	}
+	jwt.Init(jwtCfg)
 
 	pool, err := pgxpool.New(context.Background(), cfg.Postgres.GetConnectionString())
 	if err != nil {
@@ -47,8 +58,13 @@ func main() {
 	}
 	log.Println("Connected to Redis successfully")
 
+	s, err := grpc.NewServer(pool, client, redisCfg.GetTTL(), historyCfg.Grpc.GetAddr())
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
 	go func() {
-		if err := grpc.Start(pool, client, redisCfg.GetTTL(), cfg.Grpc.GetAddr(), historyServiceAddr); err != nil {
+		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()
@@ -57,4 +73,5 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down servers...")
+	s.Stop()
 }

@@ -10,7 +10,9 @@ import (
 	"whoami-server/cmd/users/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
+	jwtcfg "whoami-server/internal/config/auth/jwt"
 	rediscfg "whoami-server/internal/config/cache/redis"
+	"whoami-server/internal/tools/jwt"
 )
 
 func main() {
@@ -27,6 +29,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read redis config: %v", err)
 	}
+
+	jwtCfg, err := jwtcfg.LoadDefault()
+	if err != nil {
+		log.Fatalf("failed to read jwt config: %v", err)
+	}
+	jwt.Init(jwtCfg)
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
 	if err != nil {

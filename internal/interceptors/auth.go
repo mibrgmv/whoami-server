@@ -21,7 +21,7 @@ var exemptMethods = map[string]bool{
 	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
 
 	"/auth.AuthorizationService/Login":        true,
-	"/user.AuthorizationService/RefreshToken": true,
+	"/auth.AuthorizationService/RefreshToken": true,
 
 	"/user.UserService/BatchGetUsers":  false,
 	"/user.UserService/GetCurrentUser": false,
@@ -38,6 +38,7 @@ var exemptMethods = map[string]bool{
 	"/question.QuestionService/EvaluateAnswers":      false,
 }
 
+// todo make calls to auth microservice from here -> make a client here
 func AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	if exemptMethods[info.FullMethod] {
 		return handler(ctx, req)

@@ -2,8 +2,10 @@ package grpc
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"whoami-server/cmd/history/internal/models"
 	"whoami-server/cmd/history/internal/services/history"
 	"whoami-server/internal/tools"
@@ -11,12 +13,12 @@ import (
 )
 
 type Service struct {
-	repo history.Repository
+	service *history.Service
 	pb.UnimplementedQuizCompletionHistoryServiceServer
 }
 
-func NewService(repo history.Repository) *Service {
-	return &Service{repo: repo}
+func NewService(service *history.Service) *Service {
+	return &Service{service: service}
 }
 
 func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) (*pb.QuizCompletionHistoryItem, error) {
@@ -25,7 +27,7 @@ func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to create history item: %v", err)
 	}
 
-	createdItems, err := s.repo.Add(ctx, []*models.QuizCompletionHistoryItem{itemToCreate})
+	createdItems, err := s.service.CreateItem(ctx, itemToCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -39,16 +41,19 @@ func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsReq
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
 	}
 
-	items, err := s.repo.Query(ctx, history.Query{PageSize: request.PageSize, PageToken: parsedToken})
+	userIDs, err := parseUUIDs(request.UserIds)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse user IDs: %v", err)
 	}
 
-	var nextPageToken string
-	if request.PageSize > 0 && len(items) > int(request.PageSize) {
-		items = items[:len(items)-1]
-		lastItemID := items[len(items)-1].ID
-		nextPageToken = tools.CreatePageToken(lastItemID)
+	quizIDs, err := parseUUIDs(request.QuizIds)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse quiz IDs: %v", err)
+	}
+
+	items, nextPageToken, err := s.service.GetItems(ctx, userIDs, quizIDs, request.PageSize, parsedToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
 
 	protoItems := make([]*pb.QuizCompletionHistoryItem, len(items))
@@ -60,4 +65,19 @@ func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsReq
 		Items:         protoItems,
 		NextPageToken: nextPageToken,
 	}, nil
+}
+
+func parseUUIDs(values []*wrapperspb.StringValue) ([]*uuid.UUID, error) {
+	var uuids []*uuid.UUID
+	for _, u := range values {
+		if u != nil {
+			parsedUUID, err := uuid.Parse(u.Value)
+			if err != nil {
+				return nil, err
+			}
+			uuids = append(uuids, &parsedUUID)
+		}
+	}
+
+	return uuids, nil
 }

@@ -35,16 +35,24 @@
         },
         "parameters": [
           {
-            "name": "userId",
+            "name": "userIds",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           },
           {
-            "name": "quizId",
+            "name": "quizIds",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "pageSize",
