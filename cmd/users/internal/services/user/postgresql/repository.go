@@ -141,7 +141,6 @@ func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User
 	return users, nil
 }
 
-// todo bulk
 func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -172,20 +171,14 @@ func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models
 	}
 
 	sql := `
-	with updated AS (
-		update users
-		set user_name = u.name,
-			user_password = u.password,
-			user_last_login = u.last_login
-		from (
-			select * from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[])
-			as u(id, name, password, last_login)
-		) u
-		where users.user_id = u.id
-		returning users.user_id, users.user_name, users.user_password, users.user_created_at, users.user_last_login
-	)
-	select user_id, user_name, user_password, user_created_at, user_last_login
-	from updated
+	update users
+	set user_name = u_name,
+	    user_password = u_password,
+	    user_last_login = u_last_login
+	from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[])
+	    as source (u_id, u_name, u_password, u_last_login)
+	where user_id = u_id
+	returning user_id, user_name, user_password, user_created_at, user_last_login
 	`
 
 	rows, err := tx.Query(ctx, sql, userIDs, userNames, userPasswords, userLastLogins)
@@ -211,7 +204,11 @@ func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models
 }
 
 func (r Repository) Delete(ctx context.Context, id *uuid.UUID) error {
-	_, err := r.pool.Exec(ctx, "delete from users where user_id = $1", id)
+	sql := `
+	delete from users where user_id = $1
+	`
+
+	_, err := r.pool.Exec(ctx, sql, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}

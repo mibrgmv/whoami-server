@@ -135,7 +135,7 @@
           "UserService"
         ]
       },
-      "put": {
+      "patch": {
         "operationId": "UserService_UpdateUser",
         "responses": {
           "200": {
@@ -177,13 +177,13 @@
     "UserServiceUpdateUserBody": {
       "type": "object",
       "properties": {
-        "username": {
+        "user": {
+          "$ref": "#/definitions/userUser"
+        },
+        "updateMask": {
           "type": "string"
         },
         "currentPassword": {
-          "type": "string"
-        },
-        "newPassword": {
           "type": "string"
         }
       }

@@ -6,6 +6,7 @@ option go_package = "whoami-server/protogen/golang/user";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
 import "google/api/annotations.proto";
 import "google/api/http.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
@@ -32,7 +33,7 @@ service UserService {
 
   rpc UpdateUser(UpdateUserRequest) returns (User) {
     option (google.api.http) = {
-      put: "/api/v1/users/{user_id}"
+      patch: "/api/v1/users/{user_id}"
       body: "*"
     };
   }
@@ -58,9 +59,9 @@ message CreateUserRequest {
 
 message UpdateUserRequest {
   string user_id = 1;
-  string username = 2;
-  string current_password = 3;
-  string new_password = 4;
+  User user = 2;
+  google.protobuf.FieldMask update_mask = 3;
+  string current_password = 4;
 }
 
 message DeleteUserRequest {

@@ -87,6 +87,7 @@ func (s *UserService) CreateUser(ctx context.Context, request *pb.CreateUserRequ
 	return &pb.User{
 		UserId:    usr.ID.String(),
 		Username:  usr.Name,
+		Password:  "",
 		CreatedAt: timestamppb.New(usr.CreatedAt),
 		LastLogin: timestamppb.New(usr.LastLogin),
 	}, nil
@@ -98,39 +99,66 @@ func (s *UserService) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
 	}
 
-	usrPtr, err := s.service.GetByID(ctx, userID)
+	existingUser, err := s.service.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, user.ErrUserNotFound) {
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to update user: %v", err)
 	}
-	usr := *usrPtr
 
-	if err := bcrypt.CompareHashAndPassword([]byte(usr.Password), []byte(request.CurrentPassword)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(request.CurrentPassword)); err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "incorrect password")
 	}
+	// todo test field mask
+	// todo move some logic to BL
+	updatedUser := *existingUser
 
-	if request.NewPassword != "" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to hash password")
+	updateAll := len(request.UpdateMask.GetPaths()) == 0
+
+	for _, path := range request.UpdateMask.GetPaths() {
+		switch path {
+		case "username":
+			if request.User.Username != "" {
+				updatedUser.Name = request.User.Username
+			}
+		case "password":
+			if request.User.Password != "" {
+				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.User.Password), bcrypt.DefaultCost)
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to hash password")
+				}
+				updatedUser.Password = string(hashedPassword)
+			}
+		default:
+			return nil, status.Errorf(codes.InvalidArgument, "update mask contains invalid field: %s", path)
 		}
-		usr.Password = string(hashedPassword)
 	}
 
-	// todo username change does not work
-	// todo use field mask
-	updatedUsers, err := s.service.Update(ctx, []*models.User{&usr})
+	if updateAll {
+		if request.User.Username != "" {
+			updatedUser.Name = request.User.Username
+		}
+		if request.User.Password != "" {
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.User.Password), bcrypt.DefaultCost)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to hash password")
+			}
+			updatedUser.Password = string(hashedPassword)
+		}
+	}
+
+	updatedUsers, err := s.service.Update(ctx, []*models.User{&updatedUser})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update user: %v", err)
 	}
 
-	updatedUser := updatedUsers[0]
+	updatedUser = *updatedUsers[0]
 
 	return &pb.User{
 		UserId:    updatedUser.ID.String(),
 		Username:  updatedUser.Name,
+		Password:  "",
 		CreatedAt: timestamppb.New(updatedUser.CreatedAt),
 		LastLogin: timestamppb.New(updatedUser.LastLogin),
 	}, nil
