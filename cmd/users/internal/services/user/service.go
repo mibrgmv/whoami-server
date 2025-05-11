@@ -12,9 +12,17 @@ import (
 	"whoami-server/internal/tools"
 )
 
+type UpdateParams struct {
+	ID              uuid.UUID
+	User            *models.User
+	CurrentPassword string
+	UpdateMask      []string
+}
+
 var (
 	ErrUserNotFound      = errors.New("user not found")
 	ErrIncorrectPassword = errors.New("incorrect password")
+	ErrInvalidField      = errors.New("invalid field in update mask")
 )
 
 const (
@@ -34,7 +42,7 @@ func NewService(repo Repository, cache cache.Interface) *Service {
 	}
 }
 
-func (s *Service) Register(ctx context.Context, username, password string) (*models.User, error) {
+func (s *Service) Create(ctx context.Context, username, password string) (*models.User, error) {
 	users, _ := s.repo.Query(ctx, Query{Username: &username, PageSize: 1})
 	if len(users) != 0 {
 		return nil, fmt.Errorf("user with username %s already exists", username)
@@ -53,7 +61,7 @@ func (s *Service) Register(ctx context.Context, username, password string) (*mod
 	}
 
 	createdUsers, err := s.repo.Add(ctx, []*models.User{user})
-	if err != nil {
+	if err != nil || len(createdUsers) != 1 {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
@@ -87,8 +95,61 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 	return &users[0].ID, nil
 }
 
-func (s *Service) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
-	return s.repo.Update(ctx, users)
+func (s *Service) Update(ctx context.Context, params *UpdateParams) (*models.User, error) {
+	existingUser, err := s.GetByID(ctx, params.ID)
+	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+	}
+
+	// todo make global password helper tool
+	// todo maybe even uuid helper tool
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(params.CurrentPassword)); err != nil {
+		return nil, ErrIncorrectPassword
+	}
+
+	userToUpdate := *existingUser
+
+	if len(params.UpdateMask) == 0 || (len(params.UpdateMask) == 1 && params.UpdateMask[0] == "*") {
+		if params.User.Name != "" {
+			userToUpdate.Name = params.User.Name
+		}
+		if params.User.Password != "" {
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.User.Password), bcrypt.DefaultCost)
+			if err != nil {
+				return nil, fmt.Errorf("failed to hash password: %w", err)
+			}
+			userToUpdate.Password = string(hashedPassword)
+		}
+	} else {
+		for _, path := range params.UpdateMask {
+			switch path {
+			case "username":
+				if params.User.Name != "" {
+					userToUpdate.Name = params.User.Name
+				}
+			case "password":
+				if params.User.Password != "" {
+					hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.User.Password), bcrypt.DefaultCost)
+					if err != nil {
+						return nil, fmt.Errorf("failed to hash password: %w", err)
+					}
+					userToUpdate.Password = string(hashedPassword)
+				}
+			default:
+				return nil, ErrInvalidField
+			}
+		}
+	}
+
+	updatedUsers, err := s.repo.Update(ctx, []*models.User{&userToUpdate})
+	if err != nil || len(updatedUsers) != 1 {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return updatedUsers[0], nil
 }
 
 func (s *Service) Delete(ctx context.Context, id *uuid.UUID) error {

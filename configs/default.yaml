@@ -12,7 +12,7 @@ gateway:
     shutdown_timeout: 10s
     cors:
       allowed_origins: [ "*" ]
-      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
       allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
       expose_headers: [ ]
       allow_credentials: true

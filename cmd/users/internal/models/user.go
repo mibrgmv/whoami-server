@@ -19,7 +19,7 @@ func (user *User) ToProto() *pb.User {
 	return &pb.User{
 		UserId:    user.ID.String(),
 		Username:  user.Name,
-		Password:  user.Password,
+		Password:  "",
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		LastLogin: timestamppb.New(user.LastLogin),
 	}
