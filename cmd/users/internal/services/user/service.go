@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/internal/cache"
@@ -23,6 +22,7 @@ var (
 	ErrUserNotFound      = errors.New("user not found")
 	ErrIncorrectPassword = errors.New("incorrect password")
 	ErrInvalidField      = errors.New("invalid field in update mask")
+	ErrHashPassword      = errors.New("could not hash password")
 )
 
 const (
@@ -48,14 +48,14 @@ func (s *Service) Create(ctx context.Context, username, password string) (*model
 		return nil, fmt.Errorf("user with username %s already exists", username)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := tools.HashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("internal error")
+		return nil, ErrHashPassword
 	}
 
 	user := &models.User{
 		Name:      username,
-		Password:  string(hashedPassword),
+		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
@@ -82,7 +82,7 @@ func (s *Service) Login(ctx context.Context, username, password string) (*uuid.U
 		return nil, ErrUserNotFound
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(users[0].Password), []byte(password)); err != nil {
+	if err := tools.CompareHashAndPassword(users[0].Password, password); err != nil {
 		return nil, ErrIncorrectPassword
 	}
 
@@ -104,9 +104,7 @@ func (s *Service) Update(ctx context.Context, params *UpdateParams) (*models.Use
 		return nil, fmt.Errorf("failed to retrieve user: %w", err)
 	}
 
-	// todo make global password helper tool
-	// todo maybe even uuid helper tool
-	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(params.CurrentPassword)); err != nil {
+	if err := tools.CompareHashAndPassword(existingUser.Password, params.CurrentPassword); err != nil {
 		return nil, ErrIncorrectPassword
 	}
 
@@ -117,11 +115,11 @@ func (s *Service) Update(ctx context.Context, params *UpdateParams) (*models.Use
 			userToUpdate.Name = params.User.Name
 		}
 		if params.User.Password != "" {
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.User.Password), bcrypt.DefaultCost)
+			hashedPassword, err := tools.HashPassword(params.User.Password)
 			if err != nil {
-				return nil, fmt.Errorf("failed to hash password: %w", err)
+				return nil, ErrHashPassword
 			}
-			userToUpdate.Password = string(hashedPassword)
+			userToUpdate.Password = hashedPassword
 		}
 	} else {
 		for _, path := range params.UpdateMask {
@@ -132,11 +130,11 @@ func (s *Service) Update(ctx context.Context, params *UpdateParams) (*models.Use
 				}
 			case "password":
 				if params.User.Password != "" {
-					hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.User.Password), bcrypt.DefaultCost)
+					hashedPassword, err := tools.HashPassword(params.User.Password)
 					if err != nil {
-						return nil, fmt.Errorf("failed to hash password: %w", err)
+						return nil, ErrHashPassword
 					}
-					userToUpdate.Password = string(hashedPassword)
+					userToUpdate.Password = hashedPassword
 				}
 			default:
 				return nil, ErrInvalidField
