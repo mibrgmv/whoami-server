@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	errMissingMetadata       = status.Errorf(codes.InvalidArgument, "missing metadata")
 	errAuthHeaderNotProvided = status.Errorf(codes.Unauthenticated, "authorization header is not provided")
 	errInvalidAuthFormat     = status.Errorf(codes.Unauthenticated, "invalid authorization header format")
 	errInvalidToken          = status.Errorf(codes.Unauthenticated, "invalid token")
@@ -65,7 +64,18 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		userID, err := m.validateToken(ctx, token)
 		if err != nil {
-			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+			st, ok := status.FromError(err)
+			if !ok {
+				switch st.Code() {
+				case codes.Unauthenticated:
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				case codes.Unavailable, codes.DeadlineExceeded:
+					http.Error(w, "Service temporarily unavailable", http.StatusServiceUnavailable)
+				}
+				return
+			}
+
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 

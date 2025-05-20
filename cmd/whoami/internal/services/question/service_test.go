@@ -31,7 +31,7 @@ func TestEvaluateAnswers(t *testing.T) {
 		uuid.New(),
 	}
 
-	questions := []models.Question{
+	questions := []*models.Question{
 		{
 			ID:     questionIDs[0],
 			QuizID: quizID,
@@ -72,9 +72,9 @@ func TestEvaluateAnswers(t *testing.T) {
 
 	cacheKey := "questions:quiz:" + quizID.String()
 
-	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
 	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
-	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	tests := []struct {
 		name     string
@@ -126,8 +126,7 @@ func TestEvaluateAnswers(t *testing.T) {
 			},
 			expected: "",
 			wantErr:  true,
-			// Fix 3: Update error message to match implementation format
-			errMsg: "question with ID",
+			errMsg:   "question with ID",
 		},
 		{
 			name: "Invalid option",
@@ -150,7 +149,7 @@ func TestEvaluateAnswers(t *testing.T) {
 		{
 			name:     "Empty answers",
 			answers:  []models.Answer{},
-			expected: "Michael", // No answers means weights are all 0, so first result is returned
+			expected: "Michael", // No answers meaning all weights are 0, first result is returned
 			wantErr:  false,
 			errMsg:   "",
 		},
@@ -192,10 +191,10 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
-	questions := []models.Question{
+	questions := []*models.Question{
 		{
 			ID:     questionID,
-			QuizID: wrongQuizID, // Mismatched quiz ID
+			QuizID: wrongQuizID,
 			Body:   "Question with wrong quiz ID",
 			OptionsWeights: map[string][]float32{
 				"Yes": {1.0, 0.0, 0.0},
@@ -205,11 +204,9 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 
 	cacheKey := "questions:quiz:" + quizID.String()
 
-	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
-
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
 	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
-
-	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
 		{QuizID: quizID, QuestionID: questionID, Body: "Yes"},
@@ -218,7 +215,7 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	ctx := context.Background()
 	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "question quiz ID does not match quiz ID")
+	assert.Equal(t, err, question.ErrQuestionQuizIdMismatch)
 	assert.Empty(t, result)
 }
 
@@ -237,24 +234,22 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
-	questions := []models.Question{
+	questions := []*models.Question{
 		{
 			ID:     questionID,
 			QuizID: quizID,
 			Body:   "Question with wrong weights length",
 			OptionsWeights: map[string][]float32{
-				"Yes": {1.0, 0.0}, // Only two weights for three results
+				"Yes": {1.0, 0.0},
 			},
 		},
 	}
 
 	cacheKey := "questions:quiz:" + quizID.String()
 
-	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(errors.New("cache miss"))
-
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
 	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
-
-	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Return(nil)
+	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
 		{QuizID: quizID, QuestionID: questionID, Body: "Yes"},
@@ -281,7 +276,7 @@ func TestEvaluateAnswers_CacheHit(t *testing.T) {
 		Results: []string{"Michael", "Franklin", "Trevor"},
 	}
 
-	cachedQuestions := []models.Question{
+	cachedQuestions := []*models.Question{
 		{
 			ID:     questionID,
 			QuizID: quizID,
@@ -295,8 +290,8 @@ func TestEvaluateAnswers_CacheHit(t *testing.T) {
 
 	cacheKey := "questions:quiz:" + quizID.String()
 
-	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]models.Question")).Run(func(args mock.Arguments) {
-		dest := args.Get(2).(*[]models.Question)
+	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Run(func(args mock.Arguments) {
+		dest := args.Get(2).(*[]*models.Question)
 		*dest = cachedQuestions
 	}).Return(nil)
 

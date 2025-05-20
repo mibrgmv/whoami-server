@@ -79,9 +79,6 @@ func (s *AuthService) ValidateToken(ctx context.Context, request *pb.ValidateTok
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
 	}
-	// todo make errors for jwt service and handle them here
 
-	return &pb.ValidateTokenResponse{
-		UserId: userID,
-	}, nil
+	return &pb.ValidateTokenResponse{UserId: userID}, nil
 }

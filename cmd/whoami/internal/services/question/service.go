@@ -13,6 +13,11 @@ const (
 	questionsCacheKey = "questions:quiz:%s"
 )
 
+var (
+	ErrAnswerQuizIdMismatch   = errors.New("answer quiz ID does not match quiz ID")
+	ErrQuestionQuizIdMismatch = errors.New("question quiz ID does not match quiz ID")
+)
+
 type Service struct {
 	repo  Repository
 	cache cache.Interface
@@ -65,7 +70,13 @@ func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, 
 
 	for _, answer := range answers {
 		if answer.QuizID != quiz.ID {
-			return "", errors.New("answer quiz ID does not match quiz ID")
+			return "", ErrAnswerQuizIdMismatch
+		}
+	}
+
+	for _, question := range questions {
+		if question.QuizID != quiz.ID {
+			return "", ErrQuestionQuizIdMismatch
 		}
 	}
 
