@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"net/http"
+	"whoami-server/cmd/gateway/internal/servers/http/auth"
 	"whoami-server/cmd/gateway/internal/servers/http/cors"
 	"whoami-server/cmd/gateway/internal/servers/http/logging"
 	"whoami-server/cmd/gateway/internal/servers/http/recovery"
@@ -23,9 +24,15 @@ import (
 func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.ServeMux, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
-			return metadata.New(map[string]string{
+			md := metadata.New(map[string]string{
 				"authorization": req.Header.Get("Authorization"),
 			})
+
+			if userId, ok := ctx.Value("user_id").(string); ok && userId != "" {
+				md.Set("user_id", userId)
+			}
+
+			return md
 		}),
 	)
 
@@ -90,9 +97,16 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig http
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
+	authMiddleware, err := auth.NewMiddleware(grpcAddresses["users"])
+	if err != nil {
+		return fmt.Errorf("failed to create auth middleware: %w", err)
+	}
+	defer authMiddleware.Close()
+
 	handler := ApplyMiddleware(mux,
 		recovery.Middleware,
 		logging.Middleware,
+		authMiddleware.Middleware,
 		cors.Middleware(httpConfig.CORS),
 	)
 

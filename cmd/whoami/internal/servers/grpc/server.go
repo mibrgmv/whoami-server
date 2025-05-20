@@ -16,7 +16,7 @@ import (
 	quizgrpc "whoami-server/cmd/whoami/internal/services/quiz/grpc"
 	quizpg "whoami-server/cmd/whoami/internal/services/quiz/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
-	"whoami-server/internal/interceptors"
+	"whoami-server/internal/tools"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
 )
@@ -29,10 +29,10 @@ type Server struct {
 func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*Server, error) {
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			interceptors.AuthUnaryInterceptor,
+			tools.MetadataUnaryInterceptor,
 		),
 		grpc.ChainStreamInterceptor(
-			interceptors.AuthStreamInterceptor,
+			tools.MetadataStreamInterceptor,
 		),
 	)
 

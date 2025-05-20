@@ -24,6 +24,8 @@ service AuthorizationService {
       body: "*"
     };
   }
+
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
 }
 
 message LoginRequest {
@@ -44,4 +46,12 @@ message RefreshTokenRequest {
 message RefreshTokenResponse {
   string access_token = 1;
   string user_id = 2;
+}
+
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  string user_id = 1;
 }

@@ -1,0 +1,116 @@
+package auth
+
+import (
+	"context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
+	"net/http"
+	"strings"
+	"time"
+	authpb "whoami-server/protogen/golang/auth"
+)
+
+var (
+	errMissingMetadata       = status.Errorf(codes.InvalidArgument, "missing metadata")
+	errAuthHeaderNotProvided = status.Errorf(codes.Unauthenticated, "authorization header is not provided")
+	errInvalidAuthFormat     = status.Errorf(codes.Unauthenticated, "invalid authorization header format")
+	errInvalidToken          = status.Errorf(codes.Unauthenticated, "invalid token")
+	errAuthServiceFailed     = status.Errorf(codes.Internal, "auth service unavailable")
+)
+
+type AuthMiddleware struct {
+	authClient authpb.AuthorizationServiceClient
+	conn       *grpc.ClientConn
+	timeout    time.Duration
+}
+
+func NewMiddleware(authServiceAddr string) (*AuthMiddleware, error) {
+	conn, err := grpc.NewClient(authServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
+	client := authpb.NewAuthorizationServiceClient(conn)
+	return &AuthMiddleware{
+		authClient: client,
+		conn:       conn,
+		timeout:    time.Second * 5,
+	}, nil
+}
+
+func (m *AuthMiddleware) Close() error {
+	if m.conn != nil {
+		return m.conn.Close()
+	}
+	return nil
+}
+
+func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isPublicEndpoint(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		token, err := extractToken(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), m.timeout)
+		defer cancel()
+
+		userID, err := m.validateToken(ctx, token)
+		if err != nil {
+			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+			return
+		}
+
+		newCtx := context.WithValue(ctx, "user_id", userID)
+		next.ServeHTTP(w, r.WithContext(newCtx))
+	})
+}
+
+func isPublicEndpoint(r *http.Request) bool {
+	publicEndpoints := map[string]string{
+		"/api/v1/auth/login":   "*",
+		"/api/v1/auth/refresh": "*",
+		"/api/v1/quizzes":      "GET",
+		"/api/v1/users":        "POST",
+	}
+
+	for endpoint, method := range publicEndpoints {
+		if r.URL.Path == endpoint && (method == "*" || r.Method == method) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func extractToken(r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", errAuthHeaderNotProvided
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return "", errInvalidAuthFormat
+	}
+
+	return parts[1], nil
+}
+
+func (m *AuthMiddleware) validateToken(ctx context.Context, token string) (string, error) {
+	resp, err := m.authClient.ValidateToken(ctx, &authpb.ValidateTokenRequest{
+		AccessToken: token,
+	})
+	if err != nil {
+		return "", err
+	}
+	return resp.UserId, nil
+}

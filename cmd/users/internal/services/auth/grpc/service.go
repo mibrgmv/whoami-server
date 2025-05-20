@@ -5,8 +5,8 @@ import (
 	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"whoami-server/cmd/users/internal/services/auth/jwt"
 	"whoami-server/cmd/users/internal/services/user"
-	"whoami-server/internal/tools/jwt"
 	pb "whoami-server/protogen/golang/auth"
 )
 
@@ -67,5 +67,21 @@ func (s *AuthService) RefreshToken(ctx context.Context, request *pb.RefreshToken
 	return &pb.RefreshTokenResponse{
 		AccessToken: accessToken,
 		UserId:      userID,
+	}, nil
+}
+
+func (s *AuthService) ValidateToken(ctx context.Context, request *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+	if request.AccessToken == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "access token is required")
+	}
+
+	userID, err := jwt.ValidateAccessToken(request.AccessToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
+	}
+	// todo make errors for jwt service and handle them here
+
+	return &pb.ValidateTokenResponse{
+		UserId: userID,
 	}, nil
 }

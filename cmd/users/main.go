@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 	"whoami-server/cmd/users/internal/servers/grpc"
+	"whoami-server/cmd/users/internal/services/auth/jwt"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
 	jwtcfg "whoami-server/internal/config/auth/jwt"
 	rediscfg "whoami-server/internal/config/cache/redis"
-	"whoami-server/internal/tools/jwt"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read jwt config: %v", err)
 	}
-	jwt.Init(jwtCfg)
+	jwt.Init(jwtCfg) // todo pass to service
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
 	if err != nil {
