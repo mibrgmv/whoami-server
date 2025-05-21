@@ -13,6 +13,10 @@ var (
 	errMissingUserID   = status.Errorf(codes.InvalidArgument, "missing userID from metadata")
 )
 
+const (
+	userIDContextKey string = "user_id"
+)
+
 func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	if exemptMethods[info.FullMethod] {
 		return handler(ctx, req)
@@ -29,7 +33,7 @@ func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.U
 	}
 
 	userID := userIDValues[0]
-	newCtx := context.WithValue(ctx, "user_id", userID)
+	newCtx := context.WithValue(ctx, userIDContextKey, userID)
 	return handler(newCtx, req)
 }
 
@@ -49,7 +53,7 @@ func MetadataStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc
 	}
 
 	userID := userIDValues[0]
-	newCtx := context.WithValue(ss.Context(), "user_id", userID)
+	newCtx := context.WithValue(ss.Context(), userIDContextKey, userID)
 
 	wrappedStream := wrapServerStream(ss)
 	wrappedStream.SetContext(newCtx)

@@ -8,20 +8,6 @@ import (
 	jwtcfg "whoami-server/internal/config/auth/jwt"
 )
 
-var (
-	accessTokenSecret  []byte
-	refreshTokenSecret []byte
-	accessTokenExpiry  time.Duration
-	refreshTokenExpiry time.Duration
-)
-
-func Init(cfg *jwtcfg.Config) {
-	accessTokenSecret = []byte(cfg.AccessSecret)
-	refreshTokenSecret = []byte(cfg.RefreshSecret)
-	accessTokenExpiry = cfg.AccessExpiry
-	refreshTokenExpiry = cfg.RefreshExpiry
-}
-
 type TokenType string
 
 const (
@@ -36,14 +22,30 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateTokenPair(userID string) (accessToken string, refreshToken string, err error) {
+type Service struct {
+	accessTokenSecret  []byte
+	refreshTokenSecret []byte
+	accessTokenExpiry  time.Duration
+	refreshTokenExpiry time.Duration
+}
+
+func NewService(cfg *jwtcfg.Config) *Service {
+	return &Service{
+		accessTokenSecret:  []byte(cfg.AccessSecret),
+		refreshTokenSecret: []byte(cfg.RefreshSecret),
+		accessTokenExpiry:  cfg.AccessExpiry,
+		refreshTokenExpiry: cfg.RefreshExpiry,
+	}
+}
+
+func (s *Service) GenerateTokenPair(userID string) (accessToken string, refreshToken string, err error) {
 	_, err = uuid.Parse(userID)
 	if err != nil {
 		return "", "", fmt.Errorf("invalid UUID format: %w", err)
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(accessTokenExpiry)
+	accessExpiration := time.Now().Add(s.accessTokenExpiry)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
@@ -56,13 +58,13 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessToken, err = accessJWT.SignedString(accessTokenSecret)
+	accessToken, err = accessJWT.SignedString(s.accessTokenSecret)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to sign access token: %w", err)
 	}
 
 	refreshTokenID := uuid.New().String()
-	refreshExpiration := time.Now().Add(refreshTokenExpiry)
+	refreshExpiration := time.Now().Add(s.refreshTokenExpiry)
 	refreshClaims := &Claims{
 		UserID:    userID,
 		TokenID:   refreshTokenID,
@@ -75,7 +77,7 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	}
 
 	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshToken, err = refreshJWT.SignedString(refreshTokenSecret)
+	refreshToken, err = refreshJWT.SignedString(s.refreshTokenSecret)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to sign refresh token: %w", err)
 	}
@@ -83,13 +85,13 @@ func GenerateTokenPair(userID string) (accessToken string, refreshToken string, 
 	return accessToken, refreshToken, nil
 }
 
-func ValidateAccessToken(tokenString string) (string, error) {
+func (s *Service) ValidateAccessToken(tokenString string) (string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return accessTokenSecret, nil
+		return s.accessTokenSecret, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -108,13 +110,13 @@ func ValidateAccessToken(tokenString string) (string, error) {
 	return claims.UserID, nil
 }
 
-func ValidateRefreshToken(tokenString string) (string, string, error) {
+func (s *Service) ValidateRefreshToken(tokenString string) (string, string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return refreshTokenSecret, nil
+		return s.refreshTokenSecret, nil
 	})
 
 	if err != nil || !token.Valid {
@@ -133,14 +135,14 @@ func ValidateRefreshToken(tokenString string) (string, string, error) {
 	return claims.UserID, claims.TokenID, nil
 }
 
-func RefreshAccessToken(refreshToken string) (string, error) {
-	userID, _, err := ValidateRefreshToken(refreshToken)
+func (s *Service) RefreshAccessToken(refreshToken string) (string, error) {
+	userID, _, err := s.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		return "", err
 	}
 
 	accessTokenID := uuid.New().String()
-	accessExpiration := time.Now().Add(accessTokenExpiry)
+	accessExpiration := time.Now().Add(s.accessTokenExpiry)
 	accessClaims := &Claims{
 		UserID:    userID,
 		TokenID:   accessTokenID,
@@ -153,5 +155,5 @@ func RefreshAccessToken(refreshToken string) (string, error) {
 	}
 
 	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	return accessJWT.SignedString(accessTokenSecret)
+	return accessJWT.SignedString(s.accessTokenSecret)
 }

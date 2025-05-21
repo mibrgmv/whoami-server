@@ -97,16 +97,16 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig http
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
-	authMiddleware, err := auth.NewMiddleware(grpcAddresses["users"])
+	authClient, err := auth.NewClient(grpcAddresses["users"])
 	if err != nil {
 		return fmt.Errorf("failed to create auth middleware: %w", err)
 	}
-	defer authMiddleware.Close()
+	defer authClient.Close()
 
 	handler := ApplyMiddleware(mux,
 		recovery.Middleware,
 		logging.Middleware,
-		authMiddleware.Middleware,
+		authClient.Middleware,
 		cors.Middleware(httpConfig.CORS),
 	)
 

@@ -18,10 +18,7 @@ func QuestionToModel(protoQuestion *pb.CreateQuestionRequest) (*Question, error)
 
 	for option, protoWeights := range protoQuestion.OptionsWeights {
 		weights := make([]float32, len(protoWeights.Weights))
-		for i, weight := range protoWeights.Weights {
-			weights[i] = weight
-		}
-
+		copy(weights, protoWeights.Weights)
 		optionsWeights[option] = weights
 	}
 
@@ -50,11 +47,7 @@ func (q *Question) ToProto() *pb.Question {
 		protoWeights := &pb.OptionWeights{
 			Weights: make([]float32, len(weights)),
 		}
-
-		for i, weight := range weights {
-			protoWeights.Weights[i] = weight
-		}
-
+		copy(protoWeights.Weights, weights)
 		protoOptionsWeights[option] = protoWeights
 	}
 
@@ -68,7 +61,7 @@ func (q *Question) ToProto() *pb.Question {
 
 func (q *Question) ToProtoWithoutWeights() *pb.QuestionResponse {
 	var options []string
-	for option, _ := range q.OptionsWeights {
+	for option := range q.OptionsWeights {
 		options = append(options, option)
 	}
 

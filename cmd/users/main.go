@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 	"whoami-server/cmd/users/internal/servers/grpc"
-	"whoami-server/cmd/users/internal/services/auth/jwt"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
 	jwtcfg "whoami-server/internal/config/auth/jwt"
@@ -34,7 +33,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read jwt config: %v", err)
 	}
-	jwt.Init(jwtCfg) // todo pass to service
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
 	if err != nil {
@@ -54,7 +52,7 @@ func main() {
 	log.Println("Connected to Redis successfully")
 
 	go func() {
-		if err := grpc.Start(pool, client, redisCfg.GetTTL(), cfg.Grpc.GetAddr()); err != nil {
+		if err := grpc.Start(pool, client, redisCfg.GetTTL(), jwtCfg, cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()

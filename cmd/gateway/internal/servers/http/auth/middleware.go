@@ -15,38 +15,40 @@ import (
 var (
 	errAuthHeaderNotProvided = status.Errorf(codes.Unauthenticated, "authorization header is not provided")
 	errInvalidAuthFormat     = status.Errorf(codes.Unauthenticated, "invalid authorization header format")
-	errInvalidToken          = status.Errorf(codes.Unauthenticated, "invalid token")
-	errAuthServiceFailed     = status.Errorf(codes.Internal, "auth service unavailable")
 )
 
-type AuthMiddleware struct {
+const (
+	userIDContextKey = "user_id"
+)
+
+type Client struct {
 	authClient authpb.AuthorizationServiceClient
 	conn       *grpc.ClientConn
 	timeout    time.Duration
 }
 
-func NewMiddleware(authServiceAddr string) (*AuthMiddleware, error) {
+func NewClient(authServiceAddr string) (*Client, error) {
 	conn, err := grpc.NewClient(authServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
 	client := authpb.NewAuthorizationServiceClient(conn)
-	return &AuthMiddleware{
+	return &Client{
 		authClient: client,
 		conn:       conn,
 		timeout:    time.Second * 5,
 	}, nil
 }
 
-func (m *AuthMiddleware) Close() error {
-	if m.conn != nil {
-		return m.conn.Close()
+func (c *Client) Close() error {
+	if c.conn != nil {
+		return c.conn.Close()
 	}
 	return nil
 }
 
-func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
+func (c *Client) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if isPublicEndpoint(r) {
 			next.ServeHTTP(w, r)
@@ -59,10 +61,10 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), m.timeout)
+		ctx, cancel := context.WithTimeout(r.Context(), c.timeout)
 		defer cancel()
 
-		userID, err := m.validateToken(ctx, token)
+		userID, err := c.validateToken(ctx, token)
 		if err != nil {
 			st, ok := status.FromError(err)
 			if !ok {
@@ -79,7 +81,7 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		newCtx := context.WithValue(ctx, "user_id", userID)
+		newCtx := context.WithValue(ctx, userIDContextKey, userID)
 		next.ServeHTTP(w, r.WithContext(newCtx))
 	})
 }
@@ -115,8 +117,8 @@ func extractToken(r *http.Request) (string, error) {
 	return parts[1], nil
 }
 
-func (m *AuthMiddleware) validateToken(ctx context.Context, token string) (string, error) {
-	resp, err := m.authClient.ValidateToken(ctx, &authpb.ValidateTokenRequest{
+func (c *Client) validateToken(ctx context.Context, token string) (string, error) {
+	resp, err := c.authClient.ValidateToken(ctx, &authpb.ValidateTokenRequest{
 		AccessToken: token,
 	})
 	if err != nil {

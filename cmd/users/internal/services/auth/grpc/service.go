@@ -10,18 +10,20 @@ import (
 	pb "whoami-server/protogen/golang/auth"
 )
 
-type AuthService struct {
+type Service struct {
 	service *user.Service
+	jwt     *jwt.Service
 	pb.UnimplementedAuthorizationServiceServer
 }
 
-func NewAuthService(service *user.Service) *AuthService {
-	return &AuthService{
+func NewService(service *user.Service, jwt *jwt.Service) *Service {
+	return &Service{
 		service: service,
+		jwt:     jwt,
 	}
 }
 
-func (s *AuthService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (s *Service) Login(ctx context.Context, request *pb.LoginRequest) (*pb.LoginResponse, error) {
 	if request.Username == "" || request.Password == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
 	}
@@ -37,7 +39,7 @@ func (s *AuthService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 		return nil, status.Errorf(codes.Internal, "failed to login: %v", err)
 	}
 
-	accessToken, refreshToken, err := jwt.GenerateTokenPair(userID.String())
+	accessToken, refreshToken, err := s.jwt.GenerateTokenPair(userID.String())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate tokens: %v", err)
 	}
@@ -49,17 +51,17 @@ func (s *AuthService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.
 	}, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, request *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
+func (s *Service) RefreshToken(ctx context.Context, request *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
 	if request.RefreshToken == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
 	}
 
-	userID, _, err := jwt.ValidateRefreshToken(request.RefreshToken)
+	userID, _, err := s.jwt.ValidateRefreshToken(request.RefreshToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid refresh token: %v", err)
 	}
 
-	accessToken, err := jwt.RefreshAccessToken(request.RefreshToken)
+	accessToken, err := s.jwt.RefreshAccessToken(request.RefreshToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate new access token: %v", err)
 	}
@@ -70,12 +72,12 @@ func (s *AuthService) RefreshToken(ctx context.Context, request *pb.RefreshToken
 	}, nil
 }
 
-func (s *AuthService) ValidateToken(ctx context.Context, request *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+func (s *Service) ValidateToken(ctx context.Context, request *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
 	if request.AccessToken == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "access token is required")
 	}
 
-	userID, err := jwt.ValidateAccessToken(request.AccessToken)
+	userID, err := s.jwt.ValidateAccessToken(request.AccessToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
 	}
