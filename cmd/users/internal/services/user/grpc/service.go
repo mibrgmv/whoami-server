@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"strings"
 	"whoami-server/cmd/users/internal/models"
 	"whoami-server/cmd/users/internal/services/user"
 	pb "whoami-server/protogen/golang/user"
@@ -73,7 +74,11 @@ func (s *UserService) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) 
 }
 
 func (s *UserService) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.User, error) {
-	if request.User.Username == "" || request.User.Password == "" {
+	if request.User == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "user object is required")
+	}
+
+	if strings.TrimSpace(request.User.Username) == "" || strings.TrimSpace(request.User.Password) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "username and password are required")
 	}
 
