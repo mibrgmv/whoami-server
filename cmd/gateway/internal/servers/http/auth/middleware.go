@@ -67,7 +67,7 @@ func (c *Client) Middleware(next http.Handler) http.Handler {
 		userID, err := c.validateToken(ctx, token)
 		if err != nil {
 			st, ok := status.FromError(err)
-			if !ok {
+			if ok {
 				switch st.Code() {
 				case codes.Unauthenticated:
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
