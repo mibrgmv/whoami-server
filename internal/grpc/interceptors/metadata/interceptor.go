@@ -1,4 +1,4 @@
-package tools
+package metadata
 
 import (
 	"context"
@@ -17,7 +17,7 @@ const (
 	userIDContextKey string = "user_id"
 )
 
-func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errMissingMetadata
@@ -33,7 +33,7 @@ func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.U
 	return handler(newCtx, req)
 }
 
-func MetadataStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func StreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	md, ok := metadata.FromIncomingContext(ss.Context())
 	if !ok {
 		return errMissingMetadata

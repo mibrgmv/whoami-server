@@ -1,17 +1,14 @@
-package grpc
+package interceptors
 
 import (
 	"context"
 	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
-	"whoami-server/internal/tools"
 )
 
 type Config struct {
@@ -22,11 +19,6 @@ func NewConfig(logger *log.Logger) *Config {
 	return &Config{
 		logger: logger,
 	}
-}
-
-func authSkip(_ context.Context, c interceptors.CallMeta) bool {
-	return c.FullMethod() != "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" &&
-		c.FullMethod() != "/quiz.QuizService/BatchGetQuizzes"
 }
 
 func (c *Config) buildLoggingOptions() []logging.Option {
@@ -90,7 +82,6 @@ func (c *Config) buildRecoveryOptions() []recovery.Option {
 func (c *Config) BuildUnaryInterceptors() []grpc.UnaryServerInterceptor {
 	return []grpc.UnaryServerInterceptor{
 		logging.UnaryServerInterceptor(c.interceptorLogger(), c.buildLoggingOptions()...),
-		selector.UnaryServerInterceptor(tools.MetadataUnaryInterceptor, selector.MatchFunc(authSkip)),
 		recovery.UnaryServerInterceptor(c.buildRecoveryOptions()...),
 	}
 }
@@ -98,7 +89,6 @@ func (c *Config) BuildUnaryInterceptors() []grpc.UnaryServerInterceptor {
 func (c *Config) BuildStreamInterceptors() []grpc.StreamServerInterceptor {
 	return []grpc.StreamServerInterceptor{
 		logging.StreamServerInterceptor(c.interceptorLogger(), c.buildLoggingOptions()...),
-		selector.StreamServerInterceptor(tools.MetadataStreamInterceptor, selector.MatchFunc(authSkip)),
 		recovery.StreamServerInterceptor(c.buildRecoveryOptions()...),
 	}
 }

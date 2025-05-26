@@ -11,12 +11,13 @@ import (
 	"whoami-server/cmd/history/internal/services/history"
 	historygrpc "whoami-server/cmd/history/internal/services/history/grpc"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
+	sharedInterceptors "whoami-server/internal/grpc/interceptors"
 	pb "whoami-server/protogen/golang/history"
 )
 
 func NewServer(pool *pgxpool.Pool) *grpc.Server {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := NewConfig(logger)
+	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptorCfg.BuildUnaryInterceptors()...),

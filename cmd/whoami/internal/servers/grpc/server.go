@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -17,6 +20,8 @@ import (
 	quizgrpc "whoami-server/cmd/whoami/internal/services/quiz/grpc"
 	quizpg "whoami-server/cmd/whoami/internal/services/quiz/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
+	sharedInterceptors "whoami-server/internal/grpc/interceptors"
+	"whoami-server/internal/grpc/interceptors/metadata"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
 )
@@ -26,13 +31,28 @@ type Server struct {
 	questionServer *questiongrpc.QuestionService
 }
 
+func authSkip(_ context.Context, c interceptors.CallMeta) bool {
+	return c.FullMethod() != "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" &&
+		c.FullMethod() != "/quiz.QuizService/BatchGetQuizzes"
+}
+
 func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*Server, error) {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := NewConfig(logger)
+	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(interceptorCfg.BuildUnaryInterceptors()...),
-		grpc.ChainStreamInterceptor(interceptorCfg.BuildStreamInterceptors()...),
+		grpc.ChainUnaryInterceptor(
+			append(
+				interceptorCfg.BuildUnaryInterceptors(),
+				selector.UnaryServerInterceptor(metadata.UnaryInterceptor, selector.MatchFunc(authSkip)),
+			)...,
+		),
+		grpc.ChainStreamInterceptor(
+			append(
+				interceptorCfg.BuildStreamInterceptors(),
+				selector.StreamServerInterceptor(metadata.StreamInterceptor, selector.MatchFunc(authSkip)),
+			)...,
+		),
 	)
 
 	redisService := redisservice.NewService(redisClient, redisTTL)

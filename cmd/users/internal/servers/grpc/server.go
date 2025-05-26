@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -17,17 +20,37 @@ import (
 	pg "whoami-server/cmd/users/internal/services/user/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
 	jwtcfg "whoami-server/internal/config/auth/jwt"
+	sharedInterceptors "whoami-server/internal/grpc/interceptors"
+	"whoami-server/internal/grpc/interceptors/metadata"
 	authpb "whoami-server/protogen/golang/auth"
 	userpb "whoami-server/protogen/golang/user"
 )
 
+func authSkip(_ context.Context, c interceptors.CallMeta) bool {
+	return c.FullMethod() != "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo" &&
+		c.FullMethod() != "/auth.AuthorizationService/Login" &&
+		c.FullMethod() != "/auth.AuthorizationService/RefreshToken" &&
+		c.FullMethod() != "/auth.AuthorizationService/ValidateToken" &&
+		c.FullMethod() != "/user.UserService/CreateUser"
+}
+
 func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, jwtCfg *jwtcfg.Config) *grpc.Server {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := NewConfig(logger)
+	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(interceptorCfg.BuildUnaryInterceptors()...),
-		grpc.ChainStreamInterceptor(interceptorCfg.BuildStreamInterceptors()...),
+		grpc.ChainUnaryInterceptor(
+			append(
+				interceptorCfg.BuildUnaryInterceptors(),
+				selector.UnaryServerInterceptor(metadata.UnaryInterceptor, selector.MatchFunc(authSkip)),
+			)...,
+		),
+		grpc.ChainStreamInterceptor(
+			append(
+				interceptorCfg.BuildStreamInterceptors(),
+				selector.StreamServerInterceptor(metadata.StreamInterceptor, selector.MatchFunc(authSkip)),
+			)...,
+		),
 	)
 
 	redisService := redisservice.NewService(redisClient, redisTTL)
