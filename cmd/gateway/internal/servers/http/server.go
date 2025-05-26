@@ -104,10 +104,10 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig http
 	defer authClient.Close()
 
 	handler := ApplyMiddleware(mux,
-		recovery.Middleware,
-		logging.Middleware,
 		authClient.Middleware,
 		cors.Middleware(httpConfig.CORS),
+		logging.Middleware,
+		recovery.Middleware,
 	)
 
 	server := &http.Server{
