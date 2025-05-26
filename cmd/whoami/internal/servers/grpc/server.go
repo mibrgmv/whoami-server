@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"os"
 	"time"
 	"whoami-server/cmd/whoami/internal/services/question"
 	questiongrpc "whoami-server/cmd/whoami/internal/services/question/grpc"
@@ -16,7 +17,6 @@ import (
 	quizgrpc "whoami-server/cmd/whoami/internal/services/quiz/grpc"
 	quizpg "whoami-server/cmd/whoami/internal/services/quiz/postgresql"
 	redisservice "whoami-server/internal/cache/redis"
-	"whoami-server/internal/tools"
 	questionpb "whoami-server/protogen/golang/question"
 	quizpb "whoami-server/protogen/golang/quiz"
 )
@@ -27,13 +27,12 @@ type Server struct {
 }
 
 func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*Server, error) {
+	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	interceptorCfg := NewConfig(logger)
+
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			tools.MetadataUnaryInterceptor,
-		),
-		grpc.ChainStreamInterceptor(
-			tools.MetadataStreamInterceptor,
-		),
+		grpc.ChainUnaryInterceptor(interceptorCfg.BuildUnaryInterceptors()...),
+		grpc.ChainStreamInterceptor(interceptorCfg.BuildStreamInterceptors()...),
 	)
 
 	redisService := redisservice.NewService(redisClient, redisTTL)

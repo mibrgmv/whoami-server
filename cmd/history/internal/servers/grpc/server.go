@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"os"
 	"whoami-server/cmd/history/internal/services/history"
 	historygrpc "whoami-server/cmd/history/internal/services/history/grpc"
 	pg "whoami-server/cmd/history/internal/services/history/postgresql"
@@ -14,7 +15,14 @@ import (
 )
 
 func NewServer(pool *pgxpool.Pool) *grpc.Server {
-	s := grpc.NewServer()
+	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	interceptorCfg := NewConfig(logger)
+
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(interceptorCfg.BuildUnaryInterceptors()...),
+		grpc.ChainStreamInterceptor(interceptorCfg.BuildStreamInterceptors()...),
+	)
+
 	repo := pg.NewRepository(pool)
 	service := history.NewService(repo)
 	grpcServer := historygrpc.NewService(service)

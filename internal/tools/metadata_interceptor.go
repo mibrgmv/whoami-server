@@ -18,10 +18,6 @@ const (
 )
 
 func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	if exemptMethods[info.FullMethod] {
-		return handler(ctx, req)
-	}
-
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errMissingMetadata
@@ -38,10 +34,6 @@ func MetadataUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.U
 }
 
 func MetadataStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	if exemptMethods[info.FullMethod] {
-		return handler(srv, ss)
-	}
-
 	md, ok := metadata.FromIncomingContext(ss.Context())
 	if !ok {
 		return errMissingMetadata
@@ -79,16 +71,4 @@ type ctxServerStream struct {
 
 func (c *ctxServerStream) Context() context.Context {
 	return c.ctx
-}
-
-var exemptMethods = map[string]bool{
-	"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo": true,
-
-	"/auth.AuthorizationService/Login":         true,
-	"/auth.AuthorizationService/RefreshToken":  true,
-	"/auth.AuthorizationService/ValidateToken": true,
-
-	"/user.UserService/CreateUser": true,
-
-	"/quiz.QuizService/BatchGetQuizzes": true,
 }
