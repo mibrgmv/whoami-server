@@ -90,6 +90,7 @@ func (r *Repository) Add(ctx context.Context, questions []*models.Question) ([]*
 func (r *Repository) Query(ctx context.Context, query question.Query) ([]*models.Question, error) {
 	sql := `
 	select question_id,
+	       quiz_id,
 		   question_body,
 		   question_options_weights
 	from questions
@@ -106,7 +107,7 @@ func (r *Repository) Query(ctx context.Context, query question.Query) ([]*models
 		q := new(models.Question)
 		var optionsWeightsJSON []byte
 
-		if err := rows.Scan(&q.ID, &q.Body, &optionsWeightsJSON); err != nil {
+		if err := rows.Scan(&q.ID, &q.QuizID, &q.Body, &optionsWeightsJSON); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 
