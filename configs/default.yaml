@@ -1,7 +1,7 @@
 jwt:
   access_secret: "DE%^iuIBihu&TF"
   refresh_secret: "567fuOIYvg9tuv"
-  access_expiry: 1h
+  access_expiry: 10s
   refresh_expiry: 72h
 
 gateway:
