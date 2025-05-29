@@ -1,16 +1,15 @@
 include .env
 
 migrate_up:
-	migrate -path=/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=prefer" -verbose up
+	migrate -path=./migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" -verbose up
 
 migrate_down:
-	migrate -path=/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=prefer" -verbose down
+	migrate -path=./migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" -verbose down
 
 lint:
 	golangci-lint run
 
-swagger:
-	swag init -o ./docs -d ./cmd
+gen:
+	/bin/bash generate.sh
 
-protoc:
-	protoc ./cmd/*/api/*.proto --go_out=.. --go-grpc_out=..
+.PHONY: migrate_up migrate_down lint gen
