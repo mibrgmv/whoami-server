@@ -1,7 +1,7 @@
 create table quizzes
 (
-    quiz_id      bigint primary key generated always as identity,
+    quiz_id      uuid primary key,
 
-    quiz_title   text   not null,
+    quiz_title   text not null,
     quiz_results text[] not null
 );

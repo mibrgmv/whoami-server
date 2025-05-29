@@ -1,0 +1,216 @@
+package postgresql
+
+import (
+	"context"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
+	"whoami-server/cmd/users/internal/models"
+	"whoami-server/cmd/users/internal/services/user"
+)
+
+type Repository struct {
+	pool *pgxpool.Pool
+}
+
+func NewRepository(pool *pgxpool.Pool) *Repository {
+	return &Repository{pool: pool}
+}
+
+func (r Repository) Add(ctx context.Context, users []*models.User) ([]*models.User, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction failed: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				fmt.Printf("transaction rollback failed: %v\n", rbErr)
+			}
+			return
+		}
+		if cErr := tx.Commit(ctx); cErr != nil {
+			fmt.Printf("transaction commit failed: %v\n", cErr)
+		}
+	}()
+
+	sql := `
+	insert into users (user_id, user_name, user_password, user_created_at, user_last_login)
+	select user_id,
+		   user_name,
+		   user_password,
+		   user_created_at,
+		   user_last_login
+	from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[], $5::timestamptz[])
+	    as source (user_id, user_name, user_password, user_created_at, user_last_login)
+	returning user_id
+	`
+
+	userIDs := make([]uuid.UUID, len(users))
+	userNames := make([]string, len(users))
+	userPasswords := make([]string, len(users))
+	userCreatedAts := make([]time.Time, len(users))
+	userLastLogins := make([]time.Time, len(users))
+
+	for i, u := range users {
+		userIDs[i] = uuid.New()
+		userNames[i] = u.Name
+		userPasswords[i] = u.Password
+		userCreatedAts[i] = u.CreatedAt
+		userLastLogins[i] = u.LastLogin
+	}
+
+	rows, err := tx.Query(ctx, sql, userIDs, userNames, userPasswords, userCreatedAts, userLastLogins)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert users: %w", err)
+	}
+	defer rows.Close()
+
+	createdUsers := make([]*models.User, 0, len(users))
+	for i := 0; rows.Next(); i++ {
+		var createdID uuid.UUID
+		if err := rows.Scan(&createdID); err != nil {
+			return nil, fmt.Errorf("failed to scan returned user_id: %w", err)
+		}
+
+		users[i].ID = createdID
+		createdUsers = append(createdUsers, users[i])
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return createdUsers, nil
+}
+
+func (r Repository) Query(ctx context.Context, query user.Query) ([]*models.User, error) {
+	sql := `
+	select user_id,
+		   user_name,
+		   user_password,
+		   user_created_at,
+		   user_last_login
+	from users
+	where (user_id > $1)
+	  and ($2::uuid[] is null or cardinality($2) = 0 or user_id = any ($2))
+	  and ($3::text is null or user_name like $3::text)
+	order by user_id asc
+	limit $4
+	`
+
+	var args []interface{}
+
+	if query.PageToken != "" {
+		args = append(args, query.PageToken)
+	} else {
+		args = append(args, uuid.Nil)
+	}
+
+	args = append(args, query.UserIDs, query.Username)
+
+	var pageSize int32
+	if query.PageSize > 0 {
+		pageSize = query.PageSize + 1
+	} else {
+		pageSize = query.PageSize
+	}
+	args = append(args, pageSize)
+
+	rows, err := r.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		u := new(models.User)
+		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return users, nil
+}
+
+func (r Repository) Update(ctx context.Context, users []*models.User) ([]*models.User, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction failed: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				fmt.Printf("transaction rollback failed: %v\n", rbErr)
+			}
+			return
+		}
+		if cErr := tx.Commit(ctx); cErr != nil {
+			fmt.Printf("transaction commit failed: %v\n", cErr)
+		}
+	}()
+
+	userIDs := make([]uuid.UUID, len(users))
+	userNames := make([]string, len(users))
+	userPasswords := make([]string, len(users))
+	userLastLogins := make([]time.Time, len(users))
+
+	for i, u := range users {
+		userIDs[i] = u.ID
+		userNames[i] = u.Name
+		userPasswords[i] = u.Password
+		userLastLogins[i] = u.LastLogin
+	}
+
+	sql := `
+	update users
+	set user_name = u_name,
+	    user_password = u_password,
+	    user_last_login = u_last_login
+	from unnest($1::uuid[], $2::text[], $3::text[], $4::timestamptz[])
+	    as source (u_id, u_name, u_password, u_last_login)
+	where user_id = u_id
+	returning user_id, user_name, user_password, user_created_at, user_last_login
+	`
+
+	rows, err := tx.Query(ctx, sql, userIDs, userNames, userPasswords, userLastLogins)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update users: %w", err)
+	}
+	defer rows.Close()
+
+	updatedUsers := make([]*models.User, 0, len(users))
+	for rows.Next() {
+		u := new(models.User)
+		if err := rows.Scan(&u.ID, &u.Name, &u.Password, &u.CreatedAt, &u.LastLogin); err != nil {
+			return nil, fmt.Errorf("failed to scan updated user: %w", err)
+		}
+		updatedUsers = append(updatedUsers, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during row iteration: %w", err)
+	}
+
+	return updatedUsers, nil
+}
+
+func (r Repository) Delete(ctx context.Context, id *uuid.UUID) error {
+	sql := `
+	delete from users where user_id = $1
+	`
+
+	_, err := r.pool.Exec(ctx, sql, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
+}

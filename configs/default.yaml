@@ -1,7 +1,61 @@
-postgres:
-  host: "localhost"
-  port: 5432
-  database: "postgres"
-  username: "postgres"
-  password: "postgres"
-  ssl_mode: "prefer"
+jwt:
+  access_secret: "DE%^iuIBihu&TF"
+  refresh_secret: "567fuOIYvg9tuv"
+  access_expiry: 1h
+  refresh_expiry: 72h
+
+gateway:
+  http:
+    host: 0.0.0.0
+    port: 8080
+    mode: debug
+    shutdown_timeout: 10s
+    cors:
+      allowed_origins: [ "*" ]
+      allowed_methods: [ "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" ]
+      allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
+      expose_headers: [ ]
+      allow_credentials: true
+      max_age: 86400 #24h
+
+whoami:
+  grpc:
+    host: localhost
+    port: 50051
+  postgres:
+    host: localhost
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer
+
+users:
+  grpc:
+    host: localhost
+    port: 50052
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer
+
+history:
+  grpc:
+    host: localhost
+    port: 50053
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    ssl_mode: prefer
+
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0
+  ttl_minutes: 15

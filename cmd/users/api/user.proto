@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "whoami-server/protogen/golang/user";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service UserService {
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+  }
+
+  rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/users/current"
+    };
+  }
+
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/api/v1/users"
+      body: "*"
+    };
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      patch: "/api/v1/users/{user_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{user_id}"
+    };
+  }
+}
+
+message User {
+  string user_id = 1;
+  string username = 2;
+  string password = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_login = 5;
+}
+
+message CreateUserRequest {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  User user = 2;
+  google.protobuf.FieldMask update_mask = 3;
+  string current_password = 4;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message BatchGetUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message BatchGetUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+}
