@@ -2,7 +2,7 @@ package question
 
 import (
 	"context"
-	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/quizzes/internal/models"
 )
 
 type Repository interface {

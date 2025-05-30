@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"log"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/question"
-	"whoami-server/cmd/whoami/internal/services/quiz"
+	"whoami-server/cmd/quizzes/internal/models"
+	"whoami-server/cmd/quizzes/internal/services/question"
+	"whoami-server/cmd/quizzes/internal/services/quiz"
 	pbHistory "whoami-server/protogen/golang/history"
 	pb "whoami-server/protogen/golang/question"
 )

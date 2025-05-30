@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/question"
+	"whoami-server/cmd/quizzes/internal/models"
+	"whoami-server/cmd/quizzes/internal/services/question"
 )
 
 type Repository struct {

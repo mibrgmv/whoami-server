@@ -61,7 +61,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["whoami"],
+		grpcAddresses["quizzes"],
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register quiz service: %w", err)
@@ -70,7 +70,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := questionpb.RegisterQuestionServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["whoami"],
+		grpcAddresses["quizzes"],
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register question service: %w", err)

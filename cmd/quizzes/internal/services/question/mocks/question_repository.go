@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/question"
+	"whoami-server/cmd/quizzes/internal/models"
+	"whoami-server/cmd/quizzes/internal/services/question"
 )
 
 type MockRepository struct {

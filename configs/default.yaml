@@ -18,7 +18,7 @@ gateway:
       allow_credentials: true
       max_age: 86400 #24h
 
-whoami:
+quizzes:
   grpc:
     host: localhost
     port: 50051

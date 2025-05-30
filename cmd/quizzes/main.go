@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"whoami-server/cmd/whoami/internal/servers/grpc"
+	"whoami-server/cmd/quizzes/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
 	rediscfg "whoami-server/internal/config/cache/redis"
@@ -18,7 +18,7 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefaultForService("whoami")
+	cfg, err := config.GetDefaultForService("quizzes")
 	if err != nil {
 		log.Fatalf("failed to read config: %v", err)
 	}

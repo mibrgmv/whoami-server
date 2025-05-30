@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/question"
-	"whoami-server/cmd/whoami/internal/services/question/mocks"
+	"whoami-server/cmd/quizzes/internal/models"
+	"whoami-server/cmd/quizzes/internal/services/question"
+	"whoami-server/cmd/quizzes/internal/services/question/mocks"
 )
 
 func TestEvaluateAnswers(t *testing.T) {

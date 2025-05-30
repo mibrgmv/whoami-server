@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"whoami-server/cmd/whoami/internal/models"
+	"whoami-server/cmd/quizzes/internal/models"
 	"whoami-server/internal/cache"
 )
 

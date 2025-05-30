@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"whoami-server/cmd/whoami/internal/models"
-	"whoami-server/cmd/whoami/internal/services/quiz"
+	"whoami-server/cmd/quizzes/internal/models"
+	"whoami-server/cmd/quizzes/internal/services/quiz"
 	pb "whoami-server/protogen/golang/quiz"
 )
 

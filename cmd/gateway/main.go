@@ -20,9 +20,9 @@ func main() {
 		log.Fatalf("failed to read config: %v", err)
 	}
 
-	whoamiCfg, err := config.GetDefaultForService("whoami")
+	quizzesCfg, err := config.GetDefaultForService("quizzes")
 	if err != nil {
-		log.Fatalf("failed to get whoami config: %v", err)
+		log.Fatalf("failed to get quizzes config: %v", err)
 	}
 
 	usersCfg, err := config.GetDefaultForService("users")
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	grpcAddresses := map[string]string{
-		"whoami":  whoamiCfg.Grpc.GetAddr(),
+		"quizzes": quizzesCfg.Grpc.GetAddr(),
 		"users":   usersCfg.Grpc.GetAddr(),
 		"history": historyCfg.Grpc.GetAddr(),
 	}
