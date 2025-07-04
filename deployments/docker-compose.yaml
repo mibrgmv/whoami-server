@@ -1,64 +1,64 @@
 services:
-  gateway:
-    image: ghcr.io/mibrgmv/whoami-server-gateway:latest
-    ports:
-      - "8080:8080"
-    depends_on:
-      - history-service
-      - quizzes-service
-      - users-service
-    environment:
-      HISTORY_GRPC_ADDR: history-service:50051
-      QUIZZES_GRPC_ADDR: quizzes-service:50053
-      USERS_GRPC_ADDR: users-service:50052
-
-  history-service:
-    image: ghcr.io/mibrgmv/whoami-server-history:latest
-    ports:
-      - "50051:50051"
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_SSL_MODE: Prefer
-      REDIS_ADDR: redis:6379
-
-  quizzes-service:
-    image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
-    ports:
-      - "50053:50053"
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_SSL_MODE: Prefer
-      REDIS_ADDR: redis:6379
+#  gateway:
+#    image: ghcr.io/mibrgmv/whoami-server-gateway:latest
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - history-service
+#      - quizzes-service
+#      - users-service
+#    environment:
+#      HISTORY_GRPC_ADDR: history-service:50051
+#      QUIZZES_GRPC_ADDR: quizzes-service:50053
+#      USERS_GRPC_ADDR: users-service:50052
+#      JWT_ACCESS_SECRET: "9uerknjavfmklqf"
+#      JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"
+#      REDIS_ADDRESS: redis:6379
+#
+#  history-service:
+#    image: ghcr.io/mibrgmv/whoami-server-history:latest
+#    ports:
+#      - "50051:50051"
+#    depends_on:
+#      - postgres
+#      - redis
+#    environment:
+#      POSTGRES_HOST: postgres
+#      POSTGRES_DATABASE: postgres
+#      POSTGRES_USERNAME: postgres
+#      POSTGRES_PASSWORD: postgres
+#      HISTORY_GRPC_HOST: 0.0.0.0
+#
+#  quizzes-service:
+#    image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
+#    ports:
+#      - "50053:50053"
+#    depends_on:
+#      - postgres
+#      - redis
+#    environment:
+#      QUIZZES_POSTGRES_HOST: postgres
+#      QUIZZES_POSTGRES_DATABASE: postgres
+#      QUIZZES_POSTGRES_USERNAME: postgres
+#      QUIZZES_POSTGRES_PASSWORD: postgres
+#      QUIZZES_GRPC_HOST: 0.0.0.0
 
   users-service:
-    image: ghcr.io/mibrgmv/whoami-server-users:latest
+    image: ghcr.io/mibrgmv/users-whoami-server:latest
     ports:
       - "50052:50052"
     depends_on:
       - postgres
       - redis
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DATABASE: postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_SSL_MODE: Prefer
-      REDIS_ADDR: redis:6379
+      USERS_POSTGRES_HOST: postgres
+      USERS_POSTGRES_DATABASE: postgres
+      USERS_POSTGRES_USERNAME: postgres
+      USERS_POSTGRES_PASSWORD: postgres
+      USERS_GRPC_HOST: 0.0.0.0
+      REDIS_ADDRESS: redis:6379
+      JWT_ACCESS_SECRET: "9uerknjavfmklqf"
+      JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"
 
   postgres:
     image: postgres:latest

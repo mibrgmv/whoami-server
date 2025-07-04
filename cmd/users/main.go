@@ -40,6 +40,10 @@ func main() {
 	}
 	defer pool.Close()
 
+	log.Println("app config:", cfg)
+	log.Println("jwt config:", jwtCfg)
+	log.Println("redis config:", redisCfg)
+
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}

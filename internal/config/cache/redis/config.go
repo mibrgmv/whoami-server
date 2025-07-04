@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,9 @@ func LoadDefault() (*Config, error) {
 	viper.SetConfigName("default")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("configs")
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}

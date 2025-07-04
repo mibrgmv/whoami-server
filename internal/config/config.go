@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"strings"
 	"whoami-server/internal/config/api/grpc"
 	"whoami-server/internal/config/api/http"
 	"whoami-server/internal/config/dbs/postgresql"
@@ -18,6 +19,9 @@ func GetDefaultForService(serviceName string) (*Config, error) {
 	viper.SetConfigName("default")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("configs")
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
