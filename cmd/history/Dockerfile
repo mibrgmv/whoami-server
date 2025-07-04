@@ -4,9 +4,12 @@ WORKDIR /app
 
 COPY go.mod go.sum ./
 
-RUN go mod download && go mod tidy
+COPY configs/ ./configs/
+COPY internal/ ./internal/
+COPY protogen/ ./protogen/
+COPY cmd/history/ ./cmd/history/
 
-COPY . .
+RUN go mod download && go mod tidy
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o history ./cmd/history
 
@@ -15,6 +18,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/history .
+COPY --from=builder /app/configs/ ./configs/
 
 EXPOSE 50051
 
