@@ -47,18 +47,18 @@ services:
       unless-stopped
 
   users-service:
-    image: ghcr.io/mibrgmv/users-whoami-server:latest
+    image: ghcr.io/mibrgmv/whoami-server-users:latest
     ports:
       - "50052:50052"
     depends_on:
       - postgres
       - redis
     environment:
-      USERS_POSTGRES_HOST: postgres
-      USERS_POSTGRES_DATABASE: postgres
-      USERS_POSTGRES_USERNAME: postgres
-      USERS_POSTGRES_PASSWORD: postgres
-      USERS_GRPC_HOST: 0.0.0.0
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
       REDIS_ADDRESS: redis:6379
       JWT_ACCESS_SECRET: "9uerknjavfmklqf"
       JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"

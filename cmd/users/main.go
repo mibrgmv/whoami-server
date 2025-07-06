@@ -10,8 +10,7 @@ import (
 	"whoami-server/cmd/users/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
-	jwtcfg "whoami-server/internal/config/auth/jwt"
-	rediscfg "whoami-server/internal/config/cache/redis"
+	"whoami-server/internal/tools"
 )
 
 func main() {
@@ -19,19 +18,9 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefaultForService("users")
+	cfg, err := config.LoanDefault()
 	if err != nil {
-		log.Fatalf("failed to read config: %v", err)
-	}
-
-	redisCfg, err := rediscfg.LoadDefault()
-	if err != nil {
-		log.Fatalf("failed to read redis config: %v", err)
-	}
-
-	jwtCfg, err := jwtcfg.LoadDefault()
-	if err != nil {
-		log.Fatalf("failed to read jwt config: %v", err)
+		log.Fatalf("failed to read postgres config: %v", err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
@@ -45,14 +34,18 @@ func main() {
 	}
 	log.Println("Connected to database successfully")
 
-	client, err := redis.NewClient(ctx, redisCfg)
+	if err := tools.MigrateUp("migrations", pool); err != nil {
+		log.Fatalf("failed to migrate up: %v", err)
+	}
+
+	client, err := redis.NewClient(ctx, cfg.Redis)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 	log.Println("Connected to Redis successfully")
 
 	go func() {
-		if err := grpc.Start(pool, client, redisCfg.GetTTL(), jwtCfg, cfg.Grpc.GetAddr()); err != nil {
+		if err := grpc.Start(pool, client, cfg.Redis.GetTTL(), cfg.JWT, cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()

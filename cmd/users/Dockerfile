@@ -3,10 +3,9 @@ FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
-COPY configs/ ./configs/
 COPY internal/ ./internal/
-COPY protogen/ ./protogen/
+COPY protogen/golang/user/ ./protogen/golang/user/
+COPY protogen/golang/auth/ ./protogen/golang/auth/
 COPY cmd/users/ ./cmd/users/
 
 RUN go mod download && go mod tidy
@@ -18,7 +17,8 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/users .
-COPY --from=builder /app/configs/ ./configs/
+COPY --from=builder /app/cmd/users/configs/ ./cmd/users/configs/
+COPY --from=builder /app/cmd/users/migrations/ ./cmd/users/migrations/
 
 EXPOSE 50052
 
