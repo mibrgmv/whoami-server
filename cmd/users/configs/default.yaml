@@ -7,6 +7,7 @@ jwt:
 grpc:
   host: localhost
   port: 50052
+
 postgres:
   host: "localhost"
   port: 5432

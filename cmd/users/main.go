@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	usersconfig "whoami-server/cmd/users/internal/config"
 	"whoami-server/cmd/users/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
@@ -18,8 +19,8 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.LoanDefault()
-	if err != nil {
+	var cfg usersconfig.Config
+	if err := config.LoanDefault(&cfg); err != nil {
 		log.Fatalf("failed to read postgres config: %v", err)
 	}
 
