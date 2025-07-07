@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"log"
 	"net/http"
 	"whoami-server/cmd/gateway/internal/servers/http/auth"
 	"whoami-server/cmd/gateway/internal/servers/http/cors"
@@ -115,6 +116,7 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig *htt
 		Handler: handler,
 	}
 
+	log.Println("Starting HTTP server on", server.Addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("failed to serve: %w", err)
 	}
