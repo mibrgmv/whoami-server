@@ -12,7 +12,7 @@ import (
 	"runtime"
 )
 
-func MigrateUp(migrationsPath string, pool *pgxpool.Pool) error {
+func MigrateUp(migrationsPath, migrationsTableName string, pool *pgxpool.Pool) error {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
 		return errors.New("failed to get caller information")
@@ -23,9 +23,12 @@ func MigrateUp(migrationsPath string, pool *pgxpool.Pool) error {
 	log.Println("Attempting to apply migrations from", absolutePath)
 
 	sqlDB := stdlib.OpenDBFromPool(pool)
-	defer sqlDB.Close()
+	//defer sqlDB.Close()
+	//derived from pool, which lifetime is managed by main app code
 
-	driver, err := pgx.WithInstance(sqlDB, &pgx.Config{})
+	driver, err := pgx.WithInstance(sqlDB, &pgx.Config{
+		MigrationsTable: migrationsTableName,
+	})
 	if err != nil {
 		log.Fatalf("Failed to craete migration driver: %v", err)
 	}

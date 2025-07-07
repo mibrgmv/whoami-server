@@ -1,0 +1,11 @@
+grpc:
+  host: localhost
+  port: 50053
+
+postgres:
+  host: "localhost"
+  port: 5432
+  database: postgres
+  username: postgres
+  password: postgres
+  ssl_mode: prefer

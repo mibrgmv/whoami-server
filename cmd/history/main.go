@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	historyconfig "whoami-server/cmd/history/internal/config"
 	"whoami-server/cmd/history/internal/servers/grpc"
 	"whoami-server/internal/config"
+	"whoami-server/internal/tools"
 )
 
 func main() {
@@ -16,9 +18,9 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefaultForService("history")
-	if err != nil {
-		log.Fatalf("failed to read config: %v", err)
+	var cfg historyconfig.Config
+	if err := config.LoanConfig(&cfg); err != nil {
+		log.Fatalf("failed to read history service config: %v", err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
@@ -31,6 +33,10 @@ func main() {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
 	log.Println("Connected to database successfully")
+
+	if err := tools.MigrateUp("migrations", "history_service_schema_migrations", pool); err != nil {
+		log.Fatalf("failed to migrate up: %v", err)
+	}
 
 	go func() {
 		if err := grpc.Start(pool, cfg.Grpc.GetAddr()); err != nil {

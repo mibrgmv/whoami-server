@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func LoanDefault(cfg interface{}) error {
+func LoanConfig(cfg interface{}) error {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
 		return fmt.Errorf("failed to get called information")

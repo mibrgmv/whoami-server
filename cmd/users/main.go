@@ -20,8 +20,8 @@ func main() {
 	defer cancel()
 
 	var cfg usersconfig.Config
-	if err := config.LoanDefault(&cfg); err != nil {
-		log.Fatalf("failed to read postgres config: %v", err)
+	if err := config.LoanConfig(&cfg); err != nil {
+		log.Fatalf("failed to read users service config: %v", err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.Postgres.GetConnectionString())
@@ -35,7 +35,7 @@ func main() {
 	}
 	log.Println("Connected to database successfully")
 
-	if err := tools.MigrateUp("migrations", pool); err != nil {
+	if err := tools.MigrateUp("migrations", "users_service_schema_migrations", pool); err != nil {
 		log.Fatalf("failed to migrate up: %v", err)
 	}
 

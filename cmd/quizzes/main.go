@@ -7,10 +7,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	quizzesconfig "whoami-server/cmd/quizzes/internal/config"
 	"whoami-server/cmd/quizzes/internal/servers/grpc"
 	"whoami-server/internal/cache/redis"
 	"whoami-server/internal/config"
-	rediscfg "whoami-server/internal/config/cache/redis"
+	"whoami-server/internal/tools"
 )
 
 func main() {
@@ -18,19 +19,9 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefaultForService("quizzes")
-	if err != nil {
-		log.Fatalf("failed to read config: %v", err)
-	}
-
-	historyCfg, err := config.GetDefaultForService("history")
-	if err != nil {
-		log.Fatalf("failed to get history config: %v", err)
-	}
-
-	redisCfg, err := rediscfg.LoadDefault()
-	if err != nil {
-		log.Fatalf("failed to read redis config: %v", err)
+	var cfg quizzesconfig.Config
+	if err := config.LoanConfig(&cfg); err != nil {
+		log.Fatalf("failed to read quizzes service config: %v", err)
 	}
 
 	pool, err := pgxpool.New(context.Background(), cfg.Postgres.GetConnectionString())
@@ -44,13 +35,17 @@ func main() {
 	}
 	log.Println("Connected to database successfully")
 
-	client, err := redis.NewClient(ctx, redisCfg)
+	if err := tools.MigrateUp("migrations", "quizzes_service_schema_migrations", pool); err != nil {
+		log.Fatalf("failed to migrate up: %v", err)
+	}
+
+	client, err := redis.NewClient(ctx, cfg.Redis)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 	log.Println("Connected to Redis successfully")
 
-	s, err := grpc.NewServer(pool, client, redisCfg.GetTTL(), historyCfg.Grpc.GetAddr())
+	s, err := grpc.NewServer(pool, client, cfg.Redis.GetTTL(), cfg.HistoryService.GetAddr())
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}
