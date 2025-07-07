@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	gatewayconfig "whoami-server/cmd/gateway/internal/config"
 	"whoami-server/cmd/gateway/internal/servers/http"
 	"whoami-server/internal/config"
 )
@@ -15,34 +16,19 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg, err := config.GetDefaultForService("gateway")
-	if err != nil {
-		log.Fatalf("failed to read config: %v", err)
-	}
-
-	quizzesCfg, err := config.GetDefaultForService("quizzes")
-	if err != nil {
-		log.Fatalf("failed to get quizzes config: %v", err)
-	}
-
-	usersCfg, err := config.GetDefaultForService("users")
-	if err != nil {
-		log.Fatalf("failed to get users config: %v", err)
-	}
-
-	historyCfg, err := config.GetDefaultForService("history")
-	if err != nil {
-		log.Fatalf("failed to get history config: %v", err)
+	var cfg gatewayconfig.Config
+	if err := config.LoanConfig(&cfg); err != nil {
+		log.Fatalf("failed to read gateway config: %v", err)
 	}
 
 	grpcAddresses := map[string]string{
-		"quizzes": quizzesCfg.Grpc.GetAddr(),
-		"users":   usersCfg.Grpc.GetAddr(),
-		"history": historyCfg.Grpc.GetAddr(),
+		"quizzes": cfg.QuizzesService.GetAddr(),
+		"users":   cfg.UsersService.GetAddr(),
+		"history": cfg.HistoryService.GetAddr(),
 	}
 
 	go func() {
-		if err := http.Start(ctx, grpcAddresses, cfg.Http); err != nil {
+		if err := http.Start(ctx, grpcAddresses, cfg.HTTP); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

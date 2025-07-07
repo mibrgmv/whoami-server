@@ -91,7 +91,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	return mux, nil
 }
 
-func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig httpcfg.Config) error {
+func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig *httpcfg.Config) error {
 	mux, err := NewServer(ctx, grpcAddresses)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)

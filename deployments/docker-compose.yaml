@@ -8,9 +8,9 @@ services:
       - quizzes-service
       - users-service
     environment:
-      HISTORY_GRPC_HOST: history-service
-      QUIZZES_GRPC_HOST: quizzes-service
-      USERS_GRPC_HOST: users-service
+      HISTORY_SERVICE_HOST: history-service
+      USERS_SERVICE_HOST: users-service
+      QUIZZES_SERVICE_HOST: quizzes-service
       REDIS_ADDRESS: redis:6379
 
   history-service:
@@ -20,12 +20,14 @@ services:
     depends_on:
       - postgres
       - redis
+      - quizzes-service
+      - users-service
     environment:
-      HISTORY_POSTGRES_HOST: postgres
-      HISTORY_POSTGRES_DATABASE: postgres
-      HISTORY_POSTGRES_USERNAME: postgres
-      HISTORY_POSTGRES_PASSWORD: postgres
-      HISTORY_GRPC_HOST: 0.0.0.0
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
     restart:
       unless-stopped
 
@@ -37,12 +39,13 @@ services:
       - postgres
       - redis
     environment:
-      QUIZZES_POSTGRES_HOST: postgres
-      QUIZZES_POSTGRES_DATABASE: postgres
-      QUIZZES_POSTGRES_USERNAME: postgres
-      QUIZZES_POSTGRES_PASSWORD: postgres
-      QUIZZES_GRPC_HOST: 0.0.0.0
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
       REDIS_ADDRESS: redis:6379
+      HISTORY_SERVICE_HOST: history-service
     restart:
       unless-stopped
 

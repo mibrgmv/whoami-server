@@ -1,6 +1,6 @@
 grpc:
   host: localhost
-  port: 50051
+  port: 50053
 
 postgres:
   host: localhost
@@ -18,4 +18,4 @@ redis:
 
 history-service:
   host: localhost
-  port: 50053
+  port: 50051

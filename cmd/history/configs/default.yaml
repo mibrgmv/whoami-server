@@ -1,6 +1,6 @@
 grpc:
   host: localhost
-  port: 50053
+  port: 50051
 
 postgres:
   host: "localhost"

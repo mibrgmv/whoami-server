@@ -3,8 +3,6 @@ FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
-COPY configs/ ./configs/
 COPY internal/ ./internal/
 COPY protogen/ ./protogen/
 COPY cmd/gateway/ ./cmd/gateway/
@@ -18,7 +16,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/gateway .
-COPY --from=builder /app/configs/ ./configs/
+COPY --from=builder /app/cmd/gateway/configs/ ./cmd/gateway/configs/
 
 EXPOSE 8080
 
