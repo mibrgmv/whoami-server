@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	gatewayconfig "whoami-server/cmd/gateway/internal/config"
+	"whoami-server/cmd/gateway/internal"
 	"whoami-server/cmd/gateway/internal/servers/http"
 	"whoami-server/internal/config"
 )
@@ -16,19 +16,15 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	var cfg gatewayconfig.Config
+	var cfg internal.Config
 	if err := config.LoanConfig(&cfg); err != nil {
 		log.Fatalf("failed to read gateway config: %v", err)
 	}
 
-	grpcAddresses := map[string]string{
-		"quizzes": cfg.QuizzesService.GetAddr(),
-		"users":   cfg.UsersService.GetAddr(),
-		"history": cfg.HistoryService.GetAddr(),
-	}
+	log.Println("loaded keycloak config:", *cfg.Keycloak)
 
 	go func() {
-		if err := http.Start(ctx, grpcAddresses, cfg.HTTP); err != nil {
+		if err := http.Start(ctx, cfg); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

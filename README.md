@@ -4,14 +4,25 @@
 
 ### Login
 
+old
 ```shell
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"abc", "password":"123"}' 
 ```
+new
+```shell
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "testuser",
+    "password": "12345"
+  }'
+```
 
 ### Refresh Access Token
 
+old
 ```shell
 curl -X POST \
   "http://localhost:8080/api/v1/auth/refresh" \
@@ -19,6 +30,14 @@ curl -X POST \
   -H "Accept: application/json" \
   -d '{
     "refresh_token": "REFRESH_TOKEN"
+  }'
+```
+new
+```shell
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "your-refresh-token"
   }'
 ```
 

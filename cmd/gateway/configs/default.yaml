@@ -1,8 +1,8 @@
-jwt:
-  access_secret: ""
-  refresh_secret: ""
-  access_expiry: 10s # for demonstration purposes
-  refresh_expiry: 72h
+keycloak:
+  base_url: http://localhost:8088
+  realm: myrealm
+  client_id: whoami-public-client
+  client_secret:
 
 http:
   host: 0.0.0.0

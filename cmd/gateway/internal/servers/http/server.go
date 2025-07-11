@@ -10,11 +10,12 @@ import (
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
+	"whoami-server/cmd/gateway/internal"
+	"whoami-server/cmd/gateway/internal/keycloak"
 	"whoami-server/cmd/gateway/internal/servers/http/auth"
 	"whoami-server/cmd/gateway/internal/servers/http/cors"
 	"whoami-server/cmd/gateway/internal/servers/http/logging"
 	"whoami-server/cmd/gateway/internal/servers/http/recovery"
-	httpcfg "whoami-server/internal/config/api/http"
 	authpb "whoami-server/protogen/golang/auth"
 	historypb "whoami-server/protogen/golang/history"
 	questionpb "whoami-server/protogen/golang/question"
@@ -22,7 +23,7 @@ import (
 	userpb "whoami-server/protogen/golang/user"
 )
 
-func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.ServeMux, error) {
+func NewServer(ctx context.Context, cfg internal.Config) (*http.ServeMux, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -44,7 +45,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := authpb.RegisterAuthorizationServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["users"],
+		cfg.UsersService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register user service: %w", err)
@@ -53,7 +54,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["users"],
+		cfg.UsersService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register user service: %w", err)
@@ -62,7 +63,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["quizzes"],
+		cfg.QuizzesService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register quiz service: %w", err)
@@ -71,7 +72,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := questionpb.RegisterQuestionServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["quizzes"],
+		cfg.QuizzesService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register question service: %w", err)
@@ -80,7 +81,7 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	if err := historypb.RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		grpcAddresses["history"],
+		cfg.HistoryService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register history service: %w", err)
@@ -89,16 +90,18 @@ func NewServer(ctx context.Context, grpcAddresses map[string]string) (*http.Serv
 	mux := http.NewServeMux()
 	mux.Handle("/api/v1/", gwmux)
 
+	keycloak.RegisterHandlers(mux, cfg.Keycloak)
+
 	return mux, nil
 }
 
-func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig *httpcfg.Config) error {
-	mux, err := NewServer(ctx, grpcAddresses)
+func Start(ctx context.Context, cfg internal.Config) error {
+	mux, err := NewServer(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
-	authClient, err := auth.NewClient(grpcAddresses["users"])
+	authClient, err := auth.NewClient(cfg.UsersService.GetAddr())
 	if err != nil {
 		return fmt.Errorf("failed to create auth middleware: %w", err)
 	}
@@ -106,13 +109,13 @@ func Start(ctx context.Context, grpcAddresses map[string]string, httpConfig *htt
 
 	handler := ApplyMiddleware(mux,
 		authClient.Middleware,
-		cors.Middleware(httpConfig.CORS),
+		cors.Middleware(cfg.HTTP.CORS),
 		logging.Middleware,
 		recovery.Middleware,
 	)
 
 	server := &http.Server{
-		Addr:    httpConfig.GetAddr(),
+		Addr:    cfg.HTTP.GetAddr(),
 		Handler: handler,
 	}
 
