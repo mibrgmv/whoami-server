@@ -82,8 +82,6 @@ func (h *Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) exchangeCredentialsForTokens(ctx context.Context, username, password string) (*LoginResponse, error) {
-	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", h.config.BaseURL, h.config.Realm)
-
 	data := url.Values{}
 	data.Set("grant_type", "password")
 	data.Set("client_id", h.config.ClientID)
@@ -94,7 +92,7 @@ func (h *Handler) exchangeCredentialsForTokens(ctx context.Context, username, pa
 		data.Set("client_secret", h.config.ClientSecret)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, h.config.GetTokenURL(), strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -129,8 +127,6 @@ func (h *Handler) exchangeCredentialsForTokens(ctx context.Context, username, pa
 }
 
 func (h *Handler) refreshTokens(ctx context.Context, refreshToken string) (*LoginResponse, error) {
-	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", h.config.BaseURL, h.config.Realm)
-
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("client_id", h.config.ClientID)
@@ -140,7 +136,7 @@ func (h *Handler) refreshTokens(ctx context.Context, refreshToken string) (*Logi
 		data.Set("client_secret", h.config.ClientSecret)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, h.config.GetTokenURL(), strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
