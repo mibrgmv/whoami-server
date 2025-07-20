@@ -37,8 +37,8 @@ func (c *Client) ExchangeCredentialsForTokens(ctx context.Context, username, pas
 		data.Set("client_secret", c.config.ClientSecret)
 	}
 
-	url := fmt.Sprintf("%s/admin/realms/%s/token", c.config.BaseURL, c.config.Realm)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(data.Encode()))
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.config.BaseURL, c.config.Realm)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -82,8 +82,8 @@ func (c *Client) RefreshTokens(ctx context.Context, refreshToken string) (*Login
 		data.Set("client_secret", c.config.ClientSecret)
 	}
 
-	url := fmt.Sprintf("%s/admin/realms/%s/token", c.config.BaseURL, c.config.Realm)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(data.Encode()))
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.config.BaseURL, c.config.Realm)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create refresh request: %w", err)
 	}
@@ -128,8 +128,8 @@ func (c *Client) RevokeToken(ctx context.Context, refreshToken string) error {
 		data.Set("client_secret", c.config.ClientSecret)
 	}
 
-	url := fmt.Sprintf("%s/admin/realms/%s/logout", c.config.BaseURL, c.config.Realm)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(data.Encode()))
+	revokeURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/logout", c.config.BaseURL, c.config.Realm)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, revokeURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create revoke request: %w", err)
 	}
@@ -156,8 +156,8 @@ func (c *Client) GetAdminToken(ctx context.Context) (string, error) {
 	data.Set("client_id", c.config.AdminClientID)
 	data.Set("client_secret", c.config.AdminClientSecret)
 
-	url := fmt.Sprintf("%s/admin/realms/%s/token", c.config.BaseURL, c.config.Realm)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(data.Encode()))
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.config.BaseURL, c.config.Realm)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", fmt.Errorf("failed to create admin token request: %w", err)
 	}
@@ -198,8 +198,8 @@ func (c *Client) CreateUser(ctx context.Context, userReq CreateUserRequest) (*Cr
 		return nil, fmt.Errorf("failed to marshal user request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/admin/realms/%s/users", c.config.BaseURL, c.config.Realm)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+	userURL := fmt.Sprintf("%s/admin/realms/%s/users", c.config.BaseURL, c.config.Realm)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, userURL, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user request: %w", err)
 	}

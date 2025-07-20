@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
@@ -9,7 +8,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -18,17 +16,16 @@ import (
 	"whoami-server-gateway/internal/auth/keycloak"
 )
 
-type KeycloakJWK struct {
-	Kty string   `json:"kty"`
-	Kid string   `json:"kid"`
-	Use string   `json:"use"`
-	N   string   `json:"n"`
-	E   string   `json:"e"`
-	X5c []string `json:"x5c"`
+type JWK struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	N   string `json:"n"`
+	E   string `json:"e"`
 }
 
-type KeycloakJWKS struct {
-	Keys []KeycloakJWK `json:"keys"`
+type JWKSResponse struct {
+	Keys []JWK `json:"keys"`
 }
 
 // todo options
@@ -37,62 +34,59 @@ type Middleware struct {
 	realm           string
 	publicKeys      map[string]*rsa.PublicKey
 	keysMutex       sync.RWMutex
-	httpClient      *http.Client
 	lastKeyRefresh  time.Time
 	keyRefreshTTL   time.Duration
+	httpClient      *http.Client
 }
 
-// todo pointer
-func NewMiddleware(keycloakBaseURL, realm string) Middleware {
-	return Middleware{
+func NewMiddleware(keycloakBaseURL, realm string) *Middleware {
+	return &Middleware{
 		keycloakBaseURL: keycloakBaseURL,
 		realm:           realm,
 		publicKeys:      make(map[string]*rsa.PublicKey),
+		keyRefreshTTL:   1 * time.Hour, // todo config
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
-		keyRefreshTTL: 1 * time.Hour,
 	}
 }
 
-// todo naming
-func (m *Middleware) Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api/v1/auth/") {
-			next.ServeHTTP(w, r)
+func (m *Middleware) Validate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") {
+			c.Next()
 			return
 		}
 
-		authHeader := r.Header.Get("Authorization")
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			writeAuthError(w, "Authorization header is required", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			c.Abort()
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader {
-			writeAuthError(w, "Invalid authorization header format", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+			c.Abort()
 			return
 		}
 
 		claims, err := m.validateToken(tokenString)
 		if err != nil {
-			writeAuthError(w, fmt.Sprintf("Invalid token: %v", err), http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid token: %v", err)})
+			c.Abort()
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", claims.Subject)
-		ctx = context.WithValue(ctx, "username", claims.PreferredUsername)
-		ctx = context.WithValue(ctx, "email", claims.Email)
-		ctx = context.WithValue(ctx, "claims", claims)
+		c.Set("user_id", claims.Subject)
+		c.Set("username", claims.PreferredUsername)
+		c.Set("email", claims.Email)
+		c.Set("email_verified", claims.EmailVerified)
+		c.Set("claims", claims)
 
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func NewJWTMiddleware(keycloakBaseURL, realm string) func(http.Handler) http.Handler {
-	am := NewMiddleware(keycloakBaseURL, realm)
-	return am.Middleware
+		c.Next()
+	}
 }
 
 func (m *Middleware) validateToken(tokenString string) (*keycloak.Claims, error) {
@@ -173,17 +167,10 @@ func (m *Middleware) refreshPublicKeys() error {
 		return fmt.Errorf("failed to fetch JWKS: status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read JWKS response: %w", err)
+	var jwks JWKSResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+		return fmt.Errorf("failed to decode JWKS: %w", err)
 	}
-
-	var jwks KeycloakJWKS
-	if err := json.Unmarshal(body, &jwks); err != nil {
-		return fmt.Errorf("failed to parse JWKS: %w", err)
-	}
-
-	m.publicKeys = make(map[string]*rsa.PublicKey)
 
 	for _, key := range jwks.Keys {
 		if key.Kty == "RSA" && key.Use == "sig" {
@@ -199,7 +186,7 @@ func (m *Middleware) refreshPublicKeys() error {
 	return nil
 }
 
-func (m *Middleware) jwkToRSAPublicKey(jwk KeycloakJWK) (*rsa.PublicKey, error) {
+func (m *Middleware) jwkToRSAPublicKey(jwk JWK) (*rsa.PublicKey, error) {
 	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode modulus: %w", err)
@@ -221,63 +208,32 @@ func (m *Middleware) jwkToRSAPublicKey(jwk KeycloakJWK) (*rsa.PublicKey, error) 
 	return publicKey, nil
 }
 
-func writeAuthError(w http.ResponseWriter, message string, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error":             "authentication_failed",
-		"error_description": message,
-	})
-}
+func (m *Middleware) RequireRole(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, exists := c.Get("claims")
+		if !exists {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Claims not found"})
+			c.Abort()
+			return
+		}
 
-func GetUserID(ctx context.Context) string {
-	if userID, ok := ctx.Value("user_id").(string); ok {
-		return userID
-	}
-	return ""
-}
+		keycloakClaims, ok := claims.(*keycloak.Claims)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid claims"})
+			c.Abort()
+			return
+		}
 
-func GetUsername(ctx context.Context) string {
-	if username, ok := ctx.Value("username").(string); ok {
-		return username
-	}
-	return ""
-}
-
-func GetEmail(ctx context.Context) string {
-	if email, ok := ctx.Value("email").(string); ok {
-		return email
-	}
-	return ""
-}
-
-func GetClaims(ctx context.Context) *keycloak.Claims {
-	if claims, ok := ctx.Value("claims").(*keycloak.Claims); ok {
-		return claims
-	}
-	return nil
-}
-
-func HasRole(ctx context.Context, role string) bool {
-	claims := GetClaims(ctx)
-	if claims == nil {
-		return false
-	}
-
-	if realmAccess, ok := claims.RealmAccess["roles"].([]interface{}); ok {
-		for _, r := range realmAccess {
-			if roleStr, ok := r.(string); ok && roleStr == role {
-				return true
+		if realmAccess, ok := keycloakClaims.RealmAccess["roles"].([]interface{}); ok {
+			for _, r := range realmAccess {
+				if roleStr, ok := r.(string); ok && roleStr == role {
+					c.Next()
+					return
+				}
 			}
 		}
+
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
+		c.Abort()
 	}
-
-	return false
-}
-
-func GinJWTMiddleware(baseURL, realm string) gin.HandlerFunc {
-	jwtMiddleware := NewJWTMiddleware(baseURL, realm)
-	return gin.WrapH(jwtMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This will be handled by the next handler in Gin
-	})))
 }

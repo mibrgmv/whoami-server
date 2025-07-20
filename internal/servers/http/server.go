@@ -35,11 +35,11 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 				md.Set("user_id", userId)
 			}
 
-			if username := auth.GetUsername(ctx); username != "" {
+			if username, ok := ctx.Value("username").(string); ok && username != "" {
 				md.Set("username", username)
 			}
 
-			if email := auth.GetEmail(ctx); email != "" {
+			if email, ok := ctx.Value("email").(string); ok && email != "" {
 				md.Set("email", email)
 			}
 
@@ -89,11 +89,12 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 
 	keycloakClient := keycloak.NewClient(cfg.Keycloak)
 	authHandler := auth2.NewHandler(keycloakClient, nil)
+	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.Use(
-		auth.GinJWTMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm),
+		authMiddleware.Validate(),
 		cors.Middleware(cfg.HTTP.CORS),
 		gin.Logger(),
 		gin.Recovery(),
@@ -125,13 +126,6 @@ func Start(ctx context.Context, cfg config.Config) error {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
-	//handler := ApplyMiddleware(router,
-	//	auth.NewJWTMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm),
-	//	cors.Middleware(cfg.HTTP.CORS),
-	//	logging.Middleware,
-	//	recovery.Middleware,
-	//)
-
 	server := &http.Server{
 		Addr:    cfg.HTTP.GetAddr(),
 		Handler: router,
@@ -143,11 +137,4 @@ func Start(ctx context.Context, cfg config.Config) error {
 	}
 
 	return nil
-}
-
-func ApplyMiddleware(handler http.Handler, middlewares ...func(http.Handler) http.Handler) http.Handler {
-	for _, middleware := range middlewares {
-		handler = middleware(handler)
-	}
-	return handler
 }
