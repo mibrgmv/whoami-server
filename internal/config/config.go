@@ -1,35 +1,15 @@
 package config
 
 import (
-	"fmt"
-	"github.com/spf13/viper"
-	"path/filepath"
-	"runtime"
-	"strings"
+	"github.com/mibrgmv/whoami-server-shared/config/api/grpc"
+	"github.com/mibrgmv/whoami-server-shared/config/api/http"
+	"whoami-server-gateway/internal/auth/keycloak"
 )
 
-func LoanConfig(cfg interface{}) error {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return fmt.Errorf("failed to get called information")
-	}
-
-	mainDir := filepath.Dir(filename)
-	configDir := filepath.Join(mainDir, "configs")
-
-	viper.SetConfigName("default")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(configDir)
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	if err := viper.Unmarshal(cfg); err != nil {
-		return fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	return nil
+type Config struct {
+	Keycloak       *keycloak.Config `mapstructure:"keycloak"`
+	HTTP           *http.Config     `mapstructure:"http"`
+	QuizzesService *grpc.Config     `mapstructure:"quizzes_service"`
+	UsersService   *grpc.Config     `mapstructure:"users_service"`
+	HistoryService *grpc.Config     `mapstructure:"history_service"`
 }
