@@ -13,28 +13,10 @@ services:
       QUIZZES_SERVICE_HOST: quizzes-service
       REDIS_ADDRESS: redis:6379
 
-  history-service:
-    image: ghcr.io/mibrgmv/whoami-server-history:latest
-    ports:
-      - "50051:50051"
-    depends_on:
-      - postgres
-      - redis
-      - quizzes-service
-      - users-service
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_DATABASE: postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      GRPC_HOST: 0.0.0.0
-    restart:
-      unless-stopped
-
   quizzes-service:
     image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
     ports:
-      - "50053:50053"
+      - "50051:50051"
     depends_on:
       - postgres
       - redis
@@ -65,6 +47,24 @@ services:
       REDIS_ADDRESS: redis:6379
       JWT_ACCESS_SECRET: "9uerknjavfmklqf"
       JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"
+    restart:
+      unless-stopped
+
+  history-service:
+    image: ghcr.io/mibrgmv/whoami-server-history:latest
+    ports:
+      - "50053:50053"
+    depends_on:
+      - postgres
+      - redis
+      - quizzes-service
+      - users-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
     restart:
       unless-stopped
 
