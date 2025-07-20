@@ -108,6 +108,8 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		authGroup.POST("/register", authHandler.Register)
 	}
 
+	router.DELETE("/api/v1/users/:id", authHandler.DeleteUser)
+
 	router.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") {

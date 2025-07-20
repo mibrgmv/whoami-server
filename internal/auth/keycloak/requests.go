@@ -39,3 +39,8 @@ type CreateUserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type DeleteUserResponse struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}

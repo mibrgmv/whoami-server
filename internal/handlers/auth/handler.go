@@ -87,8 +87,8 @@ func (h *Handler) Register(c *gin.Context) {
 		Username  string `json:"username" binding:"required,min=3,max=50"`
 		Email     string `json:"email" binding:"required,email"`
 		Password  string `json:"password" binding:"required,min=8"`
-		FirstName string `json:"firstName,omitempty"`
-		LastName  string `json:"lastName,omitempty"`
+		FirstName string `json:"first_name,omitempty"`
+		LastName  string `json:"last_name,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -127,27 +127,6 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	// TODO: Create user in your app service when it's ready
-	// This is where you would call your user service to create the user profile
-	/*
-	   if h.user != nil {
-	       appUserReq := &user.CreateUserRequest{
-	           KeycloakId: keycloakResp.ID,
-	           Username:   req.Username,
-	           Email:      req.Email,
-	           FirstName:  req.FirstName,
-	           LastName:   req.LastName,
-	       }
-
-	       _, err := h.user.CreateUser(c.Request.Context(), appUserReq)
-	       if err != nil {
-	           // Log the error but don't fail the registration
-	           // You might want to implement a cleanup mechanism here
-	           log.Printf("Failed to create user in app service: %v", err)
-	       }
-	   }
-	*/
-
 	c.JSON(http.StatusCreated, gin.H{
 		"ID":       keycloakResp.ID,
 		"Username": keycloakResp.Username,
@@ -156,33 +135,34 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
-//func (h *Handler) ValidateToken() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		authHeader := c.GetHeader("Authorization")
-//		if authHeader == "" {
-//			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-//			c.Abort()
-//			return
-//		}
-//
-//		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-//		if tokenString == authHeader {
-//			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
-//			c.Abort()
-//			return
-//		}
-//
-//		claims, err := h.keycloak.ValidateToken(c.Request.Context(), tokenString)
-//		if err != nil {
-//			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-//			c.Abort()
-//			return
-//		}
-//
-//		// Add user info to context
-//		c.Set("user_id", claims)
-//		c.Set("username", claims.PreferredUsername)
-//		c.Set("email", claims.Email)
-//		c.Next()
-//	}
-//}
+func (h *Handler) DeleteUser(c *gin.Context) {
+	targetUserID := c.Param("id")
+	if targetUserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	authUserID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	if authUserID.(string) != targetUserID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this user"})
+		return
+	}
+
+	deletedUser, err := h.keycloak.DeleteUser(c.Request.Context(), targetUserID)
+	if err != nil {
+		if strings.Contains(err.Error(), "user not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, deletedUser)
+}
