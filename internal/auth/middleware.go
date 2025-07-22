@@ -53,7 +53,9 @@ func NewMiddleware(keycloakBaseURL, realm string) *Middleware {
 
 func (m *Middleware) Validate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") {
+		// todo configure middleware in server.go
+		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") ||
+			strings.HasPrefix(c.Request.URL.Path, "/swagger") {
 			c.Next()
 			return
 		}

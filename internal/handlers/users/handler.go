@@ -1,4 +1,4 @@
-package auth
+package users
 
 import (
 	"whoami-server-gateway/internal/auth/keycloak/client"

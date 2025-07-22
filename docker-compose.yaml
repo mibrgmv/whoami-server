@@ -5,7 +5,8 @@ services:
       - "8088:8080"
     container_name: keycloak
     networks:
-      - whoami-network
+      - keycloak-network
+      - app-network
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -27,14 +28,117 @@ services:
     ports:
       - "6432:5432"
     networks:
-      - whoami-network
+      - keycloak-network
     restart: unless-stopped
     volumes:
       - postgres-keycloak-data:/var/lib/postgresql/data
 
+  gateway:
+    image: ghcr.io/mibrgmv/whoami-server-gateway:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - quizzes-service
+      - users-service
+      - history-service
+    networks:
+      - app-network
+    environment:
+      HISTORY_SERVICE_HOST: history-service
+      USERS_SERVICE_HOST: users-service
+      QUIZZES_SERVICE_HOST: quizzes-service
+      REDIS_ADDRESS: redis:6379
+
+  quizzes-service:
+    image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
+    ports:
+      - "50051:50051"
+    depends_on:
+      - postgres-app
+      - redis
+    networks:
+      - app-network
+    environment:
+      POSTGRES_HOST: postgres-app
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
+      REDIS_ADDRESS: redis:6379
+      HISTORY_SERVICE_HOST: history-service
+    restart:
+      unless-stopped
+
+  users-service:
+    image: ghcr.io/mibrgmv/whoami-server-users:latest
+    ports:
+      - "50052:50052"
+    depends_on:
+      - postgres-app
+      - redis
+    networks:
+      - app-network
+    environment:
+      POSTGRES_HOST: postgres-app
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
+      REDIS_ADDRESS: redis:6379
+      JWT_ACCESS_SECRET: "9uerknjavfmklqf"
+      JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"
+    restart:
+      unless-stopped
+
+  history-service:
+    image: ghcr.io/mibrgmv/whoami-server-history:latest
+    ports:
+      - "50053:50053"
+    depends_on:
+      - postgres-app
+      - redis
+      - quizzes-service
+      - users-service
+    networks:
+      - app-network
+    environment:
+      POSTGRES_HOST: postgres-app
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      GRPC_HOST: 0.0.0.0
+    restart:
+      unless-stopped
+
+  postgres-app:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+
 networks:
-  whoami-network:
+  keycloak-network:
+    driver: bridge
+  app-network:
     driver: bridge
 
 volumes:
   postgres-keycloak-data:
+  postgres-data:

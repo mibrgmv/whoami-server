@@ -6,17 +6,21 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
 	"strings"
+	"whoami-server-gateway/api/swagger"
 	"whoami-server-gateway/internal/auth"
-	"whoami-server-gateway/internal/auth/keycloak"
+	"whoami-server-gateway/internal/auth/keycloak/client"
 	"whoami-server-gateway/internal/config"
 	appcfg "whoami-server-gateway/internal/config"
 	auth2 "whoami-server-gateway/internal/handlers/auth"
+	"whoami-server-gateway/internal/handlers/users"
 	"whoami-server-gateway/internal/servers/http/cors"
 	historypb "whoami-server-gateway/protogen/golang/history"
 	questionpb "whoami-server-gateway/protogen/golang/question"
@@ -87,9 +91,10 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register history service: %w", err)
 	}
 
-	keycloakClient := keycloak.NewClient(cfg.Keycloak)
+	keycloakClient := client.NewClient(cfg.Keycloak)
 	authHandler := auth2.NewHandler(keycloakClient, nil)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
+	usersHandler := users.NewHandler(keycloakClient, nil)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
@@ -100,6 +105,9 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		gin.Recovery(),
 	)
 
+	swagger.SwaggerInfo.BasePath = "/api/v1"
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	authGroup := router.Group("/api/v1/auth")
 	{
 		authGroup.POST("/login", authHandler.Login)
@@ -108,7 +116,12 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		authGroup.POST("/register", authHandler.Register)
 	}
 
-	router.DELETE("/api/v1/users/:id", authHandler.DeleteUser)
+	usersGroup := router.Group("/api/v1/users")
+	{
+		usersGroup.PUT("/:id", usersHandler.UpdateUser)
+		usersGroup.PUT("/:id/password", usersHandler.ChangePassword)
+		usersGroup.DELETE("/:id", usersHandler.DeleteUser)
+	}
 
 	router.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/") &&
