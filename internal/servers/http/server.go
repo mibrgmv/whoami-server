@@ -16,7 +16,7 @@ import (
 	"strings"
 	"whoami-server-gateway/api/swagger"
 	"whoami-server-gateway/internal/auth"
-	"whoami-server-gateway/internal/auth/keycloak/client"
+	"whoami-server-gateway/internal/auth/keycloak"
 	"whoami-server-gateway/internal/config"
 	appcfg "whoami-server-gateway/internal/config"
 	auth2 "whoami-server-gateway/internal/handlers/auth"
@@ -91,7 +91,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register history service: %w", err)
 	}
 
-	keycloakClient := client.NewClient(cfg.Keycloak)
+	keycloakClient := keycloak.NewClient(cfg.Keycloak)
 	authHandler := auth2.NewHandler(keycloakClient, nil)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
 	usersHandler := users.NewHandler(keycloakClient, nil)
