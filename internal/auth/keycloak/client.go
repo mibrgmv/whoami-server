@@ -581,7 +581,7 @@ func (c *Client) BatchGetUsers(ctx context.Context, req BatchGetUsersRequest) (*
 
 	query := httpReq.URL.Query()
 	query.Add("first", fmt.Sprintf("%d", req.First))
-	query.Add("max", fmt.Sprintf("%d", req.PageSize))
+	query.Add("max", fmt.Sprintf("%d", req.PageSize+1))
 	query.Add("briefRepresentation", "false")
 	httpReq.URL.RawQuery = query.Encode()
 
@@ -616,9 +616,10 @@ func (c *Client) BatchGetUsers(ctx context.Context, req BatchGetUsersRequest) (*
 	}
 
 	var nextFirst *int32
-	if len(keycloakUsers) == int(req.PageSize) {
+	if len(keycloakUsers) > int(req.PageSize) {
 		next := req.First + req.PageSize
 		nextFirst = &next
+		keycloakUsers = keycloakUsers[:len(keycloakUsers)-1]
 	}
 
 	return &BatchGetUsersResponse{
