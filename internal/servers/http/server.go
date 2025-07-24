@@ -21,11 +21,9 @@ import (
 	appcfg "whoami-server-gateway/internal/config"
 	auth2 "whoami-server-gateway/internal/handlers/auth"
 	"whoami-server-gateway/internal/handlers/users"
-	"whoami-server-gateway/internal/servers/http/cors"
 	historypb "whoami-server-gateway/protogen/golang/history"
 	questionpb "whoami-server-gateway/protogen/golang/question"
 	quizpb "whoami-server-gateway/protogen/golang/quiz"
-	userpb "whoami-server-gateway/protogen/golang/user"
 )
 
 func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
@@ -55,15 +53,6 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.UsersService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register user service: %w", err)
-	}
-
 	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
@@ -91,19 +80,13 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register history service: %w", err)
 	}
 
-	keycloakClient := keycloak.NewClient(cfg.Keycloak)
+	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
 	authHandler := auth2.NewHandler(keycloakClient, nil)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
 	usersHandler := users.NewHandler(keycloakClient, nil)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	router.Use(
-		authMiddleware.Validate(),
-		cors.Middleware(cfg.HTTP.CORS),
-		gin.Logger(),
-		gin.Recovery(),
-	)
 
 	swagger.SwaggerInfo.BasePath = "/api/v1"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -117,7 +100,9 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	}
 
 	usersGroup := router.Group("/api/v1/users")
+	usersGroup.Use(authMiddleware.Authorization())
 	{
+		usersGroup.GET("/current", usersHandler.GetCurrentUser)
 		usersGroup.PUT("/:id", usersHandler.UpdateUser)
 		usersGroup.PUT("/:id/password", usersHandler.ChangePassword)
 		usersGroup.DELETE("/:id", usersHandler.DeleteUser)
@@ -126,6 +111,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	router.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") {
+			authMiddleware.Authorization()
 			gin.WrapH(gwmux)(c)
 		} else {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})

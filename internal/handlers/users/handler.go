@@ -27,8 +27,8 @@ type ErrorResponse struct {
 type UpdateUserRequest struct {
 	Username  string `json:"username,omitempty" binding:"omitempty,min=3,max=50" example:"johndoe_updated"`
 	Email     string `json:"email,omitempty" binding:"omitempty,email" example:"john.updated@example.com"`
-	FirstName string `json:"first_name,omitempty" example:"John"`
-	LastName  string `json:"last_name,omitempty" example:"Doe"`
+	FirstName string `json:"firstName,omitempty" example:"John"`
+	LastName  string `json:"lastName,omitempty" example:"Doe"`
 }
 
 type UpdateUserResponse struct {
@@ -263,6 +263,63 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	response := DeleteUserResponse{
 		ID:      deletedUser.ID,
 		Message: "User deleted successfully",
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+type GetCurrentUserResponse struct {
+	ID               string `json:"id" example:"f47ac10b-58cc-4372-a567-0e02b2c3d479"`
+	Username         string `json:"username" example:"john_doe"`
+	Email            string `json:"email" example:"john.doe@example.com"`
+	FirstName        string `json:"firstName" example:"John"`
+	LastName         string `json:"lastName" example:"Doe"`
+	Enabled          bool   `json:"enabled" example:"true"`
+	EmailVerified    bool   `json:"emailVerified" example:"true"`
+	CreatedTimestamp int64  `json:"createdTimestamp" example:"1640995200000"`
+}
+
+// GetCurrentUser godoc
+// @Summary      Get current user profile
+// @Description  Get the authenticated user's profile information
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  GetCurrentUserResponse "User profile retrieved successfully"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - User not authenticated"
+// @Failure      404  {object}  ErrorResponse "Not found - User not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error - Failed to retrieve user"
+// @Security     BearerAuth
+// @Router       /users/current [get]
+func (h *Handler) GetCurrentUser(c *gin.Context) {
+	authUserID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "User not authenticated"})
+		return
+	}
+
+	userID := authUserID.(string)
+
+	u, err := h.keycloak.GetUser(c.Request.Context(), userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "user not found") {
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to retrieve user"})
+		return
+	}
+
+	response := GetCurrentUserResponse{
+		ID:               u.ID,
+		Username:         u.Username,
+		Email:            u.Email,
+		FirstName:        u.FirstName,
+		LastName:         u.LastName,
+		Enabled:          u.Enabled,
+		EmailVerified:    u.EmailVerified,
+		CreatedTimestamp: u.CreatedTimestamp,
 	}
 
 	c.JSON(http.StatusOK, response)

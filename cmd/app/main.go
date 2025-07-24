@@ -11,6 +11,10 @@ import (
 	"whoami-server-gateway/internal/servers/http"
 )
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter the token in the format: Bearer <your-token-here>
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)

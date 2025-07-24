@@ -51,15 +51,8 @@ func NewMiddleware(keycloakBaseURL, realm string) *Middleware {
 	}
 }
 
-func (m *Middleware) Validate() gin.HandlerFunc {
+func (m *Middleware) Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// todo configure middleware in server.go
-		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") ||
-			strings.HasPrefix(c.Request.URL.Path, "/swagger") {
-			c.Next()
-			return
-		}
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
@@ -86,6 +79,7 @@ func (m *Middleware) Validate() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("email_verified", claims.EmailVerified)
 		c.Set("claims", claims)
+		// todo add role
 
 		c.Next()
 	}

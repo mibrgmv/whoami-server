@@ -159,6 +159,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/current": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's profile information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user profile",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.GetCurrentUserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - User not found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - Failed to retrieve user",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "put": {
                 "security": [
@@ -572,6 +618,43 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_handlers_users.GetCurrentUserResponse": {
+            "type": "object",
+            "properties": {
+                "createdTimestamp": {
+                    "type": "integer",
+                    "example": 1640995200000
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emailVerified": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "firstName": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
         "internal_handlers_users.UpdateUserRequest": {
             "type": "object",
             "properties": {
@@ -579,11 +662,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "john.updated@example.com"
                 },
-                "first_name": {
+                "firstName": {
                     "type": "string",
                     "example": "John"
                 },
-                "last_name": {
+                "lastName": {
                     "type": "string",
                     "example": "Doe"
                 },
@@ -615,6 +698,14 @@ const docTemplate = `{
                     "example": "johndoe_updated"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter the token in the format: Bearer \u003cyour-token-here\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

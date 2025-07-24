@@ -133,15 +133,42 @@ definitions:
         example: Invalid credentials
         type: string
     type: object
+  internal_handlers_users.GetCurrentUserResponse:
+    properties:
+      createdTimestamp:
+        example: 1640995200000
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      emailVerified:
+        example: true
+        type: boolean
+      enabled:
+        example: true
+        type: boolean
+      firstName:
+        example: John
+        type: string
+      id:
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        type: string
+      lastName:
+        example: Doe
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
   internal_handlers_users.UpdateUserRequest:
     properties:
       email:
         example: john.updated@example.com
         type: string
-      first_name:
+      firstName:
         example: John
         type: string
-      last_name:
+      lastName:
         example: Doe
         type: string
       username:
@@ -407,4 +434,39 @@ paths:
       summary: Change user password
       tags:
       - Users
+  /users/current:
+    get:
+      consumes:
+      - application/json
+      description: Get the authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            $ref: '#/definitions/internal_handlers_users.GetCurrentUserResponse'
+        "401":
+          description: Unauthorized - User not authenticated
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+        "404":
+          description: Not found - User not found
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+        "500":
+          description: Internal server error - Failed to retrieve user
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter the token in the format: Bearer <your-token-here>'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
