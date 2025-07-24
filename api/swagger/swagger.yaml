@@ -95,6 +95,16 @@ definitions:
         example: johndoe
         type: string
     type: object
+  internal_handlers_users.BatchGetUsersResponse:
+    properties:
+      next_offset:
+        example: 20
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/internal_handlers_users.User'
+        type: array
+    type: object
   internal_handlers_users.ChangePasswordRequest:
     properties:
       confirm_password:
@@ -135,9 +145,9 @@ definitions:
     type: object
   internal_handlers_users.GetCurrentUserResponse:
     properties:
-      createdTimestamp:
-        example: 1640995200000
-        type: integer
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
       email:
         example: john.doe@example.com
         type: string
@@ -190,6 +200,27 @@ definitions:
         type: string
       username:
         example: johndoe_updated
+        type: string
+    type: object
+  internal_handlers_users.User:
+    properties:
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      first_name:
+        example: John
+        type: string
+      id:
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      username:
+        example: johndoe
         type: string
     type: object
 info:
@@ -289,6 +320,53 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated list of users using offset-based pagination
+      parameters:
+      - default: 10
+        description: 'Number of users per page (1-100, default: 10)'
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - default: 0
+        description: 'Starting position for pagination (default: 0)'
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users retrieved successfully with next_offset for continuation
+          schema:
+            $ref: '#/definitions/internal_handlers_users.BatchGetUsersResponse'
+        "400":
+          description: Bad request - Invalid pagination parameters or negative offset
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+        "401":
+          description: Unauthorized - User not authenticated
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+        "403":
+          description: Forbidden - Insufficient permissions to list users
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+        "500":
+          description: Internal server error - Failed to retrieve users
+          schema:
+            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get users with pagination
+      tags:
+      - Users
   /users/{id}:
     delete:
       consumes:

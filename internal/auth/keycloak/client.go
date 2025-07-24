@@ -541,3 +541,88 @@ func (c *Client) DeleteUser(ctx context.Context, userID string) (*DeleteUserResp
 		Message: "User deleted successfully",
 	}, nil
 }
+
+type BatchGetUsersRequest struct {
+	PageSize int32 `json:"page_size"`
+	First    int32 `json:"first"`
+}
+
+type User struct {
+	ID               string `json:"id"`
+	Username         string `json:"username"`
+	Email            string `json:"email"`
+	FirstName        string `json:"firstName"`
+	LastName         string `json:"lastName"`
+	CreatedTimestamp int64  `json:"createdTimestamp"`
+	Enabled          bool   `json:"enabled"`
+}
+
+type BatchGetUsersResponse struct {
+	Users     []User `json:"users"`
+	NextFirst *int32 `json:"next_first"`
+}
+
+type pageTokenData struct {
+	First int `json:"first"`
+}
+
+func (c *Client) BatchGetUsers(ctx context.Context, req BatchGetUsersRequest) (*BatchGetUsersResponse, error) {
+	adminToken, err := c.GetAdminToken(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get admin token: %w", err)
+	}
+
+	usersURL := fmt.Sprintf("%s/admin/realms/%s/users", c.config.BaseURL, c.config.Realm)
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, usersURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create batch get users request: %w", err)
+	}
+
+	query := httpReq.URL.Query()
+	query.Add("first", fmt.Sprintf("%d", req.First))
+	query.Add("max", fmt.Sprintf("%d", req.PageSize))
+	query.Add("briefRepresentation", "false")
+	httpReq.URL.RawQuery = query.Encode()
+
+	httpReq.Header.Set("Authorization", "Bearer "+adminToken)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read batch get users response: %w", err)
+	}
+
+	if resp.StatusCode == http.StatusForbidden {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var errorResp ErrorResponse
+		if err := json.Unmarshal(body, &errorResp); err == nil {
+			return nil, fmt.Errorf("keycloak batch get users error: %s - %s", errorResp.Error, errorResp.ErrorDescription)
+		}
+		return nil, fmt.Errorf("failed to get users, status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var keycloakUsers []User
+	if err := json.Unmarshal(body, &keycloakUsers); err != nil {
+		return nil, fmt.Errorf("failed to parse batch get users response: %w", err)
+	}
+
+	var nextFirst *int32
+	if len(keycloakUsers) == int(req.PageSize) {
+		next := req.First + req.PageSize
+		nextFirst = &next
+	}
+
+	return &BatchGetUsersResponse{
+		Users:     keycloakUsers,
+		NextFirst: nextFirst,
+	}, nil
+}

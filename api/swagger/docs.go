@@ -159,6 +159,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a paginated list of users using offset-based pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get users with pagination",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of users per page (1-100, default: 10)",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Starting position for pagination (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Users retrieved successfully with next_offset for continuation",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.BatchGetUsersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - Invalid pagination parameters or negative offset",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions to list users",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error - Failed to retrieve users",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handlers_users.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/current": {
             "get": {
                 "security": [
@@ -564,6 +635,21 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_handlers_users.BatchGetUsersResponse": {
+            "type": "object",
+            "properties": {
+                "next_offset": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_handlers_users.User"
+                    }
+                }
+            }
+        },
         "internal_handlers_users.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -621,9 +707,9 @@ const docTemplate = `{
         "internal_handlers_users.GetCurrentUserResponse": {
             "type": "object",
             "properties": {
-                "createdTimestamp": {
-                    "type": "integer",
-                    "example": 1640995200000
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
                 },
                 "email": {
                     "type": "string",
@@ -696,6 +782,35 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "johndoe_updated"
+                }
+            }
+        },
+        "internal_handlers_users.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
                 }
             }
         }

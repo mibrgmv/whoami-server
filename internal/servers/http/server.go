@@ -103,6 +103,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	usersGroup.Use(authMiddleware.Authorization())
 	{
 		usersGroup.GET("/current", usersHandler.GetCurrentUser)
+		usersGroup.GET("", usersHandler.BatchGetUsers)
 		usersGroup.PUT("/:id", usersHandler.UpdateUser)
 		usersGroup.PUT("/:id/password", usersHandler.ChangePassword)
 		usersGroup.DELETE("/:id", usersHandler.DeleteUser)

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+	"time"
 	"whoami-server-gateway/internal/auth/keycloak"
 	"whoami-server-gateway/protogen/golang/user"
 )
@@ -74,7 +75,6 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 	}
 
 	var req UpdateUserRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
@@ -171,7 +171,6 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	}
 
 	var req ChangePasswordRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
@@ -269,14 +268,14 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 }
 
 type GetCurrentUserResponse struct {
-	ID               string `json:"id" example:"f47ac10b-58cc-4372-a567-0e02b2c3d479"`
-	Username         string `json:"username" example:"john_doe"`
-	Email            string `json:"email" example:"john.doe@example.com"`
-	FirstName        string `json:"firstName" example:"John"`
-	LastName         string `json:"lastName" example:"Doe"`
-	Enabled          bool   `json:"enabled" example:"true"`
-	EmailVerified    bool   `json:"emailVerified" example:"true"`
-	CreatedTimestamp int64  `json:"createdTimestamp" example:"1640995200000"`
+	ID            string `json:"id" example:"f47ac10b-58cc-4372-a567-0e02b2c3d479"`
+	Username      string `json:"username" example:"john_doe"`
+	Email         string `json:"email" example:"john.doe@example.com"`
+	FirstName     string `json:"firstName" example:"John"`
+	LastName      string `json:"lastName" example:"Doe"`
+	Enabled       bool   `json:"enabled" example:"true"`
+	EmailVerified bool   `json:"emailVerified" example:"true"`
+	CreatedAt     string `json:"created_at" example:"2024-01-15T10:30:00Z"`
 }
 
 // GetCurrentUser godoc
@@ -300,7 +299,7 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 
 	userID := authUserID.(string)
 
-	u, err := h.keycloak.GetUser(c.Request.Context(), userID)
+	kcUser, err := h.keycloak.GetUser(c.Request.Context(), userID)
 	if err != nil {
 		if strings.Contains(err.Error(), "user not found") {
 			c.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
@@ -312,14 +311,107 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 	}
 
 	response := GetCurrentUserResponse{
-		ID:               u.ID,
-		Username:         u.Username,
-		Email:            u.Email,
-		FirstName:        u.FirstName,
-		LastName:         u.LastName,
-		Enabled:          u.Enabled,
-		EmailVerified:    u.EmailVerified,
-		CreatedTimestamp: u.CreatedTimestamp,
+		ID:            kcUser.ID,
+		Username:      kcUser.Username,
+		Email:         kcUser.Email,
+		FirstName:     kcUser.FirstName,
+		LastName:      kcUser.LastName,
+		Enabled:       kcUser.Enabled,
+		EmailVerified: kcUser.EmailVerified,
+		CreatedAt:     time.Unix(kcUser.CreatedTimestamp/1000, 0).UTC().Format(time.RFC3339),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+type BatchGetUsersRequest struct {
+	PageSize int32 `form:"page_size,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
+	Offset   int32 `form:"offset,omitempty" binding:"min=0" example:"0"`
+}
+
+type User struct {
+	ID        string `json:"id" example:"f47ac10b-58cc-4372-a567-0e02b2c3d479"`
+	Username  string `json:"username" example:"johndoe"`
+	Email     string `json:"email" example:"john@example.com"`
+	FirstName string `json:"first_name" example:"John"`
+	LastName  string `json:"last_name" example:"Doe"`
+	CreatedAt string `json:"created_at" example:"2024-01-15T10:30:00Z"`
+}
+
+type BatchGetUsersResponse struct {
+	Users      []User `json:"users"`
+	NextOffset *int32 `json:"next_offset,omitempty" example:"20"`
+}
+
+// BatchGetUsers godoc
+// @Summary      Get users with pagination
+// @Description  Retrieve a paginated list of users using offset-based pagination
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        page_size   query  int     false  "Number of users per page (1-100, default: 10)"  minimum(1)  maximum(100)  default(10)
+// @Param        offset      query  int     false  "Starting position for pagination (default: 0)"  minimum(0)  default(0)
+// @Success      200         {object}  BatchGetUsersResponse "Users retrieved successfully with next_offset for continuation"
+// @Failure      400         {object}  ErrorResponse "Bad request - Invalid pagination parameters or negative offset"
+// @Failure      401         {object}  ErrorResponse "Unauthorized - User not authenticated"
+// @Failure      403         {object}  ErrorResponse "Forbidden - Insufficient permissions to list users"
+// @Failure      500         {object}  ErrorResponse "Internal server error - Failed to retrieve users"
+// @Security     BearerAuth
+// @Router       /users [get]
+func (h *Handler) BatchGetUsers(c *gin.Context) {
+	_, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "User not authenticated"})
+		return
+	}
+
+	var req BatchGetUsersRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	if req.Offset < 0 {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Offset must be non-negative"})
+		return
+	}
+
+	// todo cache
+	keycloakReq := keycloak.BatchGetUsersRequest{
+		PageSize: req.PageSize,
+		First:    req.Offset,
+	}
+
+	keycloakResp, err := h.keycloak.BatchGetUsers(c.Request.Context(), keycloakReq)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid page token") {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid page token"})
+			return
+		}
+		if strings.Contains(err.Error(), "unauthorized") {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "Insufficient permissions to list users"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to retrieve users"})
+		return
+	}
+
+	users := make([]User, len(keycloakResp.Users))
+	for i, kcUser := range keycloakResp.Users {
+		users[i] = User{
+			ID:        kcUser.ID,
+			Username:  kcUser.Username,
+			Email:     kcUser.Email,
+			FirstName: kcUser.FirstName,
+			LastName:  kcUser.LastName,
+			CreatedAt: time.Unix(kcUser.CreatedTimestamp/1000, 0).UTC().Format(time.RFC3339),
+		}
+	}
+
+	response := BatchGetUsersResponse{
+		Users:      users,
+		NextOffset: keycloakResp.NextFirst,
 	}
 
 	c.JSON(http.StatusOK, response)
