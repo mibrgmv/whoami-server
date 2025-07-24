@@ -19,8 +19,7 @@ import (
 	"whoami-server-gateway/internal/auth/keycloak"
 	"whoami-server-gateway/internal/config"
 	appcfg "whoami-server-gateway/internal/config"
-	auth2 "whoami-server-gateway/internal/handlers/auth"
-	"whoami-server-gateway/internal/handlers/users"
+	"whoami-server-gateway/internal/users"
 	historypb "whoami-server-gateway/protogen/golang/history"
 	questionpb "whoami-server-gateway/protogen/golang/question"
 	quizpb "whoami-server-gateway/protogen/golang/quiz"
@@ -81,7 +80,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	}
 
 	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
-	authHandler := auth2.NewHandler(keycloakClient, nil)
+	authHandler := auth.NewHandler(keycloakClient, nil)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
 	usersHandler := users.NewHandler(keycloakClient, nil)
 
