@@ -7,9 +7,9 @@ import (
 )
 
 type Config struct {
-	Keycloak       keycloak.Config `json:"keycloak"`
-	HTTP           http.Config     `json:"http"`
-	QuizzesService grpc.Config     `json:"quizzes_service"`
-	UsersService   grpc.Config     `json:"users_service"`
-	HistoryService grpc.Config     `json:"history_service"`
+	Keycloak       keycloak.Config `mapstructure:"keycloak"`
+	HTTP           http.Config     `mapstructure:"http"`
+	QuizzesService grpc.Config     `mapstructure:"quizzes_service"`
+	UsersService   grpc.Config     `mapstructure:"users_service"`
+	HistoryService grpc.Config     `mapstructure:"history_service"`
 }
