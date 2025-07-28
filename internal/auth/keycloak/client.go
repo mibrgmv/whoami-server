@@ -45,12 +45,12 @@ type TokenResponse struct {
 func (c *Client) ExchangeCredentialsForTokens(ctx context.Context, username, password string) (*TokenResponse, error) {
 	data := url.Values{}
 	data.Set("grant_type", "password")
-	data.Set("client_id", c.config.ClientID)
+	data.Set("client_id", c.config.PublicClientID)
 	data.Set("username", username)
 	data.Set("password", password)
 
-	if c.config.ClientSecret != "" {
-		data.Set("client_secret", c.config.ClientSecret)
+	if c.config.PublicClientSecret != "" {
+		data.Set("client_secret", c.config.PublicClientSecret)
 	}
 
 	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.config.BaseURL, c.config.Realm)
@@ -91,11 +91,11 @@ func (c *Client) ExchangeCredentialsForTokens(ctx context.Context, username, pas
 func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, error) {
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
-	data.Set("client_id", c.config.ClientID)
+	data.Set("client_id", c.config.PublicClientID)
 	data.Set("refresh_token", refreshToken)
 
-	if c.config.ClientSecret != "" {
-		data.Set("client_secret", c.config.ClientSecret)
+	if c.config.PublicClientSecret != "" {
+		data.Set("client_secret", c.config.PublicClientSecret)
 	}
 
 	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.config.BaseURL, c.config.Realm)
@@ -136,12 +136,12 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (*TokenR
 // todo
 func (c *Client) RevokeToken(ctx context.Context, refreshToken string) error {
 	data := url.Values{}
-	data.Set("client_id", c.config.ClientID)
+	data.Set("client_id", c.config.PublicClientID)
 	data.Set("token", refreshToken)
 	data.Set("token_type_hint", "refresh_token")
 
-	if c.config.ClientSecret != "" {
-		data.Set("client_secret", c.config.ClientSecret)
+	if c.config.PublicClientSecret != "" {
+		data.Set("client_secret", c.config.PublicClientSecret)
 	}
 
 	revokeURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/logout", c.config.BaseURL, c.config.Realm)
