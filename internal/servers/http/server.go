@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/swaggo/files"
@@ -14,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 	"whoami-server-gateway/api/swagger"
 	"whoami-server-gateway/internal/auth"
 	"whoami-server-gateway/internal/auth/keycloak"
@@ -86,6 +88,14 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.HTTP.CORS.AllowedOrigins,
+		AllowMethods:     cfg.HTTP.CORS.AllowedMethods,
+		AllowHeaders:     cfg.HTTP.CORS.AllowedHeaders,
+		ExposeHeaders:    cfg.HTTP.CORS.ExposeHeaders,
+		AllowCredentials: cfg.HTTP.CORS.AllowCredentials,
+		MaxAge:           time.Duration(cfg.HTTP.CORS.MaxAge) * time.Second,
+	}))
 
 	swagger.SwaggerInfo.BasePath = "/api/v1"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

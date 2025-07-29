@@ -4,4 +4,7 @@ lint:
 gen:
 	/bin/bash gen.sh
 
-.PHONY: lint gen
+swag:
+	swag init -g cmd/app/main.go -o api/swagger --parseDependency --parseInternal
+
+.PHONY: lint gen swag
