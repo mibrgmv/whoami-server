@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-contrib/cors"
@@ -82,11 +83,25 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	}
 
 	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
-	authHandler := auth.NewHandler(keycloakClient, nil)
+	authHandler := auth.NewHandler(keycloakClient)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
-	usersHandler := users.NewHandler(keycloakClient, nil)
+	usersHandler := users.NewHandler(keycloakClient)
 
-	gin.SetMode(gin.ReleaseMode)
+	switch cfg.HTTP.Mode {
+	case "debug":
+		gin.SetMode(gin.DebugMode)
+		log.Println("Running in debug mode")
+		if configJSON, err := json.MarshalIndent(cfg, "", "  "); err == nil {
+			log.Printf("Configuration:\n%s", configJSON)
+		}
+	case "release":
+		gin.SetMode(gin.ReleaseMode)
+		log.Println("Running in release mode")
+	default:
+		gin.SetMode(gin.ReleaseMode)
+		log.Printf("Unknown mode '%s', defaulting to release mode", cfg.HTTP.Mode)
+	}
+
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.HTTP.CORS.AllowedOrigins,

@@ -6,18 +6,15 @@ import (
 	"strings"
 	"time"
 	"whoami-server-gateway/internal/auth/keycloak"
-	"whoami-server-gateway/protogen/golang/user"
 )
 
 type Handler struct {
 	keycloak *keycloak.Client
-	user     *user.UserServiceClient
 }
 
-func NewHandler(keycloak *keycloak.Client, user *user.UserServiceClient) *Handler {
+func NewHandler(keycloak *keycloak.Client) *Handler {
 	return &Handler{
 		keycloak: keycloak,
-		user:     user,
 	}
 }
 
