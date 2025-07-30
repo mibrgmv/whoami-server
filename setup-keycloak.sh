@@ -63,6 +63,34 @@ ADMIN_CLIENT_SECRET=$(curl -s -X GET \
   "http://localhost:8088/admin/realms/myrealm/clients/$ADMIN_CLIENT_UUID/client-secret" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.value')
 
+# Get the service account user for whoami-admin client
+SERVICE_ACCOUNT_USER_ID=$(curl -s -X GET \
+  "http://localhost:8088/admin/realms/myrealm/clients/$ADMIN_CLIENT_UUID/service-account-user" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.id')
+
+REALM_MGMT_CLIENT_UUID=$(curl -s -X GET \
+  "http://localhost:8088/admin/realms/myrealm/clients?clientId=realm-management" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
+
+MANAGE_USERS_ROLE=$(curl -s -X GET \
+  "http://localhost:8088/admin/realms/myrealm/clients/$REALM_MGMT_CLIENT_UUID/roles/manage-users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN")
+
+VIEW_USERS_ROLE=$(curl -s -X GET \
+  "http://localhost:8088/admin/realms/myrealm/clients/$REALM_MGMT_CLIENT_UUID/roles/view-users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN")
+
+QUERY_USERS_ROLE=$(curl -s -X GET \
+  "http://localhost:8088/admin/realms/myrealm/clients/$REALM_MGMT_CLIENT_UUID/roles/query-users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN")
+
+echo "Assigning admin roles to service account..."
+curl -s -X POST \
+  "http://localhost:8088/admin/realms/myrealm/users/$SERVICE_ACCOUNT_USER_ID/role-mappings/clients/$REALM_MGMT_CLIENT_UUID" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "[$MANAGE_USERS_ROLE, $VIEW_USERS_ROLE, $QUERY_USERS_ROLE]"
+
 echo "Setup complete!"
 echo "Admin client secret: $ADMIN_CLIENT_SECRET"
 echo "Update your KEYCLOAK_ADMIN_CLIENT_SECRET with this value"
