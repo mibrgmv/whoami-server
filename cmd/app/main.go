@@ -21,7 +21,13 @@ func main() {
 	defer cancel()
 
 	var cfg appcfg.Config
-	if err := config.LoanConfig(&cfg); err != nil {
+	var err = config.NewBuilder().
+		WithConfigName("default").
+		WithConfigType("yaml").
+		WithEnvFiles(".env").
+		Load(&cfg)
+
+	if err != nil {
 		log.Fatalf("failed to read gateway config: %v", err)
 	}
 
