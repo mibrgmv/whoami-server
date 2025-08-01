@@ -38,55 +38,39 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - keycloak
       - quizzes-service
-      - users-service
       - history-service
     networks:
       - app-network
     environment:
-      HISTORY_SERVICE_HOST: history-service
-      USERS_SERVICE_HOST: users-service
-      QUIZZES_SERVICE_HOST: quizzes-service
-      REDIS_ADDRESS: redis:6379
+      - HTTP_MODE=debug
+      - QUIZZES_SERVICE_HOST=quizzes-service
+      - HISTORY_SERVICE_HOST=history-service
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+      - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
+      - KEYCLOAK_PUBLIC_CLIENT_SECRET=
+      - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=oRnu9DCUeLg4KqkrGMSGHntBBFHlxDD7
 
   quizzes-service:
     image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
     ports:
       - "50051:50051"
     depends_on:
-      - postgres-app
+      - postgres-quizzes
       - redis
     networks:
       - app-network
     environment:
-      POSTGRES_HOST: postgres-app
+      POSTGRES_HOST: postgres-quizzes
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
       GRPC_HOST: 0.0.0.0
       REDIS_ADDRESS: redis:6379
       HISTORY_SERVICE_HOST: history-service
-    restart:
-      unless-stopped
-
-  users-service:
-    image: ghcr.io/mibrgmv/whoami-server-users:latest
-    ports:
-      - "50052:50052"
-    depends_on:
-      - postgres-app
-      - redis
-    networks:
-      - app-network
-    environment:
-      POSTGRES_HOST: postgres-app
-      POSTGRES_DATABASE: postgres
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: postgres
-      GRPC_HOST: 0.0.0.0
-      REDIS_ADDRESS: redis:6379
-      JWT_ACCESS_SECRET: "9uerknjavfmklqf"
-      JWT_REFRESH_SECRET: "5ghuw9rfnoeajclmk"
     restart:
       unless-stopped
 
@@ -95,14 +79,13 @@ services:
     ports:
       - "50053:50053"
     depends_on:
-      - postgres-app
+      - postgres-history
       - redis
       - quizzes-service
-      - users-service
     networks:
       - app-network
     environment:
-      POSTGRES_HOST: postgres-app
+      POSTGRES_HOST: postgres-history
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
@@ -110,7 +93,7 @@ services:
     restart:
       unless-stopped
 
-  postgres-app:
+  postgres-quizzes:
     image: postgres:latest
     environment:
       - POSTGRES_USER=postgres
@@ -122,7 +105,21 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-quizzes-data:/var/lib/postgresql/data
+
+  postgres-history:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    networks:
+      - app-network
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres-history-data:/var/lib/postgresql/data
 
   redis:
     image: redis:latest
@@ -141,4 +138,5 @@ networks:
 
 volumes:
   postgres-keycloak-data:
-  postgres-data:
+  postgres-quizzes-data:
+  postgres-history-data:
