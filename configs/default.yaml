@@ -15,10 +15,14 @@ quizzes_service:
   host: localhost
   port: 50051
 
-users_service:
-  host: localhost
-  port: 50052
-
 history_service:
   host: localhost
   port: 50053
+
+keycloak:
+  base_url:
+  realm:
+  public_client_id:
+  public_client_secret:
+  admin_client_id:
+  admin_client_secret:

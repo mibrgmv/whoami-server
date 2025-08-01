@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 	"whoami-server-gateway/api/swagger"
 	"whoami-server-gateway/internal/auth"
@@ -133,14 +132,21 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		usersGroup.DELETE("/:id", usersHandler.DeleteUser)
 	}
 
+	gwmuxGroup := router.Group("/api/v1")
+	gwmuxGroup.Use(authMiddleware.Authorization())
+	{
+		gwmuxGroup.Any("/quizzes", gin.WrapH(gwmux))
+		gwmuxGroup.Any("/quizzes/*path", gin.WrapH(gwmux))
+
+		gwmuxGroup.Any("/questions", gin.WrapH(gwmux))
+		gwmuxGroup.Any("/questions/*path", gin.WrapH(gwmux))
+
+		gwmuxGroup.Any("/history", gin.WrapH(gwmux))
+		gwmuxGroup.Any("/history/*path", gin.WrapH(gwmux))
+	}
+
 	router.NoRoute(func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.URL.Path, "/api/v1/") &&
-			!strings.HasPrefix(c.Request.URL.Path, "/api/v1/auth/") {
-			authMiddleware.Authorization()
-			gin.WrapH(gwmux)(c)
-		} else {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
-		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
 	})
 
 	return router, nil
