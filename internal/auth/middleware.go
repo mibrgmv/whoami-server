@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
@@ -79,8 +80,14 @@ func (m *Middleware) Authorization() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Set("email_verified", claims.EmailVerified)
 		c.Set("claims", claims)
-		// todo add role
 
+		ctx := c.Request.Context()
+		ctx = context.WithValue(ctx, "user_id", claims.Subject)
+		ctx = context.WithValue(ctx, "username", claims.PreferredUsername)
+		ctx = context.WithValue(ctx, "email", claims.Email)
+		ctx = context.WithValue(ctx, "email_verified", claims.EmailVerified)
+
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }

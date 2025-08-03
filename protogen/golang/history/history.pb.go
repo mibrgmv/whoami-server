@@ -137,6 +137,66 @@ func (x *CreateItemRequest) GetItem() *QuizCompletionHistoryItem {
 	return nil
 }
 
+type BatchGetMyItemsRequest struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	QuizIds       []*wrapperspb.StringValue `protobuf:"bytes,1,rep,name=quiz_ids,json=quizIds,proto3" json:"quiz_ids,omitempty"`
+	PageSize      int32                     `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                    `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchGetMyItemsRequest) Reset() {
+	*x = BatchGetMyItemsRequest{}
+	mi := &file_history_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchGetMyItemsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchGetMyItemsRequest) ProtoMessage() {}
+
+func (x *BatchGetMyItemsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_history_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchGetMyItemsRequest.ProtoReflect.Descriptor instead.
+func (*BatchGetMyItemsRequest) Descriptor() ([]byte, []int) {
+	return file_history_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BatchGetMyItemsRequest) GetQuizIds() []*wrapperspb.StringValue {
+	if x != nil {
+		return x.QuizIds
+	}
+	return nil
+}
+
+func (x *BatchGetMyItemsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *BatchGetMyItemsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
 type BatchGetItemsRequest struct {
 	state         protoimpl.MessageState    `protogen:"open.v1"`
 	UserIds       []*wrapperspb.StringValue `protobuf:"bytes,1,rep,name=user_ids,json=userIds,proto3" json:"user_ids,omitempty"`
@@ -149,7 +209,7 @@ type BatchGetItemsRequest struct {
 
 func (x *BatchGetItemsRequest) Reset() {
 	*x = BatchGetItemsRequest{}
-	mi := &file_history_proto_msgTypes[2]
+	mi := &file_history_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -161,7 +221,7 @@ func (x *BatchGetItemsRequest) String() string {
 func (*BatchGetItemsRequest) ProtoMessage() {}
 
 func (x *BatchGetItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_history_proto_msgTypes[2]
+	mi := &file_history_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -174,7 +234,7 @@ func (x *BatchGetItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchGetItemsRequest.ProtoReflect.Descriptor instead.
 func (*BatchGetItemsRequest) Descriptor() ([]byte, []int) {
-	return file_history_proto_rawDescGZIP(), []int{2}
+	return file_history_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *BatchGetItemsRequest) GetUserIds() []*wrapperspb.StringValue {
@@ -215,7 +275,7 @@ type BatchGetItemsResponse struct {
 
 func (x *BatchGetItemsResponse) Reset() {
 	*x = BatchGetItemsResponse{}
-	mi := &file_history_proto_msgTypes[3]
+	mi := &file_history_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -227,7 +287,7 @@ func (x *BatchGetItemsResponse) String() string {
 func (*BatchGetItemsResponse) ProtoMessage() {}
 
 func (x *BatchGetItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_history_proto_msgTypes[3]
+	mi := &file_history_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -240,7 +300,7 @@ func (x *BatchGetItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchGetItemsResponse.ProtoReflect.Descriptor instead.
 func (*BatchGetItemsResponse) Descriptor() ([]byte, []int) {
-	return file_history_proto_rawDescGZIP(), []int{3}
+	return file_history_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *BatchGetItemsResponse) GetItems() []*QuizCompletionHistoryItem {
@@ -269,7 +329,12 @@ const file_history_proto_rawDesc = "" +
 	"\vquiz_result\x18\x04 \x01(\tR\n" +
 	"quizResult\"K\n" +
 	"\x11CreateItemRequest\x126\n" +
-	"\x04item\x18\x01 \x01(\v2\".history.QuizCompletionHistoryItemR\x04item\"\xc4\x01\n" +
+	"\x04item\x18\x01 \x01(\v2\".history.QuizCompletionHistoryItemR\x04item\"\x8d\x01\n" +
+	"\x16BatchGetMyItemsRequest\x127\n" +
+	"\bquiz_ids\x18\x01 \x03(\v2\x1c.google.protobuf.StringValueR\aquizIds\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"\xc4\x01\n" +
 	"\x14BatchGetItemsRequest\x127\n" +
 	"\buser_ids\x18\x01 \x03(\v2\x1c.google.protobuf.StringValueR\auserIds\x127\n" +
 	"\bquiz_ids\x18\x02 \x03(\v2\x1c.google.protobuf.StringValueR\aquizIds\x12\x1b\n" +
@@ -278,10 +343,11 @@ const file_history_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"y\n" +
 	"\x15BatchGetItemsResponse\x128\n" +
 	"\x05items\x18\x01 \x03(\v2\".history.QuizCompletionHistoryItemR\x05items\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xd7\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xc7\x02\n" +
 	"\x1cQuizCompletionHistoryService\x12N\n" +
 	"\n" +
-	"CreateItem\x12\x1a.history.CreateItemRequest\x1a\".history.QuizCompletionHistoryItem\"\x00\x12g\n" +
+	"CreateItem\x12\x1a.history.CreateItemRequest\x1a\".history.QuizCompletionHistoryItem\"\x00\x12n\n" +
+	"\x0fBatchGetMyItems\x12\x1f.history.BatchGetMyItemsRequest\x1a\x1e.history.BatchGetItemsResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/history/me\x12g\n" +
 	"\rBatchGetItems\x12\x1d.history.BatchGetItemsRequest\x1a\x1e.history.BatchGetItemsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/historyB/Z-whoami-server-gateway/protogen/golang/historyb\x06proto3"
 
 var (
@@ -296,28 +362,32 @@ func file_history_proto_rawDescGZIP() []byte {
 	return file_history_proto_rawDescData
 }
 
-var file_history_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_history_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_history_proto_goTypes = []any{
 	(*QuizCompletionHistoryItem)(nil), // 0: history.QuizCompletionHistoryItem
 	(*CreateItemRequest)(nil),         // 1: history.CreateItemRequest
-	(*BatchGetItemsRequest)(nil),      // 2: history.BatchGetItemsRequest
-	(*BatchGetItemsResponse)(nil),     // 3: history.BatchGetItemsResponse
-	(*wrapperspb.StringValue)(nil),    // 4: google.protobuf.StringValue
+	(*BatchGetMyItemsRequest)(nil),    // 2: history.BatchGetMyItemsRequest
+	(*BatchGetItemsRequest)(nil),      // 3: history.BatchGetItemsRequest
+	(*BatchGetItemsResponse)(nil),     // 4: history.BatchGetItemsResponse
+	(*wrapperspb.StringValue)(nil),    // 5: google.protobuf.StringValue
 }
 var file_history_proto_depIdxs = []int32{
 	0, // 0: history.CreateItemRequest.item:type_name -> history.QuizCompletionHistoryItem
-	4, // 1: history.BatchGetItemsRequest.user_ids:type_name -> google.protobuf.StringValue
-	4, // 2: history.BatchGetItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
-	0, // 3: history.BatchGetItemsResponse.items:type_name -> history.QuizCompletionHistoryItem
-	1, // 4: history.QuizCompletionHistoryService.CreateItem:input_type -> history.CreateItemRequest
-	2, // 5: history.QuizCompletionHistoryService.BatchGetItems:input_type -> history.BatchGetItemsRequest
-	0, // 6: history.QuizCompletionHistoryService.CreateItem:output_type -> history.QuizCompletionHistoryItem
-	3, // 7: history.QuizCompletionHistoryService.BatchGetItems:output_type -> history.BatchGetItemsResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	5, // 1: history.BatchGetMyItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
+	5, // 2: history.BatchGetItemsRequest.user_ids:type_name -> google.protobuf.StringValue
+	5, // 3: history.BatchGetItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
+	0, // 4: history.BatchGetItemsResponse.items:type_name -> history.QuizCompletionHistoryItem
+	1, // 5: history.QuizCompletionHistoryService.CreateItem:input_type -> history.CreateItemRequest
+	2, // 6: history.QuizCompletionHistoryService.BatchGetMyItems:input_type -> history.BatchGetMyItemsRequest
+	3, // 7: history.QuizCompletionHistoryService.BatchGetItems:input_type -> history.BatchGetItemsRequest
+	0, // 8: history.QuizCompletionHistoryService.CreateItem:output_type -> history.QuizCompletionHistoryItem
+	4, // 9: history.QuizCompletionHistoryService.BatchGetMyItems:output_type -> history.BatchGetItemsResponse
+	4, // 10: history.QuizCompletionHistoryService.BatchGetItems:output_type -> history.BatchGetItemsResponse
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_history_proto_init() }
@@ -331,7 +401,7 @@ func file_history_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_history_proto_rawDesc), len(file_history_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
