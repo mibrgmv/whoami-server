@@ -85,6 +85,7 @@ services:
       - app-network
     environment:
       POSTGRES_HOST: postgres-history
+      POSTGRES_PORT: 5432
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres

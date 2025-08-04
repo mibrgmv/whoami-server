@@ -1,11 +1,11 @@
 definitions:
-  internal_handlers_auth.ErrorResponse:
+  auth.ErrorResponse:
     properties:
       error:
         example: Invalid credentials
         type: string
     type: object
-  internal_handlers_auth.LoginRequest:
+  auth.LoginRequest:
     properties:
       password:
         example: password123
@@ -17,7 +17,7 @@ definitions:
     - password
     - username
     type: object
-  internal_handlers_auth.LoginResponse:
+  auth.LoginResponse:
     properties:
       access_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -32,7 +32,7 @@ definitions:
         example: Bearer
         type: string
     type: object
-  internal_handlers_auth.RefreshTokenRequest:
+  auth.RefreshTokenRequest:
     properties:
       refresh_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -40,7 +40,7 @@ definitions:
     required:
     - refresh_token
     type: object
-  internal_handlers_auth.RefreshTokenResponse:
+  auth.RefreshTokenResponse:
     properties:
       access_token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -55,7 +55,7 @@ definitions:
         example: Bearer
         type: string
     type: object
-  internal_handlers_auth.RegisterRequest:
+  auth.RegisterRequest:
     properties:
       email:
         example: john.doe@example.com
@@ -80,7 +80,7 @@ definitions:
     - password
     - username
     type: object
-  internal_handlers_auth.RegisterSuccessResponse:
+  auth.RegisterSuccessResponse:
     properties:
       Email:
         example: john.doe@example.com
@@ -95,17 +95,17 @@ definitions:
         example: johndoe
         type: string
     type: object
-  internal_handlers_users.BatchGetUsersResponse:
+  users.BatchGetUsersResponse:
     properties:
       next_offset:
         example: 20
         type: integer
       users:
         items:
-          $ref: '#/definitions/internal_handlers_users.User'
+          $ref: '#/definitions/users.User'
         type: array
     type: object
-  internal_handlers_users.ChangePasswordRequest:
+  users.ChangePasswordRequest:
     properties:
       confirm_password:
         example: newSecurePass456
@@ -122,13 +122,13 @@ definitions:
     - current_password
     - new_password
     type: object
-  internal_handlers_users.ChangePasswordResponse:
+  users.ChangePasswordResponse:
     properties:
       message:
         example: Password updated successfully
         type: string
     type: object
-  internal_handlers_users.DeleteUserResponse:
+  users.DeleteUserResponse:
     properties:
       id:
         example: f47ac10b-58cc-4372-a567-0e02b2c3d479
@@ -137,13 +137,13 @@ definitions:
         example: User deleted successfully
         type: string
     type: object
-  internal_handlers_users.ErrorResponse:
+  users.ErrorResponse:
     properties:
       error:
         example: Invalid credentials
         type: string
     type: object
-  internal_handlers_users.GetCurrentUserResponse:
+  users.GetCurrentUserResponse:
     properties:
       created_at:
         example: "2024-01-15T10:30:00Z"
@@ -170,7 +170,7 @@ definitions:
         example: john_doe
         type: string
     type: object
-  internal_handlers_users.UpdateUserRequest:
+  users.UpdateUserRequest:
     properties:
       email:
         example: john.updated@example.com
@@ -187,7 +187,7 @@ definitions:
         minLength: 3
         type: string
     type: object
-  internal_handlers_users.UpdateUserResponse:
+  users.UpdateUserResponse:
     properties:
       email:
         example: john.updated@example.com
@@ -202,7 +202,7 @@ definitions:
         example: johndoe_updated
         type: string
     type: object
-  internal_handlers_users.User:
+  users.User:
     properties:
       created_at:
         example: "2024-01-15T10:30:00Z"
@@ -226,7 +226,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /auth/login:
+  /api/v1/auth/login:
     post:
       consumes:
       - application/json
@@ -237,26 +237,26 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers_auth.LoginRequest'
+          $ref: '#/definitions/auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Login successful
           schema:
-            $ref: '#/definitions/internal_handlers_auth.LoginResponse'
+            $ref: '#/definitions/auth.LoginResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
         "401":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
       summary: User login
       tags:
       - Authentication
-  /auth/refresh:
+  /api/v1/auth/refresh:
     post:
       consumes:
       - application/json
@@ -267,26 +267,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers_auth.RefreshTokenRequest'
+          $ref: '#/definitions/auth.RefreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Tokens refreshed successfully
           schema:
-            $ref: '#/definitions/internal_handlers_auth.RefreshTokenResponse'
+            $ref: '#/definitions/auth.RefreshTokenResponse'
         "400":
           description: Bad request - Invalid input data
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
         "401":
           description: Unauthorized - Invalid refresh token
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
       summary: Refresh access token
       tags:
       - Authentication
-  /auth/register:
+  /api/v1/auth/register:
     post:
       consumes:
       - application/json
@@ -297,30 +297,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers_auth.RegisterRequest'
+          $ref: '#/definitions/auth.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: User created successfully
           schema:
-            $ref: '#/definitions/internal_handlers_auth.RegisterSuccessResponse'
+            $ref: '#/definitions/auth.RegisterSuccessResponse'
         "400":
           description: Bad request - Invalid input data
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
         "409":
           description: Conflict - Username or email already exists
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
         "500":
           description: Internal server error - Failed to create user
           schema:
-            $ref: '#/definitions/internal_handlers_auth.ErrorResponse'
+            $ref: '#/definitions/auth.ErrorResponse'
       summary: Register a new user
       tags:
       - Authentication
-  /users:
+  /api/v1/users:
     get:
       consumes:
       - application/json
@@ -345,29 +345,29 @@ paths:
         "200":
           description: Users retrieved successfully with next_offset for continuation
           schema:
-            $ref: '#/definitions/internal_handlers_users.BatchGetUsersResponse'
+            $ref: '#/definitions/users.BatchGetUsersResponse'
         "400":
           description: Bad request - Invalid pagination parameters or negative offset
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "401":
           description: Unauthorized - User not authenticated
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "403":
           description: Forbidden - Insufficient permissions to list users
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal server error - Failed to retrieve users
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get users with pagination
       tags:
       - Users
-  /users/{id}:
+  /api/v1/users/{id}:
     delete:
       consumes:
       - application/json
@@ -384,27 +384,27 @@ paths:
         "200":
           description: User deleted successfully
           schema:
-            $ref: '#/definitions/internal_handlers_users.DeleteUserResponse'
+            $ref: '#/definitions/users.DeleteUserResponse'
         "400":
           description: Bad request - User ID is required
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "401":
           description: Unauthorized - User not authenticated
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "403":
           description: Forbidden - Not authorized to delete this user
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not found - User not found
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal server error - Failed to delete user
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete user account
@@ -425,44 +425,44 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers_users.UpdateUserRequest'
+          $ref: '#/definitions/users.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User updated successfully
           schema:
-            $ref: '#/definitions/internal_handlers_users.UpdateUserResponse'
+            $ref: '#/definitions/users.UpdateUserResponse'
         "400":
           description: Bad request - Invalid input data or User ID is required
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "401":
           description: Unauthorized - User not authenticated
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "403":
           description: Forbidden - Not authorized to update this user
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not found - User not found
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "409":
           description: Conflict - Username or email already exists
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal server error - Failed to update user
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user profile
       tags:
       - Users
-  /users/{id}/password:
+  /api/v1/users/{id}/password:
     put:
       consumes:
       - application/json
@@ -478,41 +478,41 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers_users.ChangePasswordRequest'
+          $ref: '#/definitions/users.ChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Password updated successfully
           schema:
-            $ref: '#/definitions/internal_handlers_users.ChangePasswordResponse'
+            $ref: '#/definitions/users.ChangePasswordResponse'
         "400":
           description: Bad request - Invalid input data or password policy violation
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "401":
           description: Unauthorized - User not authenticated or incorrect current
             password
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "403":
           description: Forbidden - Not authorized to change this user's password
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not found - User not found
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal server error - Failed to update password
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Change user password
       tags:
       - Users
-  /users/current:
+  /api/v1/users/current:
     get:
       consumes:
       - application/json
@@ -523,19 +523,19 @@ paths:
         "200":
           description: User profile retrieved successfully
           schema:
-            $ref: '#/definitions/internal_handlers_users.GetCurrentUserResponse'
+            $ref: '#/definitions/users.GetCurrentUserResponse'
         "401":
           description: Unauthorized - User not authenticated
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not found - User not found
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal server error - Failed to retrieve user
           schema:
-            $ref: '#/definitions/internal_handlers_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get current user profile

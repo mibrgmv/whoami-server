@@ -10,7 +10,7 @@ gen:
 	/bin/bash gen.sh
 
 swag:
-	swag init -g cmd/app/main.go -o api/swagger --parseDependency --parseInternal
+	swag init -g cmd/app/main.go -o api/swagger/custom --parseDependency --parseInternal
 
 build:
 	docker build -t $(SERVICE):$(TAG) -f $(DOCKERFILE) .

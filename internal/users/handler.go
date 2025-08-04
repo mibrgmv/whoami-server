@@ -52,7 +52,7 @@ type UpdateUserResponse struct {
 // @Failure      409     {object}  ErrorResponse "Conflict - Username or email already exists"
 // @Failure      500     {object}  ErrorResponse "Internal server error - Failed to update user"
 // @Security     BearerAuth
-// @Router       /users/{id} [put]
+// @Router       /api/v1/users/{id} [put]
 func (h *Handler) UpdateUser(c *gin.Context) {
 	targetUserID := c.Param("id")
 	if targetUserID == "" {
@@ -148,7 +148,7 @@ type ChangePasswordResponse struct {
 // @Failure      404     {object}  ErrorResponse "Not found - User not found"
 // @Failure      500     {object}  ErrorResponse "Internal server error - Failed to update password"
 // @Security     BearerAuth
-// @Router       /users/{id}/password [put]
+// @Router       /api/v1/users/{id}/password [put]
 func (h *Handler) ChangePassword(c *gin.Context) {
 	targetUserID := c.Param("id")
 	if targetUserID == "" {
@@ -226,7 +226,7 @@ type DeleteUserResponse struct {
 // @Failure      404  {object}  ErrorResponse "Not found - User not found"
 // @Failure      500  {object}  ErrorResponse "Internal server error - Failed to delete user"
 // @Security     BearerAuth
-// @Router       /users/{id} [delete]
+// @Router       /api/v1/users/{id} [delete]
 func (h *Handler) DeleteUser(c *gin.Context) {
 	targetUserID := c.Param("id")
 	if targetUserID == "" {
@@ -286,7 +286,7 @@ type GetCurrentUserResponse struct {
 // @Failure      404  {object}  ErrorResponse "Not found - User not found"
 // @Failure      500  {object}  ErrorResponse "Internal server error - Failed to retrieve user"
 // @Security     BearerAuth
-// @Router       /users/current [get]
+// @Router       /api/v1/users/current [get]
 func (h *Handler) GetCurrentUser(c *gin.Context) {
 	authUserID, exists := c.Get("user_id")
 	if !exists {
@@ -354,7 +354,7 @@ type BatchGetUsersResponse struct {
 // @Failure      403         {object}  ErrorResponse "Forbidden - Insufficient permissions to list users"
 // @Failure      500         {object}  ErrorResponse "Internal server error - Failed to retrieve users"
 // @Security     BearerAuth
-// @Router       /users [get]
+// @Router       /api/v1/users [get]
 func (h *Handler) BatchGetUsers(c *gin.Context) {
 	_, exists := c.Get("user_id")
 	if !exists {

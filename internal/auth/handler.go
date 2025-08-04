@@ -43,7 +43,7 @@ type LoginResponse struct {
 // @Success 200 {object} LoginResponse "Login successful"
 // @Failure 400 {object} ErrorResponse "Bad request"
 // @Failure 401 {object} ErrorResponse "Invalid credentials"
-// @Router /auth/login [post]
+// @Router /api/v1/auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -96,7 +96,7 @@ type RegisterSuccessResponse struct {
 // @Failure      400  {object}  ErrorResponse "Bad request - Invalid input data"
 // @Failure      409  {object}  ErrorResponse "Conflict - Username or email already exists"
 // @Failure      500  {object}  ErrorResponse "Internal server error - Failed to create user"
-// @Router       /auth/register [post]
+// @Router       /api/v1/auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 
@@ -165,7 +165,7 @@ type RefreshTokenResponse struct {
 // @Success      200  {object}  RefreshTokenResponse "Tokens refreshed successfully"
 // @Failure      400  {object}  ErrorResponse "Bad request - Invalid input data"
 // @Failure      401  {object}  ErrorResponse "Unauthorized - Invalid refresh token"
-// @Router       /auth/refresh [post]
+// @Router       /api/v1/auth/refresh [post]
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req RefreshTokenRequest
 

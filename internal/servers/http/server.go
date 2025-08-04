@@ -8,15 +8,14 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
 	"time"
-	"whoami-server-gateway/api/swagger"
 	"whoami-server-gateway/internal/auth"
 	"whoami-server-gateway/internal/auth/keycloak"
 	"whoami-server-gateway/internal/config"
@@ -111,8 +110,12 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		MaxAge:           time.Duration(cfg.HTTP.CORS.MaxAge) * time.Second,
 	}))
 
-	swagger.SwaggerInfo.BasePath = "/api/v1"
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/api/swagger.json", func(c *gin.Context) {
+		c.File("./api/swagger/swagger.json")
+	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.URL("/api/swagger.json")))
 
 	authGroup := router.Group("/api/v1/auth")
 	{
