@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package quiz;
+
+option go_package = "whoami-server-gateway/protogen/golang/quiz";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service QuizService {
+  rpc CreateQuiz(CreateQuizRequest) returns (Quiz) {
+    option (google.api.http) = {
+      post: "/api/v1/quizzes"
+      body: "*"
+    };
+  }
+
+  rpc GetQuiz(GetQuizRequest) returns (Quiz) {
+    option (google.api.http) = {
+      get: "/api/v1/quizzes/{id}"
+    };
+  }
+
+  rpc BatchGetQuizzes(BatchGetQuizzesRequest) returns (BatchGetQuizzesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/quizzes"
+    };
+  }
+}
+
+message Quiz {
+  string id = 1;
+  string title = 2;
+  repeated string results = 3;
+}
+
+message CreateQuizRequest {
+  string title = 1;
+  repeated string results = 2;
+}
+
+message GetQuizRequest {
+  string id = 1;
+}
+
+message BatchGetQuizzesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message BatchGetQuizzesResponse {
+  repeated Quiz quizzes = 1;
+  string next_page_token = 2;
+}

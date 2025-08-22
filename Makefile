@@ -1,16 +1,22 @@
-include .env
-
-migrate_up:
-	migrate -path=/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=prefer" -verbose up
-
-migrate_down:
-	migrate -path=/migrations -database "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=prefer" -verbose down
+REGISTRY = ghcr.io/your-username
+SERVICE = whoami-server-gateway
+TAG = latest
+DOCKERFILE = ./cmd/app/Dockerfile
 
 lint:
 	golangci-lint run
 
-swagger:
-	swag init -o ./docs -d ./cmd
+gen:
+	/bin/bash gen.sh
 
-protoc:
-	protoc ./cmd/*/api/*.proto --go_out=.. --go-grpc_out=..
+swag:
+	swag init -g cmd/app/main.go -o api/swagger/custom --parseDependency --parseInternal
+
+build:
+	docker build -t $(SERVICE):$(TAG) -f $(DOCKERFILE) .
+
+push: build
+	docker tag $(SERVICE):$(TAG) $(REGISTRY)/$(SERVICE):$(TAG)
+	docker push $(REGISTRY)/$(SERVICE):$(TAG)
+
+.PHONY: lint gen swag build push

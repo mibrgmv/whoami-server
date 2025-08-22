@@ -1,0 +1,1416 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "contact": {}
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Authenticate user with username and password",
+        "parameters": [
+          {
+            "description": "Login credentials",
+            "in": "body",
+            "name": "credentials",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auth.LoginRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "schema": {
+              "$ref": "#/definitions/auth.LoginResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          }
+        },
+        "summary": "User login",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Generate new access and refresh tokens using a valid refresh token",
+        "parameters": [
+          {
+            "description": "Refresh token details",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auth.RefreshTokenRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully",
+            "schema": {
+              "$ref": "#/definitions/auth.RefreshTokenResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input data",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid refresh token",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          }
+        },
+        "summary": "Refresh access token",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Creates a new user account through Keycloak identity provider",
+        "parameters": [
+          {
+            "description": "User registration details",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/auth.RegisterRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "schema": {
+              "$ref": "#/definitions/auth.RegisterSuccessResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input data",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict - Username or email already exists",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to create user",
+            "schema": {
+              "$ref": "#/definitions/auth.ErrorResponse"
+            }
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/history": {
+      "get": {
+        "operationId": "QuizCompletionHistoryService_BatchGetItems",
+        "parameters": [
+          {
+            "collectionFormat": "multi",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "userIds",
+            "required": false,
+            "type": "array"
+          },
+          {
+            "collectionFormat": "multi",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "quizIds",
+            "required": false,
+            "type": "array"
+          },
+          {
+            "format": "int32",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "pageToken",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/historyBatchGetItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuizCompletionHistoryService"
+        ]
+      }
+    },
+    "/api/v1/history/me": {
+      "get": {
+        "operationId": "QuizCompletionHistoryService_BatchGetMyItems",
+        "parameters": [
+          {
+            "collectionFormat": "multi",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "quizIds",
+            "required": false,
+            "type": "array"
+          },
+          {
+            "format": "int32",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "pageToken",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/historyBatchGetItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuizCompletionHistoryService"
+        ]
+      }
+    },
+    "/api/v1/quizzes": {
+      "get": {
+        "operationId": "QuizService_BatchGetQuizzes",
+        "parameters": [
+          {
+            "format": "int32",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "pageToken",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/quizBatchGetQuizzesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuizService"
+        ]
+      },
+      "post": {
+        "operationId": "QuizService_CreateQuiz",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/quizCreateQuizRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/quizQuiz"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuizService"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{id}": {
+      "get": {
+        "operationId": "QuizService_GetQuiz",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/quizQuiz"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuizService"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/evaluate": {
+      "post": {
+        "operationId": "QuestionService_EvaluateAnswers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quizId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuestionServiceEvaluateAnswersBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionEvaluateAnswersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/questions": {
+      "get": {
+        "operationId": "QuestionService_BatchGetQuestions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quizId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionBatchGetQuestionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      },
+      "post": {
+        "operationId": "QuestionService_BatchCreateQuestions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quizId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuestionServiceBatchCreateQuestionsBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionBatchCreateQuestionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Retrieve a paginated list of users using offset-based pagination",
+        "parameters": [
+          {
+            "default": 10,
+            "description": "Number of users per page (1-100, default: 10)",
+            "in": "query",
+            "maximum": 100,
+            "minimum": 1,
+            "name": "page_size",
+            "type": "integer"
+          },
+          {
+            "default": 0,
+            "description": "Starting position for pagination (default: 0)",
+            "in": "query",
+            "minimum": 0,
+            "name": "offset",
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully with next_offset for continuation",
+            "schema": {
+              "$ref": "#/definitions/users.BatchGetUsersResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid pagination parameters or negative offset",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions to list users",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to retrieve users",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get users with pagination",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/current": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Get the authenticated user's profile information",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully",
+            "schema": {
+              "$ref": "#/definitions/users.GetCurrentUserResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found - User not found",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to retrieve user",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Delete the authenticated user's account from Keycloak",
+        "parameters": [
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "schema": {
+              "$ref": "#/definitions/users.DeleteUserResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - User ID is required",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to delete this user",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found - User not found",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to delete user",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete user account",
+        "tags": [
+          "Users"
+        ]
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Update the authenticated user's profile information",
+        "parameters": [
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "User update details",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/users.UpdateUserRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "schema": {
+              "$ref": "#/definitions/users.UpdateUserResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input data or User ID is required",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to update this user",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found - User not found",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict - Username or email already exists",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to update user",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update user profile",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/password": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Change the authenticated user's password",
+        "parameters": [
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Password change details",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/users.ChangePasswordRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Password updated successfully",
+            "schema": {
+              "$ref": "#/definitions/users.ChangePasswordResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input data or password policy violation",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated or incorrect current password",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to change this user's password",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not found - User not found",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error - Failed to update password",
+            "schema": {
+              "$ref": "#/definitions/users.ErrorResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Change user password",
+        "tags": [
+          "Users"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "QuestionServiceBatchCreateQuestionsBody": {
+      "properties": {
+        "requests": {
+          "items": {
+            "$ref": "#/definitions/questionCreateQuestionRequest",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "QuestionServiceEvaluateAnswersBody": {
+      "properties": {
+        "answers": {
+          "items": {
+            "$ref": "#/definitions/questionAnswer",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "auth.ErrorResponse": {
+      "properties": {
+        "error": {
+          "example": "Invalid credentials",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "auth.LoginRequest": {
+      "properties": {
+        "password": {
+          "example": "password123",
+          "type": "string"
+        },
+        "username": {
+          "example": "john_doe",
+          "type": "string"
+        }
+      },
+      "required": [
+        "password",
+        "username"
+      ],
+      "type": "object"
+    },
+    "auth.LoginResponse": {
+      "properties": {
+        "access_token": {
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "type": "string"
+        },
+        "expires_in": {
+          "example": 3600,
+          "type": "integer"
+        },
+        "refresh_token": {
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "type": "string"
+        },
+        "token_type": {
+          "example": "Bearer",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "auth.RefreshTokenRequest": {
+      "properties": {
+        "refresh_token": {
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "type": "string"
+        }
+      },
+      "required": [
+        "refresh_token"
+      ],
+      "type": "object"
+    },
+    "auth.RefreshTokenResponse": {
+      "properties": {
+        "access_token": {
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "type": "string"
+        },
+        "expires_in": {
+          "example": 3600,
+          "type": "integer"
+        },
+        "refresh_token": {
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "type": "string"
+        },
+        "token_type": {
+          "example": "Bearer",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "auth.RegisterRequest": {
+      "properties": {
+        "email": {
+          "example": "john.doe@example.com",
+          "type": "string"
+        },
+        "first_name": {
+          "example": "John",
+          "type": "string"
+        },
+        "last_name": {
+          "example": "Doe",
+          "type": "string"
+        },
+        "password": {
+          "example": "SecurePass123!",
+          "minLength": 8,
+          "type": "string"
+        },
+        "username": {
+          "example": "johndoe",
+          "maxLength": 50,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "password",
+        "username"
+      ],
+      "type": "object"
+    },
+    "auth.RegisterSuccessResponse": {
+      "properties": {
+        "Email": {
+          "example": "john.doe@example.com",
+          "type": "string"
+        },
+        "ID": {
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "type": "string"
+        },
+        "Message": {
+          "example": "User created successfully",
+          "type": "string"
+        },
+        "Username": {
+          "example": "johndoe",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "historyBatchGetItemsResponse": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/definitions/historyQuizCompletionHistoryItem",
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "historyQuizCompletionHistoryItem": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "quizId": {
+          "type": "string"
+        },
+        "quizResult": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "protobufAny": {
+      "additionalProperties": {},
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questionAnswer": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "questionId": {
+          "type": "string"
+        },
+        "quizId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questionBatchCreateQuestionsResponse": {
+      "properties": {
+        "questions": {
+          "items": {
+            "$ref": "#/definitions/questionQuestion",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "questionBatchGetQuestionsResponse": {
+      "properties": {
+        "questions": {
+          "items": {
+            "$ref": "#/definitions/questionQuestionResponse",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "questionCreateQuestionRequest": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "optionsWeights": {
+          "additionalProperties": {
+            "$ref": "#/definitions/questionOptionWeights"
+          },
+          "type": "object"
+        },
+        "quizId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questionEvaluateAnswersResponse": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questionOptionWeights": {
+      "properties": {
+        "weights": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "questionQuestion": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "optionsWeights": {
+          "additionalProperties": {
+            "$ref": "#/definitions/questionOptionWeights"
+          },
+          "type": "object"
+        },
+        "quizId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questionQuestionResponse": {
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "quizId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "quizBatchGetQuizzesResponse": {
+      "properties": {
+        "nextPageToken": {
+          "type": "string"
+        },
+        "quizzes": {
+          "items": {
+            "$ref": "#/definitions/quizQuiz",
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "quizCreateQuizRequest": {
+      "properties": {
+        "results": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "quizQuiz": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "rpcStatus": {
+      "properties": {
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "details": {
+          "items": {
+            "$ref": "#/definitions/protobufAny",
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.BatchGetUsersResponse": {
+      "properties": {
+        "next_offset": {
+          "example": 20,
+          "type": "integer"
+        },
+        "users": {
+          "items": {
+            "$ref": "#/definitions/users.User"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "users.ChangePasswordRequest": {
+      "properties": {
+        "confirm_password": {
+          "example": "newSecurePass456",
+          "type": "string"
+        },
+        "current_password": {
+          "example": "currentPass123",
+          "type": "string"
+        },
+        "new_password": {
+          "example": "newSecurePass456",
+          "minLength": 8,
+          "type": "string"
+        }
+      },
+      "required": [
+        "confirm_password",
+        "current_password",
+        "new_password"
+      ],
+      "type": "object"
+    },
+    "users.ChangePasswordResponse": {
+      "properties": {
+        "message": {
+          "example": "Password updated successfully",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.DeleteUserResponse": {
+      "properties": {
+        "id": {
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "type": "string"
+        },
+        "message": {
+          "example": "User deleted successfully",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.ErrorResponse": {
+      "properties": {
+        "error": {
+          "example": "Invalid credentials",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.GetCurrentUserResponse": {
+      "properties": {
+        "created_at": {
+          "example": "2024-01-15T10:30:00Z",
+          "type": "string"
+        },
+        "email": {
+          "example": "john.doe@example.com",
+          "type": "string"
+        },
+        "emailVerified": {
+          "example": true,
+          "type": "boolean"
+        },
+        "enabled": {
+          "example": true,
+          "type": "boolean"
+        },
+        "firstName": {
+          "example": "John",
+          "type": "string"
+        },
+        "id": {
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "type": "string"
+        },
+        "lastName": {
+          "example": "Doe",
+          "type": "string"
+        },
+        "username": {
+          "example": "john_doe",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.UpdateUserRequest": {
+      "properties": {
+        "email": {
+          "example": "john.updated@example.com",
+          "type": "string"
+        },
+        "firstName": {
+          "example": "John",
+          "type": "string"
+        },
+        "lastName": {
+          "example": "Doe",
+          "type": "string"
+        },
+        "username": {
+          "example": "johndoe_updated",
+          "maxLength": 50,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.UpdateUserResponse": {
+      "properties": {
+        "email": {
+          "example": "john.updated@example.com",
+          "type": "string"
+        },
+        "id": {
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "type": "string"
+        },
+        "message": {
+          "example": "User updated successfully",
+          "type": "string"
+        },
+        "username": {
+          "example": "johndoe_updated",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.User": {
+      "properties": {
+        "created_at": {
+          "example": "2024-01-15T10:30:00Z",
+          "type": "string"
+        },
+        "email": {
+          "example": "john@example.com",
+          "type": "string"
+        },
+        "first_name": {
+          "example": "John",
+          "type": "string"
+        },
+        "id": {
+          "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "type": "string"
+        },
+        "last_name": {
+          "example": "Doe",
+          "type": "string"
+        },
+        "username": {
+          "example": "johndoe",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "description": "Enter the token in the format: Bearer \u003cyour-token-here\u003e",
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "tags": [
+    {
+      "name": "QuizCompletionHistoryService"
+    },
+    {
+      "name": "QuestionService"
+    },
+    {
+      "name": "QuizService"
+    }
+  ]
+}
