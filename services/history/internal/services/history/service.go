@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/mibrgmv/whoami-server/services/history/internal/models"
+	"github.com/mibrgmv/whoami-server/history/internal/models"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 )
 

@@ -3,7 +3,7 @@ package question
 import (
 	"context"
 
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/models"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
 )
 
 type Repository interface {

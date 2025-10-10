@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/models"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
 	"github.com/mibrgmv/whoami-server/shared/cache"
 )
 

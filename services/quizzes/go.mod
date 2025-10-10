@@ -1,4 +1,4 @@
-module github.com/mibrgmv/whoami-server/services/quizzes
+module github.com/mibrgmv/whoami-server/quizzes
 
 go 1.24.0
 

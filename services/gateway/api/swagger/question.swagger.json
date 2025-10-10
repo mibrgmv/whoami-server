@@ -1,0 +1,293 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "question.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "QuestionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/quizzes/{quizId}/evaluate": {
+      "post": {
+        "operationId": "QuestionService_EvaluateAnswers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionEvaluateAnswersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quizId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuestionServiceEvaluateAnswersBody"
+            }
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{quizId}/questions": {
+      "get": {
+        "operationId": "QuestionService_BatchGetQuestions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionBatchGetQuestionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quizId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      },
+      "post": {
+        "operationId": "QuestionService_BatchCreateQuestions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/questionBatchCreateQuestionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quizId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuestionServiceBatchCreateQuestionsBody"
+            }
+          }
+        ],
+        "tags": [
+          "QuestionService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "QuestionServiceBatchCreateQuestionsBody": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/questionCreateQuestionRequest"
+          }
+        }
+      }
+    },
+    "QuestionServiceEvaluateAnswersBody": {
+      "type": "object",
+      "properties": {
+        "answers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/questionAnswer"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "questionAnswer": {
+      "type": "object",
+      "properties": {
+        "quizId": {
+          "type": "string"
+        },
+        "questionId": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        }
+      }
+    },
+    "questionBatchCreateQuestionsResponse": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/questionQuestion"
+          }
+        }
+      }
+    },
+    "questionBatchGetQuestionsResponse": {
+      "type": "object",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/questionQuestionResponse"
+          }
+        }
+      }
+    },
+    "questionCreateQuestionRequest": {
+      "type": "object",
+      "properties": {
+        "quizId": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "optionsWeights": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/questionOptionWeights"
+          }
+        }
+      }
+    },
+    "questionEvaluateAnswersResponse": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      }
+    },
+    "questionOptionWeights": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      }
+    },
+    "questionQuestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "quizId": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "optionsWeights": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/questionOptionWeights"
+          }
+        }
+      }
+    },
+    "questionQuestionResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "quizId": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

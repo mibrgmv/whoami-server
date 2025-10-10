@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	appcfg "github.com/mibrgmv/whoami-server/services/gateway/internal/config"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/servers/http"
+	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
+	"github.com/mibrgmv/whoami-server/gateway/internal/server"
 	"github.com/mibrgmv/whoami-server/shared/config"
 )
 
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	go func() {
-		if err := http.Start(ctx, cfg); err != nil {
+		if err := server.StartHTTP(ctx, cfg); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()

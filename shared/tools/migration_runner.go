@@ -2,18 +2,17 @@ package tools
 
 import (
 	"errors"
+	"log"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	"log"
 )
 
 func MigrateUp(migrationsPath, migrationsTableName string, pool *pgxpool.Pool) error {
 	sqlDB := stdlib.OpenDBFromPool(pool)
-	//defer sqlDB.Close()
-	//derived from pool, which lifetime is managed by main app code
 
 	driver, err := pgx.WithInstance(sqlDB, &pgx.Config{
 		MigrationsTable: migrationsTableName,

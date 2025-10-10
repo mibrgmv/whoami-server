@@ -23,8 +23,7 @@ gen:
 			$(PROTO_DIR)/$(service).proto; \
 	)
 	protoc -I=$(PROTO_DIR) -I=$(THIRD_PARTY_DIR) \
-		--openapiv2_out=$(PROTO_DIR) \
-		--openapiv2_opt=logstderr=true \
+		--openapiv2_out=$(PROTO_DIR)/swagger \
 		$(PROTO_DIR)/*.proto
 
 swag:

@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	appcfg "github.com/mibrgmv/whoami-server/services/quizzes/internal/config"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/servers/grpc"
+	appcfg "github.com/mibrgmv/whoami-server/quizzes/internal/config"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/servers/grpc"
 	"github.com/mibrgmv/whoami-server/shared/cache/redis"
 	"github.com/mibrgmv/whoami-server/shared/config"
 	"github.com/mibrgmv/whoami-server/shared/tools"

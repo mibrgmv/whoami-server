@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/mibrgmv/whoami-server/users/internal/protogen/user";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service UserService {
+  rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/users/current"
+    };
+  }
+
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{id}",
+      body: "*"
+    };
+  }
+
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{id}/password",
+      body: "*"
+    };
+  }
+
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{id}"
+    };
+  }
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string first_name = 4;
+  string last_name = 5;
+  bool enabled = 6;
+  bool email_verified = 7;
+  string created_at = 8;
+}
+
+message BatchGetUsersRequest {
+  int32 page_size = 1;
+  int32 offset = 2;
+}
+
+message BatchGetUsersResponse {
+  repeated User users = 1;
+  int32 next_offset = 2;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string first_name = 4;
+  string last_name = 5;
+}
+
+message ChangePasswordRequest {
+  string id = 1;
+  string current_password = 2;
+  string new_password = 3;
+  string confirm_password = 4;
+}
+
+message ChangePasswordResponse {
+  string message = 1;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  string id = 1;
+  string message = 2;
+}

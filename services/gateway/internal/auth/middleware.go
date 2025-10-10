@@ -15,7 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/auth/keycloak"
+	"github.com/mibrgmv/whoami-server/shared/keycloak"
 )
 
 type JWK struct {

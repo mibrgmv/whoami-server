@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/auth/keycloak"
+	"github.com/mibrgmv/whoami-server/shared/keycloak"
 )
 
 type Handler struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/services/history/internal/protogen/history"
+	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
 )
 
 type QuizCompletionHistoryItem struct {

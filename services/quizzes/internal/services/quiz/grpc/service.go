@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/models"
-	pb "github.com/mibrgmv/whoami-server/services/quizzes/internal/protogen/quiz"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/services/quiz"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
+	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/services/quiz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

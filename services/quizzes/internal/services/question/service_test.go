@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/models"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/services/question"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/services/question/mocks"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/services/question"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/services/question/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

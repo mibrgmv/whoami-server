@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"context"
@@ -12,14 +12,14 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/auth"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/auth/keycloak"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/config"
-	appcfg "github.com/mibrgmv/whoami-server/services/gateway/internal/config"
-	historypb "github.com/mibrgmv/whoami-server/services/gateway/internal/protogen/history"
-	questionpb "github.com/mibrgmv/whoami-server/services/gateway/internal/protogen/question"
-	quizpb "github.com/mibrgmv/whoami-server/services/gateway/internal/protogen/quiz"
-	"github.com/mibrgmv/whoami-server/services/gateway/internal/users"
+	"github.com/mibrgmv/whoami-server/gateway/internal/auth"
+	"github.com/mibrgmv/whoami-server/gateway/internal/config"
+	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
+	historypb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/history"
+	questionpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/question"
+	quizpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/quiz"
+	userpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/user"
+	"github.com/mibrgmv/whoami-server/shared/keycloak"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
@@ -72,6 +72,15 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register question service: %w", err)
 	}
 
+	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		cfg.UserService.GetAddr(),
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register user service: %w", err)
+	}
+
 	if err := historypb.RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
@@ -84,7 +93,6 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
 	authHandler := auth.NewHandler(keycloakClient)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
-	usersHandler := users.NewHandler(keycloakClient)
 
 	switch cfg.HTTP.Mode {
 	case "debug":
@@ -126,16 +134,6 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		authGroup.POST("/register", authHandler.Register)
 	}
 
-	usersGroup := router.Group("/api/v1/users")
-	usersGroup.Use(authMiddleware.Authorization())
-	{
-		usersGroup.GET("/current", usersHandler.GetCurrentUser)
-		usersGroup.GET("", usersHandler.BatchGetUsers)
-		usersGroup.PUT("/:id", usersHandler.UpdateUser)
-		usersGroup.PUT("/:id/password", usersHandler.ChangePassword)
-		usersGroup.DELETE("/:id", usersHandler.DeleteUser)
-	}
-
 	gwmuxGroup := router.Group("/api/v1")
 	gwmuxGroup.Use(authMiddleware.Authorization())
 	{
@@ -144,6 +142,9 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 
 		gwmuxGroup.Any("/questions", gin.WrapH(gwmux))
 		gwmuxGroup.Any("/questions/*path", gin.WrapH(gwmux))
+
+		gwmuxGroup.Any("/users", gin.WrapH(gwmux))
+		gwmuxGroup.Any("/users/*path", gin.WrapH(gwmux))
 
 		gwmuxGroup.Any("/history", gin.WrapH(gwmux))
 		gwmuxGroup.Any("/history/*path", gin.WrapH(gwmux))
@@ -156,7 +157,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	return router, nil
 }
 
-func Start(ctx context.Context, cfg config.Config) error {
+func StartHTTP(ctx context.Context, cfg config.Config) error {
 	router, err := NewServer(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)

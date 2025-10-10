@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/services/quizzes/internal/protogen/question"
+	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question"
 )
 
 type Answer struct {

@@ -2,12 +2,15 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-COPY shared ./shared
-
-COPY services/gateway ./services/gateway
+COPY services/gateway/go.mod services/gateway/go.sum ./services/gateway/
+COPY shared/go.mod shared/go.sum ./shared/
 
 WORKDIR /app/services/gateway
 RUN go mod download
+
+COPY shared/ ../../shared/
+COPY services/gateway/ ./
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o gateway ./cmd/app
 
 FROM alpine:latest

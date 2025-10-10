@@ -15,6 +15,10 @@ quizzes_service:
   host: localhost
   port: 50051
 
+user_service:
+  host: localhost
+  port: 50052
+
 history_service:
   host: localhost
   port: 50053

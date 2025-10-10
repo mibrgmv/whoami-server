@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/models"
-	"github.com/mibrgmv/whoami-server/services/quizzes/internal/services/question"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/services/question"
 	"github.com/stretchr/testify/mock"
 )
 

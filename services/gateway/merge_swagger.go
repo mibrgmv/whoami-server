@@ -96,7 +96,8 @@ func mergeSpecs(base *OpenAPISpec, toMerge *OpenAPISpec) {
 	for path, pathSpec := range toMerge.Paths {
 		isGRPCPath := strings.Contains(path, "/history") ||
 			strings.Contains(path, "/quizzes") ||
-			strings.Contains(path, "/questions")
+			strings.Contains(path, "/questions") ||
+			strings.Contains(path, "/users")
 
 		if isGRPCPath {
 			if pathMap, ok := pathSpec.(map[string]interface{}); ok {

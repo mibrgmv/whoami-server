@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/mibrgmv/whoami-server/services/history/internal/models"
-	pb "github.com/mibrgmv/whoami-server/services/history/internal/protogen/history"
-	"github.com/mibrgmv/whoami-server/services/history/internal/services/history"
+	"github.com/mibrgmv/whoami-server/history/internal/models"
+	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
+	"github.com/mibrgmv/whoami-server/history/internal/services/history"
 	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 	"google.golang.org/grpc/codes"

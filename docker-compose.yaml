@@ -48,6 +48,7 @@ services:
     environment:
       - HTTP_MODE=debug
       - QUIZZES_SERVICE_HOST=quizzes-service
+      - USER_SERVICE_HOST=user-service
       - HISTORY_SERVICE_HOST=history-service
       - KEYCLOAK_BASE_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
@@ -77,6 +78,28 @@ services:
       GRPC_HOST: 0.0.0.0
       REDIS_ADDRESS: redis:6379
       HISTORY_SERVICE_HOST: history-service
+    restart:
+      unless-stopped
+
+  user-service:
+    container_name: user-service
+    build:
+      context: .
+      dockerfile: services/users/Dockerfile
+    ports:
+      - "50052:50052"
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+      - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
+      - KEYCLOAK_PUBLIC_CLIENT_SECRET=
+      - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=54GAA3S0o8whUd3mUKG1jRvazKaFvfj0
     restart:
       unless-stopped
 

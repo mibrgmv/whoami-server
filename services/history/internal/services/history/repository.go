@@ -3,7 +3,7 @@ package history
 import (
 	"context"
 
-	"github.com/mibrgmv/whoami-server/services/history/internal/models"
+	"github.com/mibrgmv/whoami-server/history/internal/models"
 )
 
 type Repository interface {

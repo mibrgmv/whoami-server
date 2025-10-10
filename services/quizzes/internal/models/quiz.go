@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/services/quizzes/internal/protogen/quiz"
+	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz"
 )
 
 type Quiz struct {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mibrgmv/whoami-server/services/history/internal/models"
-	"github.com/mibrgmv/whoami-server/services/history/internal/services/history"
+	"github.com/mibrgmv/whoami-server/history/internal/models"
+	"github.com/mibrgmv/whoami-server/history/internal/services/history"
 )
 
 type Repository struct {
