@@ -63,7 +63,6 @@ ADMIN_CLIENT_SECRET=$(curl -s -X GET \
   "http://localhost:8088/admin/realms/myrealm/clients/$ADMIN_CLIENT_UUID/client-secret" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.value')
 
-# Get the service account user for whoami-admin client
 SERVICE_ACCOUNT_USER_ID=$(curl -s -X GET \
   "http://localhost:8088/admin/realms/myrealm/clients/$ADMIN_CLIENT_UUID/service-account-user" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.id')

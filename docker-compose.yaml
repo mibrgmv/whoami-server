@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.4
     ports:
       - "8088:8080"
     container_name: keycloak
@@ -19,7 +19,7 @@ services:
       - postgres-keycloak
 
   postgres-keycloak:
-    image: postgres:latest
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=keycloak
       - POSTGRES_PASSWORD=keycloak
@@ -33,7 +33,10 @@ services:
       - postgres-keycloak-data:/var/lib/postgresql/data
 
   gateway:
-    image: ghcr.io/mibrgmv/whoami-server-gateway:latest
+    container_name: gateway
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -51,10 +54,13 @@ services:
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=oRnu9DCUeLg4KqkrGMSGHntBBFHlxDD7
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=54GAA3S0o8whUd3mUKG1jRvazKaFvfj0
 
   quizzes-service:
-    image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
+    container_name: quizzes-service
+    build:
+      context: .
+      dockerfile: services/quizzes/Dockerfile
     ports:
       - "50051:50051"
     depends_on:
@@ -64,6 +70,7 @@ services:
       - app-network
     environment:
       POSTGRES_HOST: postgres-quizzes
+      POSTGRES_PORT: 5432
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
@@ -74,7 +81,10 @@ services:
       unless-stopped
 
   history-service:
-    image: ghcr.io/mibrgmv/whoami-server-history:latest
+    container_name: history-service
+    build:
+      context: .
+      dockerfile: services/history/Dockerfile
     ports:
       - "50053:50053"
     depends_on:
@@ -94,7 +104,7 @@ services:
       unless-stopped
 
   postgres-quizzes:
-    image: postgres:latest
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -108,7 +118,7 @@ services:
       - postgres-quizzes-data:/var/lib/postgresql/data
 
   postgres-history:
-    image: postgres:latest
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -122,7 +132,7 @@ services:
       - postgres-history-data:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest
+    image: redis:8-alpine
     networks:
       - app-network
     ports:

@@ -1,0 +1,20 @@
+package models
+
+import (
+	"github.com/google/uuid"
+	pb "github.com/mibrgmv/whoami-server/services/quizzes/internal/protogen/quiz"
+)
+
+type Quiz struct {
+	ID      uuid.UUID `json:"id"`
+	Title   string    `json:"title"`
+	Results []string  `json:"results"`
+}
+
+func (q *Quiz) ToProto() *pb.Quiz {
+	return &pb.Quiz{
+		Id:      q.ID.String(),
+		Title:   q.Title,
+		Results: q.Results,
+	}
+}
