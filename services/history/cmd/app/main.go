@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	appcfg "github.com/mibrgmv/whoami-server/history/internal/config"
-	"github.com/mibrgmv/whoami-server/history/internal/servers/grpc"
+	"github.com/mibrgmv/whoami-server/history/internal/server"
 	"github.com/mibrgmv/whoami-server/shared/config"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 )
@@ -46,8 +46,9 @@ func main() {
 		log.Fatalf("failed to migrate up: %v", err)
 	}
 
+	s := server.NewGrpcServer(pool)
 	go func() {
-		if err := grpc.Start(pool, cfg.Grpc.GetAddr()); err != nil {
+		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()

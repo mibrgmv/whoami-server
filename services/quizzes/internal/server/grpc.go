@@ -1,4 +1,4 @@
-package grpc
+package server
 
 import (
 	"fmt"
@@ -23,12 +23,12 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-type Server struct {
+type GrpcServer struct {
 	grpcServer     *grpc.Server
 	questionServer *questiongrpc.QuestionService
 }
 
-func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*Server, error) {
+func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*GrpcServer, error) {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
@@ -60,13 +60,13 @@ func NewServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Dura
 	questionpb.RegisterQuestionServiceServer(s, questionServer)
 
 	reflection.Register(s)
-	return &Server{
+	return &GrpcServer{
 		grpcServer:     s,
 		questionServer: questionServer,
 	}, nil
 }
 
-func (s *Server) Start(addr string) error {
+func (s *GrpcServer) Start(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
@@ -80,7 +80,7 @@ func (s *Server) Start(addr string) error {
 	return nil
 }
 
-func (s *Server) Stop() {
+func (s *GrpcServer) Stop() {
 	s.grpcServer.GracefulStop()
 
 	if s.questionServer != nil {

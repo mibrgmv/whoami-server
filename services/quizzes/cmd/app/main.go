@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	appcfg "github.com/mibrgmv/whoami-server/quizzes/internal/config"
-	"github.com/mibrgmv/whoami-server/quizzes/internal/servers/grpc"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/server"
 	"github.com/mibrgmv/whoami-server/shared/cache/redis"
 	"github.com/mibrgmv/whoami-server/shared/config"
 	"github.com/mibrgmv/whoami-server/shared/tools"
@@ -53,7 +53,7 @@ func main() {
 	}
 	log.Println("Connected to Redis successfully")
 
-	s, err := grpc.NewServer(pool, client, cfg.Redis.GetTTL(), cfg.HistoryService.GetAddr())
+	s, err := server.NewGrpcServer(pool, client, cfg.Redis.GetTTL(), cfg.HistoryService.GetAddr())
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}
