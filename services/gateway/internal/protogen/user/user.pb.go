@@ -178,7 +178,7 @@ func (x *BatchGetUsersRequest) GetOffset() int32 {
 type BatchGetUsersResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
-	NextOffset    int32                  `protobuf:"varint,2,opt,name=next_offset,json=nextOffset,proto3" json:"next_offset,omitempty"`
+	NextOffset    *int32                 `protobuf:"varint,2,opt,name=next_offset,json=nextOffset,proto3,oneof" json:"next_offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -221,8 +221,8 @@ func (x *BatchGetUsersResponse) GetUsers() []*User {
 }
 
 func (x *BatchGetUsersResponse) GetNextOffset() int32 {
-	if x != nil {
-		return x.NextOffset
+	if x != nil && x.NextOffset != nil {
+		return *x.NextOffset
 	}
 	return 0
 }
@@ -530,12 +530,13 @@ const file_user_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\tR\tcreatedAt\"K\n" +
 	"\x14BatchGetUsersRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x16\n" +
-	"\x06offset\x18\x02 \x01(\x05R\x06offset\"Z\n" +
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\"o\n" +
 	"\x15BatchGetUsersResponse\x12 \n" +
 	"\x05users\x18\x01 \x03(\v2\n" +
-	".user.UserR\x05users\x12\x1f\n" +
-	"\vnext_offset\x18\x02 \x01(\x05R\n" +
-	"nextOffset\"\x91\x01\n" +
+	".user.UserR\x05users\x12$\n" +
+	"\vnext_offset\x18\x02 \x01(\x05H\x00R\n" +
+	"nextOffset\x88\x01\x01B\x0e\n" +
+	"\f_next_offset\"\x91\x01\n" +
 	"\x11UpdateUserRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -614,6 +615,7 @@ func file_user_proto_init() {
 	if File_user_proto != nil {
 		return
 	}
+	file_user_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

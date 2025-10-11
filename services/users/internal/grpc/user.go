@@ -53,7 +53,7 @@ func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userpb.Batch
 
 	return &userpb.BatchGetUsersResponse{
 		Users:      pbUsers,
-		NextOffset: *nextOffset,
+		NextOffset: nextOffset,
 	}, nil
 }
 

@@ -59,7 +59,7 @@ message BatchGetUsersRequest {
 
 message BatchGetUsersResponse {
   repeated User users = 1;
-  int32 next_offset = 2;
+  optional int32 next_offset = 2;
 }
 
 message UpdateUserRequest {
