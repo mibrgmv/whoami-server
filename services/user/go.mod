@@ -1,4 +1,4 @@
-module github.com/mibrgmv/whoami-server/users
+module github.com/mibrgmv/whoami-server/user
 
 go 1.24.0
 

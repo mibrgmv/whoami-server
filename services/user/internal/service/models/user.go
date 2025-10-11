@@ -1,6 +1,6 @@
 package models
 
-import userpb "github.com/mibrgmv/whoami-server/users/internal/protogen/user"
+import userpb "github.com/mibrgmv/whoami-server/user/internal/protogen/user"
 
 type User struct {
 	ID            string

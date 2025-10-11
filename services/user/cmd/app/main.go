@@ -8,8 +8,8 @@ import (
 	"syscall"
 
 	"github.com/mibrgmv/whoami-server/shared/config"
-	appcfg "github.com/mibrgmv/whoami-server/users/internal/config"
-	"github.com/mibrgmv/whoami-server/users/internal/server"
+	appcfg "github.com/mibrgmv/whoami-server/user/internal/config"
+	"github.com/mibrgmv/whoami-server/user/internal/server"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/mibrgmv/whoami-server/shared/keycloak"
-	"github.com/mibrgmv/whoami-server/users/internal/service/models"
+	"github.com/mibrgmv/whoami-server/user/internal/service/models"
 )
 
 var (

@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 
-	userpb "github.com/mibrgmv/whoami-server/users/internal/protogen/user"
-	"github.com/mibrgmv/whoami-server/users/internal/service"
-	"github.com/mibrgmv/whoami-server/users/internal/service/models"
+	userpb "github.com/mibrgmv/whoami-server/user/internal/protogen/user"
+	"github.com/mibrgmv/whoami-server/user/internal/service"
+	"github.com/mibrgmv/whoami-server/user/internal/service/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
