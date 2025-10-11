@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
-	"github.com/mibrgmv/whoami-server/quizzes/internal/services/question"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/service/question"
 	"github.com/stretchr/testify/mock"
 )
 

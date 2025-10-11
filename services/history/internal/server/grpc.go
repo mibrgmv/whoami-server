@@ -8,9 +8,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
-	"github.com/mibrgmv/whoami-server/history/internal/services/history"
-	historygrpc "github.com/mibrgmv/whoami-server/history/internal/services/history/grpc"
-	pg "github.com/mibrgmv/whoami-server/history/internal/services/history/postgresql"
+	"github.com/mibrgmv/whoami-server/history/internal/service/history"
+	historygrpc "github.com/mibrgmv/whoami-server/history/internal/service/history/grpc"
+	pg "github.com/mibrgmv/whoami-server/history/internal/service/history/postgresql"
 	sharedInterceptors "github.com/mibrgmv/whoami-server/shared/grpc"
 	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
 	"google.golang.org/grpc"

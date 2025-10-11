@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
-	"github.com/mibrgmv/whoami-server/quizzes/internal/services/quiz"
+	"github.com/mibrgmv/whoami-server/quizzes/internal/service/quiz"
 )
 
 type Repository struct {
