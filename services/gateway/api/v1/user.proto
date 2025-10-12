@@ -1,22 +1,39 @@
 syntax = "proto3";
 
-package user;
+package user.v1;
 
-option go_package = "github.com/mibrgmv/whoami-server/users/internal/protogen/user";
+option go_package = "github.com/mibrgmv/whoami-server/gateway/internal/protogen/user/v1;userv1";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 service UserService {
   rpc GetCurrentUser(google.protobuf.Empty) returns (User) {
     option (google.api.http) = {
       get: "/api/v1/users/current"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
   }
 
   rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {
     option (google.api.http) = {
       get: "/api/v1/users"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
     };
   }
 
@@ -25,6 +42,14 @@ service UserService {
       put: "/api/v1/users/{id}",
       body: "*"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
   }
 
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
@@ -32,11 +57,27 @@ service UserService {
       put: "/api/v1/users/{id}/password",
       body: "*"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
   }
 
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
     option (google.api.http) = {
       delete: "/api/v1/users/{id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
     };
   }
 }

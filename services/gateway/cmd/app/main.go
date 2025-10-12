@@ -12,10 +12,6 @@ import (
 	"github.com/mibrgmv/whoami-server/shared/config"
 )
 
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Enter the token in the format: Bearer <your-token-here>
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -24,8 +20,6 @@ func main() {
 	var cfg appcfg.Config
 	var err = config.NewBuilder().
 		WithConfigPaths("internal/config").
-		WithConfigName("default").
-		WithConfigType("yaml").
 		WithEnvFiles("../../.env").
 		Load(&cfg)
 

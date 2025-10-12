@@ -2,11 +2,11 @@
 // source: question.proto
 
 /*
-Package question is a reverse proxy.
+Package questionv1 is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package question
+package questionv1
 
 import (
 	"context"
@@ -176,7 +176,7 @@ func RegisterQuestionServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.v1.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -196,7 +196,7 @@ func RegisterQuestionServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.v1.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -216,7 +216,7 @@ func RegisterQuestionServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.QuestionService/EvaluateAnswers", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/evaluate"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/question.v1.QuestionService/EvaluateAnswers", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/evaluate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -274,7 +274,7 @@ func RegisterQuestionServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.v1.QuestionService/BatchCreateQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -291,7 +291,7 @@ func RegisterQuestionServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.v1.QuestionService/BatchGetQuestions", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/questions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -308,7 +308,7 @@ func RegisterQuestionServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.QuestionService/EvaluateAnswers", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/evaluate"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/question.v1.QuestionService/EvaluateAnswers", runtime.WithHTTPPathPattern("/api/v1/quizzes/{quiz_id}/evaluate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

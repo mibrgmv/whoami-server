@@ -2,11 +2,11 @@
 // source: quiz.proto
 
 /*
-Package quiz is a reverse proxy.
+Package quizv1 is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package quiz
+package quizv1
 
 import (
 	"context"
@@ -148,7 +148,7 @@ func RegisterQuizServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.QuizService/CreateQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.v1.QuizService/CreateQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -168,7 +168,7 @@ func RegisterQuizServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.QuizService/GetQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.v1.QuizService/GetQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -188,7 +188,7 @@ func RegisterQuizServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.QuizService/BatchGetQuizzes", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/quiz.v1.QuizService/BatchGetQuizzes", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -246,7 +246,7 @@ func RegisterQuizServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.QuizService/CreateQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.v1.QuizService/CreateQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -263,7 +263,7 @@ func RegisterQuizServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.QuizService/GetQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.v1.QuizService/GetQuiz", runtime.WithHTTPPathPattern("/api/v1/quizzes/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -280,7 +280,7 @@ func RegisterQuizServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.QuizService/BatchGetQuizzes", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/quiz.v1.QuizService/BatchGetQuizzes", runtime.WithHTTPPathPattern("/api/v1/quizzes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

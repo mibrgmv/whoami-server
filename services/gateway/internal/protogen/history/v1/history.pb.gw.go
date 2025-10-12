@@ -2,11 +2,11 @@
 // source: history.proto
 
 /*
-Package history is a reverse proxy.
+Package historyv1 is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package history
+package historyv1
 
 import (
 	"context"
@@ -117,7 +117,7 @@ func RegisterQuizCompletionHistoryServiceHandlerServer(ctx context.Context, mux 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -137,7 +137,7 @@ func RegisterQuizCompletionHistoryServiceHandlerServer(ctx context.Context, mux 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -195,7 +195,7 @@ func RegisterQuizCompletionHistoryServiceHandlerClient(ctx context.Context, mux 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -212,7 +212,7 @@ func RegisterQuizCompletionHistoryServiceHandlerClient(ctx context.Context, mux 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

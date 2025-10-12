@@ -4,14 +4,13 @@
 // 	protoc        v5.29.3
 // source: history.proto
 
-package history
+package historyv1
 
 import (
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
 	sync "sync"
@@ -321,15 +320,16 @@ var File_history_proto protoreflect.FileDescriptor
 
 const file_history_proto_rawDesc = "" +
 	"\n" +
-	"\rhistory.proto\x12\ahistory\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15google/api/http.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"~\n" +
+	"\rhistory.proto\x12\n" +
+	"history.v1\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"~\n" +
 	"\x19QuizCompletionHistoryItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x17\n" +
 	"\aquiz_id\x18\x03 \x01(\tR\x06quizId\x12\x1f\n" +
 	"\vquiz_result\x18\x04 \x01(\tR\n" +
-	"quizResult\"K\n" +
-	"\x11CreateItemRequest\x126\n" +
-	"\x04item\x18\x01 \x01(\v2\".history.QuizCompletionHistoryItemR\x04item\"\x8d\x01\n" +
+	"quizResult\"N\n" +
+	"\x11CreateItemRequest\x129\n" +
+	"\x04item\x18\x01 \x01(\v2%.history.v1.QuizCompletionHistoryItemR\x04item\"\x8d\x01\n" +
 	"\x16BatchGetMyItemsRequest\x127\n" +
 	"\bquiz_ids\x18\x01 \x03(\v2\x1c.google.protobuf.StringValueR\aquizIds\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
@@ -340,15 +340,21 @@ const file_history_proto_rawDesc = "" +
 	"\bquiz_ids\x18\x02 \x03(\v2\x1c.google.protobuf.StringValueR\aquizIds\x12\x1b\n" +
 	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"y\n" +
-	"\x15BatchGetItemsResponse\x128\n" +
-	"\x05items\x18\x01 \x03(\v2\".history.QuizCompletionHistoryItemR\x05items\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xc7\x02\n" +
-	"\x1cQuizCompletionHistoryService\x12N\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\"|\n" +
+	"\x15BatchGetItemsResponse\x12;\n" +
+	"\x05items\x18\x01 \x03(\v2%.history.v1.QuizCompletionHistoryItemR\x05items\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\x85\x03\n" +
+	"\x1cQuizCompletionHistoryService\x12T\n" +
 	"\n" +
-	"CreateItem\x12\x1a.history.CreateItemRequest\x1a\".history.QuizCompletionHistoryItem\"\x00\x12n\n" +
-	"\x0fBatchGetMyItems\x12\x1f.history.BatchGetMyItemsRequest\x1a\x1e.history.BatchGetItemsResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/history/me\x12g\n" +
-	"\rBatchGetItems\x12\x1d.history.BatchGetItemsRequest\x1a\x1e.history.BatchGetItemsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/historyB/Z-whoami-server-history/protogen/golang/historyb\x06proto3"
+	"CreateItem\x12\x1d.history.v1.CreateItemRequest\x1a%.history.v1.QuizCompletionHistoryItem\"\x00\x12\x89\x01\n" +
+	"\x0fBatchGetMyItems\x12\".history.v1.BatchGetMyItemsRequest\x1a!.history.v1.BatchGetItemsResponse\"/\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/history/me\x12\x82\x01\n" +
+	"\rBatchGetItems\x12 .history.v1.BatchGetItemsRequest\x1a!.history.v1.BatchGetItemsResponse\",\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/historyBQZOgithub.com/mibrgmv/whoami-server/gateway/internal/protogen/history/v1;historyv1b\x06proto3"
 
 var (
 	file_history_proto_rawDescOnce sync.Once
@@ -364,25 +370,25 @@ func file_history_proto_rawDescGZIP() []byte {
 
 var file_history_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_history_proto_goTypes = []any{
-	(*QuizCompletionHistoryItem)(nil), // 0: history.QuizCompletionHistoryItem
-	(*CreateItemRequest)(nil),         // 1: history.CreateItemRequest
-	(*BatchGetMyItemsRequest)(nil),    // 2: history.BatchGetMyItemsRequest
-	(*BatchGetItemsRequest)(nil),      // 3: history.BatchGetItemsRequest
-	(*BatchGetItemsResponse)(nil),     // 4: history.BatchGetItemsResponse
+	(*QuizCompletionHistoryItem)(nil), // 0: history.v1.QuizCompletionHistoryItem
+	(*CreateItemRequest)(nil),         // 1: history.v1.CreateItemRequest
+	(*BatchGetMyItemsRequest)(nil),    // 2: history.v1.BatchGetMyItemsRequest
+	(*BatchGetItemsRequest)(nil),      // 3: history.v1.BatchGetItemsRequest
+	(*BatchGetItemsResponse)(nil),     // 4: history.v1.BatchGetItemsResponse
 	(*wrapperspb.StringValue)(nil),    // 5: google.protobuf.StringValue
 }
 var file_history_proto_depIdxs = []int32{
-	0, // 0: history.CreateItemRequest.item:type_name -> history.QuizCompletionHistoryItem
-	5, // 1: history.BatchGetMyItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
-	5, // 2: history.BatchGetItemsRequest.user_ids:type_name -> google.protobuf.StringValue
-	5, // 3: history.BatchGetItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
-	0, // 4: history.BatchGetItemsResponse.items:type_name -> history.QuizCompletionHistoryItem
-	1, // 5: history.QuizCompletionHistoryService.CreateItem:input_type -> history.CreateItemRequest
-	2, // 6: history.QuizCompletionHistoryService.BatchGetMyItems:input_type -> history.BatchGetMyItemsRequest
-	3, // 7: history.QuizCompletionHistoryService.BatchGetItems:input_type -> history.BatchGetItemsRequest
-	0, // 8: history.QuizCompletionHistoryService.CreateItem:output_type -> history.QuizCompletionHistoryItem
-	4, // 9: history.QuizCompletionHistoryService.BatchGetMyItems:output_type -> history.BatchGetItemsResponse
-	4, // 10: history.QuizCompletionHistoryService.BatchGetItems:output_type -> history.BatchGetItemsResponse
+	0, // 0: history.v1.CreateItemRequest.item:type_name -> history.v1.QuizCompletionHistoryItem
+	5, // 1: history.v1.BatchGetMyItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
+	5, // 2: history.v1.BatchGetItemsRequest.user_ids:type_name -> google.protobuf.StringValue
+	5, // 3: history.v1.BatchGetItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
+	0, // 4: history.v1.BatchGetItemsResponse.items:type_name -> history.v1.QuizCompletionHistoryItem
+	1, // 5: history.v1.QuizCompletionHistoryService.CreateItem:input_type -> history.v1.CreateItemRequest
+	2, // 6: history.v1.QuizCompletionHistoryService.BatchGetMyItems:input_type -> history.v1.BatchGetMyItemsRequest
+	3, // 7: history.v1.QuizCompletionHistoryService.BatchGetItems:input_type -> history.v1.BatchGetItemsRequest
+	0, // 8: history.v1.QuizCompletionHistoryService.CreateItem:output_type -> history.v1.QuizCompletionHistoryItem
+	4, // 9: history.v1.QuizCompletionHistoryService.BatchGetMyItems:output_type -> history.v1.BatchGetItemsResponse
+	4, // 10: history.v1.QuizCompletionHistoryService.BatchGetItems:output_type -> history.v1.BatchGetItemsResponse
 	8, // [8:11] is the sub-list for method output_type
 	5, // [5:8] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name

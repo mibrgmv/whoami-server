@@ -9,7 +9,8 @@ import (
 type Config struct {
 	Keycloak       keycloak.Config `mapstructure:"keycloak"`
 	HTTP           http.Config     `mapstructure:"http"`
-	QuizzesService grpc.Config     `mapstructure:"quizzes_service"`
+	AuthService    grpc.Config     `mapstructure:"auth_service"`
+	QuizService    grpc.Config     `mapstructure:"quiz_service"`
 	UserService    grpc.Config     `mapstructure:"user_service"`
 	HistoryService grpc.Config     `mapstructure:"history_service"`
 }

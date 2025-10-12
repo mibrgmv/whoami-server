@@ -11,7 +11,11 @@ http:
     allow_credentials: true
     max_age: 86400 #24h
 
-quizzes_service:
+auth_service:
+  host: localhost
+  port: 50055
+
+quiz_service:
   host: localhost
   port: 50051
 

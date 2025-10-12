@@ -15,11 +15,11 @@ import (
 	"github.com/mibrgmv/whoami-server/gateway/internal/auth"
 	"github.com/mibrgmv/whoami-server/gateway/internal/config"
 	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
-	historypb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/history"
-	questionpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/question"
-	quizpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/quiz"
-	userpb "github.com/mibrgmv/whoami-server/gateway/internal/protogen/user"
-	"github.com/mibrgmv/whoami-server/shared/keycloak"
+	authv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/auth/v1"
+	historyv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/history/v1"
+	questionv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/question/v1"
+	quizv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/quiz/v1"
+	userv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/user/v1"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
@@ -27,7 +27,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -54,25 +54,34 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	if err := quizpb.RegisterQuizServiceHandlerFromEndpoint(
+	if err := authv1.RegisterAuthServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		cfg.QuizzesService.GetAddr(),
+		cfg.AuthService.GetAddr(),
+		dialOpts,
+	); err != nil {
+		return nil, fmt.Errorf("failed to register auth service: %w", err)
+	}
+
+	if err := quizv1.RegisterQuizServiceHandlerFromEndpoint(
+		ctx,
+		gwmux,
+		cfg.QuizService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register quiz service: %w", err)
 	}
 
-	if err := questionpb.RegisterQuestionServiceHandlerFromEndpoint(
+	if err := questionv1.RegisterQuestionServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
-		cfg.QuizzesService.GetAddr(),
+		cfg.QuizService.GetAddr(),
 		dialOpts,
 	); err != nil {
 		return nil, fmt.Errorf("failed to register question service: %w", err)
 	}
 
-	if err := userpb.RegisterUserServiceHandlerFromEndpoint(
+	if err := userv1.RegisterUserServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
 		cfg.UserService.GetAddr(),
@@ -81,7 +90,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register user service: %w", err)
 	}
 
-	if err := historypb.RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(
+	if err := historyv1.RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
 		cfg.HistoryService.GetAddr(),
@@ -90,8 +99,6 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to register history service: %w", err)
 	}
 
-	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
-	authHandler := auth.NewHandler(keycloakClient)
 	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
 
 	switch cfg.HTTP.Mode {
@@ -126,13 +133,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/api/swagger.json")))
 
-	authGroup := router.Group("/api/v1/auth")
-	{
-		authGroup.POST("/login", authHandler.Login)
-		authGroup.POST("/logout", authHandler.Logout)
-		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.POST("/register", authHandler.Register)
-	}
+	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
 
 	gwmuxGroup := router.Group("/api/v1")
 	gwmuxGroup.Use(authMiddleware.Authorization())
@@ -158,7 +159,7 @@ func NewServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
 }
 
 func StartHTTP(ctx context.Context, cfg config.Config) error {
-	router, err := NewServer(ctx, cfg)
+	router, err := NewHttpServer(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP server: %w", err)
 	}
