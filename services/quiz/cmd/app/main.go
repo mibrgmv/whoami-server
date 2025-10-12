@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	appcfg "github.com/mibrgmv/whoami-server/quiz/internal/config"
 	"github.com/mibrgmv/whoami-server/quiz/internal/server"
-	"github.com/mibrgmv/whoami-server/shared/cache/redis"
 	"github.com/mibrgmv/whoami-server/shared/config"
+	"github.com/mibrgmv/whoami-server/shared/dbs/redis"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 )
 

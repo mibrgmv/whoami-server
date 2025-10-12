@@ -16,7 +16,7 @@ import (
 	"github.com/mibrgmv/whoami-server/quiz/internal/service/quiz"
 	quizgrpc "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/grpc"
 	quizpg "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/postgresql"
-	redisservice "github.com/mibrgmv/whoami-server/shared/cache/redis"
+	redis2 "github.com/mibrgmv/whoami-server/shared/dbs/redis"
 	sharedInterceptors "github.com/mibrgmv/whoami-server/shared/grpc"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -41,7 +41,7 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.
 		),
 	)
 
-	redisService := redisservice.NewService(redisClient, redisTTL)
+	redisService := redis2.NewService(redisClient, redisTTL)
 	quizRepo := quizpg.NewRepository(pool)
 	quizService := quiz.NewService(quizRepo)
 	quizServer := quizgrpc.NewService(quizService)

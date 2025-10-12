@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/mibrgmv/whoami-server/shared/config/api/grpc"
-	"github.com/mibrgmv/whoami-server/shared/config/dbs/postgresql"
+	"github.com/mibrgmv/whoami-server/shared/dbs/postgresql"
 )
 
 type Config struct {

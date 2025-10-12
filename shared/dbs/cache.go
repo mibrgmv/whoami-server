@@ -1,11 +1,11 @@
-package cache
+package dbs
 
 import (
 	"context"
 	"time"
 )
 
-type Interface interface {
+type Cache interface {
 	Get(ctx context.Context, key string, dest interface{}) error
 	Set(ctx context.Context, key string, value interface{}) error
 	SetWithTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error
