@@ -1,10 +1,13 @@
-.PHONY: gen
+.PHONY: lint gen
+
+lint:
+	golangci-lint run
 
 gen:
 	@mkdir -p internal/protogen/history
-	protoc -I=api -I=../../shared/third_party \
-		--go_out=internal/protogen/history \
-		--go_opt=paths=source_relative \
-		--go-grpc_out=internal/protogen/history \
-		--go-grpc_opt=paths=source_relative \
-		api/*.proto
+	protoc -I=api/v1 -I=../../shared/third_party \
+		--go_out=. \
+		--go_opt=module=github.com/mibrgmv/whoami-server/history \
+		--go-grpc_out=. \
+		--go-grpc_opt=module=github.com/mibrgmv/whoami-server/history \
+		api/v1/*.proto

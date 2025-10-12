@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: history.proto
 
-package history
+package historyv1
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizCompletionHistoryService_CreateItem_FullMethodName      = "/history.QuizCompletionHistoryService/CreateItem"
-	QuizCompletionHistoryService_BatchGetMyItems_FullMethodName = "/history.QuizCompletionHistoryService/BatchGetMyItems"
-	QuizCompletionHistoryService_BatchGetItems_FullMethodName   = "/history.QuizCompletionHistoryService/BatchGetItems"
+	QuizCompletionHistoryService_CreateItem_FullMethodName      = "/history.v1.QuizCompletionHistoryService/CreateItem"
+	QuizCompletionHistoryService_BatchGetMyItems_FullMethodName = "/history.v1.QuizCompletionHistoryService/BatchGetMyItems"
+	QuizCompletionHistoryService_BatchGetItems_FullMethodName   = "/history.v1.QuizCompletionHistoryService/BatchGetItems"
 )
 
 // QuizCompletionHistoryServiceClient is the client API for QuizCompletionHistoryService service.
@@ -177,7 +177,7 @@ func _QuizCompletionHistoryService_BatchGetItems_Handler(srv interface{}, ctx co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var QuizCompletionHistoryService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "history.QuizCompletionHistoryService",
+	ServiceName: "history.v1.QuizCompletionHistoryService",
 	HandlerType: (*QuizCompletionHistoryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

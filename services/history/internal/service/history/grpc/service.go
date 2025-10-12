@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/history/internal/models"
-	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
+	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
 	"github.com/mibrgmv/whoami-server/history/internal/service/history"
 	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
 	"github.com/mibrgmv/whoami-server/shared/tools"
@@ -16,14 +16,14 @@ import (
 
 type Service struct {
 	service *history.Service
-	pb.UnimplementedQuizCompletionHistoryServiceServer
+	historyv1.UnimplementedQuizCompletionHistoryServiceServer
 }
 
 func NewService(service *history.Service) *Service {
 	return &Service{service: service}
 }
 
-func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) (*pb.QuizCompletionHistoryItem, error) {
+func (s Service) CreateItem(ctx context.Context, request *historyv1.CreateItemRequest) (*historyv1.QuizCompletionHistoryItem, error) {
 	itemToCreate, err := models.ToModel(request.Item)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create history item: %v", err)
@@ -37,7 +37,7 @@ func (s Service) CreateItem(ctx context.Context, request *pb.CreateItemRequest) 
 	return createdItems[0].ToProto(), nil
 }
 
-func (s Service) BatchGetMyItems(ctx context.Context, request *pb.BatchGetMyItemsRequest) (*pb.BatchGetItemsResponse, error) {
+func (s Service) BatchGetMyItems(ctx context.Context, request *historyv1.BatchGetMyItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
 	parsedToken, err := tools.ParsePageToken(request.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
@@ -58,18 +58,18 @@ func (s Service) BatchGetMyItems(ctx context.Context, request *pb.BatchGetMyItem
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
 
-	protoItems := make([]*pb.QuizCompletionHistoryItem, len(items))
+	protoItems := make([]*historyv1.QuizCompletionHistoryItem, len(items))
 	for i, item := range items {
 		protoItems[i] = item.ToProto()
 	}
 
-	return &pb.BatchGetItemsResponse{
+	return &historyv1.BatchGetItemsResponse{
 		Items:         protoItems,
 		NextPageToken: nextPageToken,
 	}, nil
 }
 
-func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsRequest) (*pb.BatchGetItemsResponse, error) {
+func (s Service) BatchGetItems(ctx context.Context, request *historyv1.BatchGetItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
 	parsedToken, err := tools.ParsePageToken(request.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
@@ -90,12 +90,12 @@ func (s Service) BatchGetItems(ctx context.Context, request *pb.BatchGetItemsReq
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
 
-	protoItems := make([]*pb.QuizCompletionHistoryItem, len(items))
+	protoItems := make([]*historyv1.QuizCompletionHistoryItem, len(items))
 	for i, item := range items {
 		protoItems[i] = item.ToProto()
 	}
 
-	return &pb.BatchGetItemsResponse{
+	return &historyv1.BatchGetItemsResponse{
 		Items:         protoItems,
 		NextPageToken: nextPageToken,
 	}, nil

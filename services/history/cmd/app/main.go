@@ -22,8 +22,6 @@ func main() {
 	var cfg appcfg.Config
 	var err = config.NewBuilder().
 		WithConfigPaths("internal/config").
-		WithConfigName("default").
-		WithConfigType("yaml").
 		WithEnvFiles("../../.env").
 		Load(&cfg)
 

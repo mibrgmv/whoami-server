@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
+	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
 	"github.com/mibrgmv/whoami-server/history/internal/service/history"
 	historygrpc "github.com/mibrgmv/whoami-server/history/internal/service/history/grpc"
 	pg "github.com/mibrgmv/whoami-server/history/internal/service/history/postgresql"
@@ -43,7 +43,7 @@ func NewGrpcServer(pool *pgxpool.Pool) GrpcServer {
 	repo := pg.NewRepository(pool)
 	service := history.NewService(repo)
 	grpcServer := historygrpc.NewService(service)
-	pb.RegisterQuizCompletionHistoryServiceServer(s, grpcServer)
+	historyv1.RegisterQuizCompletionHistoryServiceServer(s, grpcServer)
 	reflection.Register(s)
 	return GrpcServer{
 		grpcServer: s,
