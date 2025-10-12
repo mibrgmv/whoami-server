@@ -34,14 +34,10 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.
 
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			append(
-				interceptorCfg.BuildUnaryInterceptors(),
-			)...,
+			interceptorCfg.BuildUnaryInterceptors()...,
 		),
 		grpc.ChainStreamInterceptor(
-			append(
-				interceptorCfg.BuildStreamInterceptors(),
-			)...,
+			interceptorCfg.BuildStreamInterceptors()...,
 		),
 	)
 
