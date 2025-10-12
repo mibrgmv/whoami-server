@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 
-	config "github.com/mibrgmv/whoami-server/shared/config/cache/redis"
+	config "github.com/mibrgmv/whoami-server/shared/config/dbs/redis"
 	"github.com/redis/go-redis/v9"
 )
 
