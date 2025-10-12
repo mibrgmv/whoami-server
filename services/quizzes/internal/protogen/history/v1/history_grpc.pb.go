@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: history.proto
 
-package history
+package historyv1
 
 import (
 	context "context"
@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizCompletionHistoryService_CreateItem_FullMethodName    = "/history.QuizCompletionHistoryService/CreateItem"
-	QuizCompletionHistoryService_BatchGetItems_FullMethodName = "/history.QuizCompletionHistoryService/BatchGetItems"
+	QuizCompletionHistoryService_CreateItem_FullMethodName      = "/history.v1.QuizCompletionHistoryService/CreateItem"
+	QuizCompletionHistoryService_BatchGetMyItems_FullMethodName = "/history.v1.QuizCompletionHistoryService/BatchGetMyItems"
+	QuizCompletionHistoryService_BatchGetItems_FullMethodName   = "/history.v1.QuizCompletionHistoryService/BatchGetItems"
 )
 
 // QuizCompletionHistoryServiceClient is the client API for QuizCompletionHistoryService service.
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuizCompletionHistoryServiceClient interface {
 	CreateItem(ctx context.Context, in *CreateItemRequest, opts ...grpc.CallOption) (*QuizCompletionHistoryItem, error)
+	BatchGetMyItems(ctx context.Context, in *BatchGetMyItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error)
 	BatchGetItems(ctx context.Context, in *BatchGetItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error)
 }
 
@@ -49,6 +51,16 @@ func (c *quizCompletionHistoryServiceClient) CreateItem(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *quizCompletionHistoryServiceClient) BatchGetMyItems(ctx context.Context, in *BatchGetMyItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchGetItemsResponse)
+	err := c.cc.Invoke(ctx, QuizCompletionHistoryService_BatchGetMyItems_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *quizCompletionHistoryServiceClient) BatchGetItems(ctx context.Context, in *BatchGetItemsRequest, opts ...grpc.CallOption) (*BatchGetItemsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BatchGetItemsResponse)
@@ -64,6 +76,7 @@ func (c *quizCompletionHistoryServiceClient) BatchGetItems(ctx context.Context, 
 // for forward compatibility.
 type QuizCompletionHistoryServiceServer interface {
 	CreateItem(context.Context, *CreateItemRequest) (*QuizCompletionHistoryItem, error)
+	BatchGetMyItems(context.Context, *BatchGetMyItemsRequest) (*BatchGetItemsResponse, error)
 	BatchGetItems(context.Context, *BatchGetItemsRequest) (*BatchGetItemsResponse, error)
 	mustEmbedUnimplementedQuizCompletionHistoryServiceServer()
 }
@@ -77,6 +90,9 @@ type UnimplementedQuizCompletionHistoryServiceServer struct{}
 
 func (UnimplementedQuizCompletionHistoryServiceServer) CreateItem(context.Context, *CreateItemRequest) (*QuizCompletionHistoryItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateItem not implemented")
+}
+func (UnimplementedQuizCompletionHistoryServiceServer) BatchGetMyItems(context.Context, *BatchGetMyItemsRequest) (*BatchGetItemsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchGetMyItems not implemented")
 }
 func (UnimplementedQuizCompletionHistoryServiceServer) BatchGetItems(context.Context, *BatchGetItemsRequest) (*BatchGetItemsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchGetItems not implemented")
@@ -121,6 +137,24 @@ func _QuizCompletionHistoryService_CreateItem_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _QuizCompletionHistoryService_BatchGetMyItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetMyItemsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuizCompletionHistoryServiceServer).BatchGetMyItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuizCompletionHistoryService_BatchGetMyItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizCompletionHistoryServiceServer).BatchGetMyItems(ctx, req.(*BatchGetMyItemsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _QuizCompletionHistoryService_BatchGetItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BatchGetItemsRequest)
 	if err := dec(in); err != nil {
@@ -143,12 +177,16 @@ func _QuizCompletionHistoryService_BatchGetItems_Handler(srv interface{}, ctx co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var QuizCompletionHistoryService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "history.QuizCompletionHistoryService",
+	ServiceName: "history.v1.QuizCompletionHistoryService",
 	HandlerType: (*QuizCompletionHistoryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateItem",
 			Handler:    _QuizCompletionHistoryService_CreateItem_Handler,
+		},
+		{
+			MethodName: "BatchGetMyItems",
+			Handler:    _QuizCompletionHistoryService_BatchGetMyItems_Handler,
 		},
 		{
 			MethodName: "BatchGetItems",

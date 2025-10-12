@@ -4,14 +4,13 @@
 // 	protoc        v5.29.3
 // source: question.proto
 
-package question
+package questionv1
 
 import (
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -608,33 +607,33 @@ var File_question_proto protoreflect.FileDescriptor
 
 const file_question_proto_rawDesc = "" +
 	"\n" +
-	"\x0equestion.proto\x12\bquestion\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15google/api/http.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\")\n" +
+	"\x0equestion.proto\x12\vquestion.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\")\n" +
 	"\rOptionWeights\x12\x18\n" +
-	"\aweights\x18\x01 \x03(\x02R\aweights\"\xf4\x01\n" +
+	"\aweights\x18\x01 \x03(\x02R\aweights\"\xfa\x01\n" +
 	"\bQuestion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\aquiz_id\x18\x02 \x01(\tR\x06quizId\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\tR\x04body\x12O\n" +
-	"\x0foptions_weights\x18\x04 \x03(\v2&.question.Question.OptionsWeightsEntryR\x0eoptionsWeights\x1aZ\n" +
+	"\x04body\x18\x03 \x01(\tR\x04body\x12R\n" +
+	"\x0foptions_weights\x18\x04 \x03(\v2).question.v1.Question.OptionsWeightsEntryR\x0eoptionsWeights\x1a]\n" +
 	"\x13OptionsWeightsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.question.OptionWeightsR\x05value:\x028\x01\"\xfe\x01\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x120\n" +
+	"\x05value\x18\x02 \x01(\v2\x1a.question.v1.OptionWeightsR\x05value:\x028\x01\"\x84\x02\n" +
 	"\x15CreateQuestionRequest\x12\x17\n" +
 	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12\x12\n" +
-	"\x04body\x18\x02 \x01(\tR\x04body\x12\\\n" +
-	"\x0foptions_weights\x18\x03 \x03(\v23.question.CreateQuestionRequest.OptionsWeightsEntryR\x0eoptionsWeights\x1aZ\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\x12_\n" +
+	"\x0foptions_weights\x18\x03 \x03(\v26.question.v1.CreateQuestionRequest.OptionsWeightsEntryR\x0eoptionsWeights\x1a]\n" +
 	"\x13OptionsWeightsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.question.OptionWeightsR\x05value:\x028\x01\"s\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x120\n" +
+	"\x05value\x18\x02 \x01(\v2\x1a.question.v1.OptionWeightsR\x05value:\x028\x01\"v\n" +
 	"\x1bBatchCreateQuestionsRequest\x12\x17\n" +
-	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12;\n" +
-	"\brequests\x18\x02 \x03(\v2\x1f.question.CreateQuestionRequestR\brequests\"P\n" +
-	"\x1cBatchCreateQuestionsResponse\x120\n" +
-	"\tquestions\x18\x01 \x03(\v2\x12.question.QuestionR\tquestions\"3\n" +
+	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12>\n" +
+	"\brequests\x18\x02 \x03(\v2\".question.v1.CreateQuestionRequestR\brequests\"S\n" +
+	"\x1cBatchCreateQuestionsResponse\x123\n" +
+	"\tquestions\x18\x01 \x03(\v2\x15.question.v1.QuestionR\tquestions\"3\n" +
 	"\x18BatchGetQuestionsRequest\x12\x17\n" +
-	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\"U\n" +
-	"\x19BatchGetQuestionsResponse\x128\n" +
-	"\tquestions\x18\x01 \x03(\v2\x1a.question.QuestionResponseR\tquestions\"i\n" +
+	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\"X\n" +
+	"\x19BatchGetQuestionsResponse\x12;\n" +
+	"\tquestions\x18\x01 \x03(\v2\x1d.question.v1.QuestionResponseR\tquestions\"i\n" +
 	"\x10QuestionResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\aquiz_id\x18\x02 \x01(\tR\x06quizId\x12\x12\n" +
@@ -644,16 +643,25 @@ const file_question_proto_rawDesc = "" +
 	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12\x1f\n" +
 	"\vquestion_id\x18\x02 \x01(\tR\n" +
 	"questionId\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\tR\x04body\"]\n" +
+	"\x04body\x18\x03 \x01(\tR\x04body\"`\n" +
 	"\x16EvaluateAnswersRequest\x12\x17\n" +
-	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12*\n" +
-	"\aanswers\x18\x02 \x03(\v2\x10.question.AnswerR\aanswers\"1\n" +
+	"\aquiz_id\x18\x01 \x01(\tR\x06quizId\x12-\n" +
+	"\aanswers\x18\x02 \x03(\v2\x13.question.v1.AnswerR\aanswers\"1\n" +
 	"\x17EvaluateAnswersResponse\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\tR\x06result2\xbd\x03\n" +
-	"\x0fQuestionService\x12\x95\x01\n" +
-	"\x14BatchCreateQuestions\x12%.question.BatchCreateQuestionsRequest\x1a&.question.BatchCreateQuestionsResponse\".\x82\xd3\xe4\x93\x02(:\x01*\"#/api/v1/quizzes/{quiz_id}/questions\x12\x89\x01\n" +
-	"\x11BatchGetQuestions\x12\".question.BatchGetQuestionsRequest\x1a#.question.BatchGetQuestionsResponse\"+\x82\xd3\xe4\x93\x02%\x12#/api/v1/quizzes/{quiz_id}/questions\x12\x85\x01\n" +
-	"\x0fEvaluateAnswers\x12 .question.EvaluateAnswersRequest\x1a!.question.EvaluateAnswersResponse\"-\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/quizzes/{quiz_id}/evaluateB0Z.whoami-server-quizzes/protogen/golang/questionb\x06proto3"
+	"\x06result\x18\x01 \x01(\tR\x06result2\x8e\x04\n" +
+	"\x0fQuestionService\x12\xb0\x01\n" +
+	"\x14BatchCreateQuestions\x12(.question.v1.BatchCreateQuestionsRequest\x1a).question.v1.BatchCreateQuestionsResponse\"C\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02(:\x01*\"#/api/v1/quizzes/{quiz_id}/questions\x12\xa4\x01\n" +
+	"\x11BatchGetQuestions\x12%.question.v1.BatchGetQuestionsRequest\x1a&.question.v1.BatchGetQuestionsResponse\"@\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02%\x12#/api/v1/quizzes/{quiz_id}/questions\x12\xa0\x01\n" +
+	"\x0fEvaluateAnswers\x12#.question.v1.EvaluateAnswersRequest\x1a$.question.v1.EvaluateAnswersResponse\"B\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/quizzes/{quiz_id}/evaluateBSZQgithub.com/mibrgmv/whoami-server/quizzes/internal/protogen/question/v1;questionv1b\x06proto3"
 
 var (
 	file_question_proto_rawDescOnce sync.Once
@@ -669,35 +677,35 @@ func file_question_proto_rawDescGZIP() []byte {
 
 var file_question_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_question_proto_goTypes = []any{
-	(*OptionWeights)(nil),                // 0: question.OptionWeights
-	(*Question)(nil),                     // 1: question.Question
-	(*CreateQuestionRequest)(nil),        // 2: question.CreateQuestionRequest
-	(*BatchCreateQuestionsRequest)(nil),  // 3: question.BatchCreateQuestionsRequest
-	(*BatchCreateQuestionsResponse)(nil), // 4: question.BatchCreateQuestionsResponse
-	(*BatchGetQuestionsRequest)(nil),     // 5: question.BatchGetQuestionsRequest
-	(*BatchGetQuestionsResponse)(nil),    // 6: question.BatchGetQuestionsResponse
-	(*QuestionResponse)(nil),             // 7: question.QuestionResponse
-	(*Answer)(nil),                       // 8: question.Answer
-	(*EvaluateAnswersRequest)(nil),       // 9: question.EvaluateAnswersRequest
-	(*EvaluateAnswersResponse)(nil),      // 10: question.EvaluateAnswersResponse
-	nil,                                  // 11: question.Question.OptionsWeightsEntry
-	nil,                                  // 12: question.CreateQuestionRequest.OptionsWeightsEntry
+	(*OptionWeights)(nil),                // 0: question.v1.OptionWeights
+	(*Question)(nil),                     // 1: question.v1.Question
+	(*CreateQuestionRequest)(nil),        // 2: question.v1.CreateQuestionRequest
+	(*BatchCreateQuestionsRequest)(nil),  // 3: question.v1.BatchCreateQuestionsRequest
+	(*BatchCreateQuestionsResponse)(nil), // 4: question.v1.BatchCreateQuestionsResponse
+	(*BatchGetQuestionsRequest)(nil),     // 5: question.v1.BatchGetQuestionsRequest
+	(*BatchGetQuestionsResponse)(nil),    // 6: question.v1.BatchGetQuestionsResponse
+	(*QuestionResponse)(nil),             // 7: question.v1.QuestionResponse
+	(*Answer)(nil),                       // 8: question.v1.Answer
+	(*EvaluateAnswersRequest)(nil),       // 9: question.v1.EvaluateAnswersRequest
+	(*EvaluateAnswersResponse)(nil),      // 10: question.v1.EvaluateAnswersResponse
+	nil,                                  // 11: question.v1.Question.OptionsWeightsEntry
+	nil,                                  // 12: question.v1.CreateQuestionRequest.OptionsWeightsEntry
 }
 var file_question_proto_depIdxs = []int32{
-	11, // 0: question.Question.options_weights:type_name -> question.Question.OptionsWeightsEntry
-	12, // 1: question.CreateQuestionRequest.options_weights:type_name -> question.CreateQuestionRequest.OptionsWeightsEntry
-	2,  // 2: question.BatchCreateQuestionsRequest.requests:type_name -> question.CreateQuestionRequest
-	1,  // 3: question.BatchCreateQuestionsResponse.questions:type_name -> question.Question
-	7,  // 4: question.BatchGetQuestionsResponse.questions:type_name -> question.QuestionResponse
-	8,  // 5: question.EvaluateAnswersRequest.answers:type_name -> question.Answer
-	0,  // 6: question.Question.OptionsWeightsEntry.value:type_name -> question.OptionWeights
-	0,  // 7: question.CreateQuestionRequest.OptionsWeightsEntry.value:type_name -> question.OptionWeights
-	3,  // 8: question.QuestionService.BatchCreateQuestions:input_type -> question.BatchCreateQuestionsRequest
-	5,  // 9: question.QuestionService.BatchGetQuestions:input_type -> question.BatchGetQuestionsRequest
-	9,  // 10: question.QuestionService.EvaluateAnswers:input_type -> question.EvaluateAnswersRequest
-	4,  // 11: question.QuestionService.BatchCreateQuestions:output_type -> question.BatchCreateQuestionsResponse
-	6,  // 12: question.QuestionService.BatchGetQuestions:output_type -> question.BatchGetQuestionsResponse
-	10, // 13: question.QuestionService.EvaluateAnswers:output_type -> question.EvaluateAnswersResponse
+	11, // 0: question.v1.Question.options_weights:type_name -> question.v1.Question.OptionsWeightsEntry
+	12, // 1: question.v1.CreateQuestionRequest.options_weights:type_name -> question.v1.CreateQuestionRequest.OptionsWeightsEntry
+	2,  // 2: question.v1.BatchCreateQuestionsRequest.requests:type_name -> question.v1.CreateQuestionRequest
+	1,  // 3: question.v1.BatchCreateQuestionsResponse.questions:type_name -> question.v1.Question
+	7,  // 4: question.v1.BatchGetQuestionsResponse.questions:type_name -> question.v1.QuestionResponse
+	8,  // 5: question.v1.EvaluateAnswersRequest.answers:type_name -> question.v1.Answer
+	0,  // 6: question.v1.Question.OptionsWeightsEntry.value:type_name -> question.v1.OptionWeights
+	0,  // 7: question.v1.CreateQuestionRequest.OptionsWeightsEntry.value:type_name -> question.v1.OptionWeights
+	3,  // 8: question.v1.QuestionService.BatchCreateQuestions:input_type -> question.v1.BatchCreateQuestionsRequest
+	5,  // 9: question.v1.QuestionService.BatchGetQuestions:input_type -> question.v1.BatchGetQuestionsRequest
+	9,  // 10: question.v1.QuestionService.EvaluateAnswers:input_type -> question.v1.EvaluateAnswersRequest
+	4,  // 11: question.v1.QuestionService.BatchCreateQuestions:output_type -> question.v1.BatchCreateQuestionsResponse
+	6,  // 12: question.v1.QuestionService.BatchGetQuestions:output_type -> question.v1.BatchGetQuestionsResponse
+	10, // 13: question.v1.QuestionService.EvaluateAnswers:output_type -> question.v1.EvaluateAnswersResponse
 	11, // [11:14] is the sub-list for method output_type
 	8,  // [8:11] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name

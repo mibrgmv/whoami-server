@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: quiz.proto
 
-package quiz
+package quizv1
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuizService_CreateQuiz_FullMethodName      = "/quiz.QuizService/CreateQuiz"
-	QuizService_GetQuiz_FullMethodName         = "/quiz.QuizService/GetQuiz"
-	QuizService_BatchGetQuizzes_FullMethodName = "/quiz.QuizService/BatchGetQuizzes"
+	QuizService_CreateQuiz_FullMethodName      = "/quiz.v1.QuizService/CreateQuiz"
+	QuizService_GetQuiz_FullMethodName         = "/quiz.v1.QuizService/GetQuiz"
+	QuizService_BatchGetQuizzes_FullMethodName = "/quiz.v1.QuizService/BatchGetQuizzes"
 )
 
 // QuizServiceClient is the client API for QuizService service.
@@ -176,7 +176,7 @@ func _QuizService_BatchGetQuizzes_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var QuizService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "quiz.QuizService",
+	ServiceName: "quiz.v1.QuizService",
 	HandlerType: (*QuizServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -1,19 +1,13 @@
-.PHONY: gen
+.PHONY: lint gen
 
-PROTO_DIR=api
-PROTOGEN_DIR=internal/protogen
-PROTO_FILES=$(wildcard $(PROTO_DIR)/*.proto)
-THIRD_PARTY_DIR=../../shared/third_party
-SERVICES = $(basename $(notdir $(PROTO_FILES)))
+
+lint:
+	golangci-lint run
 
 gen:
-	@mkdir -p $(PROTOGEN_DIR)
-	$(foreach service,$(SERVICES),\
-		mkdir -p $(PROTOGEN_DIR)/$(service); \
-		protoc -I=$(PROTO_DIR) -I=$(THIRD_PARTY_DIR) \
-			--go_out=$(PROTOGEN_DIR)/$(service) \
-			--go_opt=paths=source_relative \
-			--go-grpc_out=$(PROTOGEN_DIR)/$(service) \
-			--go-grpc_opt=paths=source_relative \
-			$(PROTO_DIR)/$(service).proto; \
-	)
+	protoc -I=api/v1 -I=../../shared/third_party \
+		--go_out=. \
+		--go_opt=module=github.com/mibrgmv/whoami-server/quizzes \
+		--go-grpc_out=. \
+		--go-grpc_opt=module=github.com/mibrgmv/whoami-server/quizzes \
+		api/v1/*.proto

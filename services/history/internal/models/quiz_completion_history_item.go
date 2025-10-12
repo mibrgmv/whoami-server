@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/history/internal/protogen/history"
+	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
 )
 
 type QuizCompletionHistoryItem struct {
@@ -14,7 +14,7 @@ type QuizCompletionHistoryItem struct {
 	QuizResult string    `json:"quiz_result"`
 }
 
-func ToModel(protoItem *pb.QuizCompletionHistoryItem) (*QuizCompletionHistoryItem, error) {
+func ToModel(protoItem *historyv1.QuizCompletionHistoryItem) (*QuizCompletionHistoryItem, error) {
 	userID, err := uuid.Parse(protoItem.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse UserID '%s': %w", protoItem.UserId, err)
@@ -32,8 +32,8 @@ func ToModel(protoItem *pb.QuizCompletionHistoryItem) (*QuizCompletionHistoryIte
 	}, nil
 }
 
-func (item *QuizCompletionHistoryItem) ToProto() *pb.QuizCompletionHistoryItem {
-	return &pb.QuizCompletionHistoryItem{
+func (item *QuizCompletionHistoryItem) ToProto() *historyv1.QuizCompletionHistoryItem {
+	return &historyv1.QuizCompletionHistoryItem{
 		Id:         item.ID.String(),
 		UserId:     item.UserID.String(),
 		QuizId:     item.QuizID.String(),

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question"
+	questionv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question/v1"
 )
 
 type Answer struct {
@@ -13,7 +13,7 @@ type Answer struct {
 	Body       string    `json:"body"`
 }
 
-func AnswerToModel(protoAnswer *pb.Answer) (*Answer, error) {
+func AnswerToModel(protoAnswer *questionv1.Answer) (*Answer, error) {
 	quizID, err := uuid.Parse(protoAnswer.QuizId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse quiz ID '%s': %w", protoAnswer.QuizId, err)

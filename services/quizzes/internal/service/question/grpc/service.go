@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/quizzes/internal/models"
-	pbHistory "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/history"
-	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question"
+	historyv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/history/v1"
+	questionv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question/v1"
 	"github.com/mibrgmv/whoami-server/quizzes/internal/service/question"
 	"github.com/mibrgmv/whoami-server/quizzes/internal/service/quiz"
 	"google.golang.org/grpc"
@@ -21,9 +21,9 @@ import (
 type QuestionService struct {
 	service       *question.Service
 	quizService   *quiz.Service
-	historyClient pbHistory.QuizCompletionHistoryServiceClient
+	historyClient historyv1.QuizCompletionHistoryServiceClient
 	historyConn   *grpc.ClientConn
-	pb.UnimplementedQuestionServiceServer
+	questionv1.UnimplementedQuestionServiceServer
 }
 
 func NewService(service *question.Service, quizService *quiz.Service, historyServiceAddr string) (*QuestionService, error) {
@@ -32,7 +32,7 @@ func NewService(service *question.Service, quizService *quiz.Service, historySer
 		return nil, fmt.Errorf("failed to connect to history service: %w", err)
 	}
 
-	historyClient := pbHistory.NewQuizCompletionHistoryServiceClient(conn)
+	historyClient := historyv1.NewQuizCompletionHistoryServiceClient(conn)
 
 	return &QuestionService{
 		service:       service,
@@ -53,7 +53,7 @@ func (s *QuestionService) Close() error {
 	return nil
 }
 
-func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.BatchCreateQuestionsRequest) (*pb.BatchCreateQuestionsResponse, error) {
+func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *questionv1.BatchCreateQuestionsRequest) (*questionv1.BatchCreateQuestionsResponse, error) {
 	var questionsToCreate []*models.Question
 	for _, req := range request.Requests {
 		if req.QuizId != request.QuizId {
@@ -86,17 +86,17 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *pb.
 		return nil, status.Errorf(codes.Internal, "error creating questions: %v", err)
 	}
 
-	var pbCreatedQuestions []*pb.Question
+	var pbCreatedQuestions []*questionv1.Question
 	for _, q := range createdQuestions {
 		pbCreatedQuestions = append(pbCreatedQuestions, q.ToProto())
 	}
 
-	return &pb.BatchCreateQuestionsResponse{
+	return &questionv1.BatchCreateQuestionsResponse{
 		Questions: pbCreatedQuestions,
 	}, nil
 }
 
-func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *pb.BatchGetQuestionsRequest) (*pb.BatchGetQuestionsResponse, error) {
+func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *questionv1.BatchGetQuestionsRequest) (*questionv1.BatchGetQuestionsResponse, error) {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
@@ -107,17 +107,17 @@ func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *pb.Bat
 		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
 	}
 
-	var pbQuestions []*pb.QuestionResponse
+	var pbQuestions []*questionv1.QuestionResponse
 	for _, q := range questions {
 		pbQuestions = append(pbQuestions, q.ToProtoWithoutWeights())
 	}
 
-	return &pb.BatchGetQuestionsResponse{
+	return &questionv1.BatchGetQuestionsResponse{
 		Questions: pbQuestions,
 	}, nil
 }
 
-func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.EvaluateAnswersRequest) (*pb.EvaluateAnswersResponse, error) {
+func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *questionv1.EvaluateAnswersRequest) (*questionv1.EvaluateAnswersResponse, error) {
 	var answers []models.Answer
 	for _, answer := range request.Answers {
 		modelAnswer, err := models.AnswerToModel(answer)
@@ -160,17 +160,17 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *pb.Evalu
 		log.Printf("failed to add to quiz completion history: %v", err)
 	}
 
-	return &pb.EvaluateAnswersResponse{Result: result}, nil
+	return &questionv1.EvaluateAnswersResponse{Result: result}, nil
 }
 
 func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
-	historyItem := &pbHistory.QuizCompletionHistoryItem{
+	historyItem := &historyv1.QuizCompletionHistoryItem{
 		UserId:     userID.String(),
 		QuizId:     quizID.String(),
 		QuizResult: result,
 	}
 
-	request := &pbHistory.CreateItemRequest{
+	request := &historyv1.CreateItemRequest{
 		Item: historyItem,
 	}
 

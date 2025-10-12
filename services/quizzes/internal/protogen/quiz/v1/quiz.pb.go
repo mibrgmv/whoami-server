@@ -4,14 +4,13 @@
 // 	protoc        v5.29.3
 // source: quiz.proto
 
-package quiz
+package quizv1
 
 import (
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -289,7 +288,7 @@ var File_quiz_proto protoreflect.FileDescriptor
 const file_quiz_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"quiz.proto\x12\x04quiz\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15google/api/http.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"F\n" +
+	"quiz.proto\x12\aquiz.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"F\n" +
 	"\x04Quiz\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -302,18 +301,24 @@ const file_quiz_proto_rawDesc = "" +
 	"\x16BatchGetQuizzesRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x02 \x01(\tR\tpageToken\"g\n" +
-	"\x17BatchGetQuizzesResponse\x12$\n" +
-	"\aquizzes\x18\x01 \x03(\v2\n" +
-	".quiz.QuizR\aquizzes\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\x90\x02\n" +
-	"\vQuizService\x12M\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"j\n" +
+	"\x17BatchGetQuizzesResponse\x12'\n" +
+	"\aquizzes\x18\x01 \x03(\v2\r.quiz.v1.QuizR\aquizzes\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xe2\x02\n" +
+	"\vQuizService\x12h\n" +
 	"\n" +
-	"CreateQuiz\x12\x17.quiz.CreateQuizRequest\x1a\n" +
-	".quiz.Quiz\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/quizzes\x12I\n" +
-	"\aGetQuiz\x12\x14.quiz.GetQuizRequest\x1a\n" +
-	".quiz.Quiz\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/api/v1/quizzes/{id}\x12g\n" +
-	"\x0fBatchGetQuizzes\x12\x1c.quiz.BatchGetQuizzesRequest\x1a\x1d.quiz.BatchGetQuizzesResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzesB,Z*whoami-server-gateway/protogen/golang/quizb\x06proto3"
+	"CreateQuiz\x12\x1a.quiz.v1.CreateQuizRequest\x1a\r.quiz.v1.Quiz\"/\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/quizzes\x12d\n" +
+	"\aGetQuiz\x12\x17.quiz.v1.GetQuizRequest\x1a\r.quiz.v1.Quiz\"1\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x16\x12\x14/api/v1/quizzes/{id}\x12\x82\x01\n" +
+	"\x0fBatchGetQuizzes\x12\x1f.quiz.v1.BatchGetQuizzesRequest\x1a .quiz.v1.BatchGetQuizzesResponse\",\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzesBKZIgithub.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz/v1;quizv1b\x06proto3"
 
 var (
 	file_quiz_proto_rawDescOnce sync.Once
@@ -329,20 +334,20 @@ func file_quiz_proto_rawDescGZIP() []byte {
 
 var file_quiz_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_quiz_proto_goTypes = []any{
-	(*Quiz)(nil),                    // 0: quiz.Quiz
-	(*CreateQuizRequest)(nil),       // 1: quiz.CreateQuizRequest
-	(*GetQuizRequest)(nil),          // 2: quiz.GetQuizRequest
-	(*BatchGetQuizzesRequest)(nil),  // 3: quiz.BatchGetQuizzesRequest
-	(*BatchGetQuizzesResponse)(nil), // 4: quiz.BatchGetQuizzesResponse
+	(*Quiz)(nil),                    // 0: quiz.v1.Quiz
+	(*CreateQuizRequest)(nil),       // 1: quiz.v1.CreateQuizRequest
+	(*GetQuizRequest)(nil),          // 2: quiz.v1.GetQuizRequest
+	(*BatchGetQuizzesRequest)(nil),  // 3: quiz.v1.BatchGetQuizzesRequest
+	(*BatchGetQuizzesResponse)(nil), // 4: quiz.v1.BatchGetQuizzesResponse
 }
 var file_quiz_proto_depIdxs = []int32{
-	0, // 0: quiz.BatchGetQuizzesResponse.quizzes:type_name -> quiz.Quiz
-	1, // 1: quiz.QuizService.CreateQuiz:input_type -> quiz.CreateQuizRequest
-	2, // 2: quiz.QuizService.GetQuiz:input_type -> quiz.GetQuizRequest
-	3, // 3: quiz.QuizService.BatchGetQuizzes:input_type -> quiz.BatchGetQuizzesRequest
-	0, // 4: quiz.QuizService.CreateQuiz:output_type -> quiz.Quiz
-	0, // 5: quiz.QuizService.GetQuiz:output_type -> quiz.Quiz
-	4, // 6: quiz.QuizService.BatchGetQuizzes:output_type -> quiz.BatchGetQuizzesResponse
+	0, // 0: quiz.v1.BatchGetQuizzesResponse.quizzes:type_name -> quiz.v1.Quiz
+	1, // 1: quiz.v1.QuizService.CreateQuiz:input_type -> quiz.v1.CreateQuizRequest
+	2, // 2: quiz.v1.QuizService.GetQuiz:input_type -> quiz.v1.GetQuizRequest
+	3, // 3: quiz.v1.QuizService.BatchGetQuizzes:input_type -> quiz.v1.BatchGetQuizzesRequest
+	0, // 4: quiz.v1.QuizService.CreateQuiz:output_type -> quiz.v1.Quiz
+	0, // 5: quiz.v1.QuizService.GetQuiz:output_type -> quiz.v1.Quiz
+	4, // 6: quiz.v1.QuizService.BatchGetQuizzes:output_type -> quiz.v1.BatchGetQuizzesResponse
 	4, // [4:7] is the sub-list for method output_type
 	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

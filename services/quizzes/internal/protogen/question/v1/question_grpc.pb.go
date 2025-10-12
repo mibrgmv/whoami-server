@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: question.proto
 
-package question
+package questionv1
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	QuestionService_BatchCreateQuestions_FullMethodName = "/question.QuestionService/BatchCreateQuestions"
-	QuestionService_BatchGetQuestions_FullMethodName    = "/question.QuestionService/BatchGetQuestions"
-	QuestionService_EvaluateAnswers_FullMethodName      = "/question.QuestionService/EvaluateAnswers"
+	QuestionService_BatchCreateQuestions_FullMethodName = "/question.v1.QuestionService/BatchCreateQuestions"
+	QuestionService_BatchGetQuestions_FullMethodName    = "/question.v1.QuestionService/BatchGetQuestions"
+	QuestionService_EvaluateAnswers_FullMethodName      = "/question.v1.QuestionService/EvaluateAnswers"
 )
 
 // QuestionServiceClient is the client API for QuestionService service.
@@ -176,7 +176,7 @@ func _QuestionService_EvaluateAnswers_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var QuestionService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "question.QuestionService",
+	ServiceName: "question.v1.QuestionService",
 	HandlerType: (*QuestionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

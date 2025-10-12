@@ -2,7 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz"
+	quizv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz/v1"
 )
 
 type Quiz struct {
@@ -11,8 +11,8 @@ type Quiz struct {
 	Results []string  `json:"results"`
 }
 
-func (q *Quiz) ToProto() *pb.Quiz {
-	return &pb.Quiz{
+func (q *Quiz) ToProto() *quizv1.Quiz {
+	return &quizv1.Quiz{
 		Id:      q.ID.String(),
 		Title:   q.Title,
 		Results: q.Results,

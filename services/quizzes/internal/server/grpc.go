@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	questionpb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question"
-	quizpb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz"
+	questionv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question/v1"
+	quizv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/quiz/v1"
 	"github.com/mibrgmv/whoami-server/quizzes/internal/service/question"
 	questiongrpc "github.com/mibrgmv/whoami-server/quizzes/internal/service/question/grpc"
 	questionpg "github.com/mibrgmv/whoami-server/quizzes/internal/service/question/postgresql"
@@ -45,7 +45,7 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.
 	quizRepo := quizpg.NewRepository(pool)
 	quizService := quiz.NewService(quizRepo)
 	quizServer := quizgrpc.NewService(quizService)
-	quizpb.RegisterQuizServiceServer(s, quizServer)
+	quizv1.RegisterQuizServiceServer(s, quizServer)
 
 	questionRepo := questionpg.NewRepository(pool)
 	questionService := question.NewService(questionRepo, redisService)
@@ -53,7 +53,7 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.
 	if err != nil {
 		return nil, fmt.Errorf("failed to create question service: %w", err)
 	}
-	questionpb.RegisterQuestionServiceServer(s, questionServer)
+	questionv1.RegisterQuestionServiceServer(s, questionServer)
 
 	reflection.Register(s)
 	return &GrpcServer{

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	pb "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question"
+	questionv1 "github.com/mibrgmv/whoami-server/quizzes/internal/protogen/question/v1"
 )
 
 type Question struct {
@@ -14,7 +14,7 @@ type Question struct {
 	OptionsWeights map[string][]float32 `json:"options_weights"`
 }
 
-func QuestionToModel(protoQuestion *pb.CreateQuestionRequest) (*Question, error) {
+func QuestionToModel(protoQuestion *questionv1.CreateQuestionRequest) (*Question, error) {
 	optionsWeights := make(map[string][]float32)
 
 	for option, protoWeights := range protoQuestion.OptionsWeights {
@@ -41,18 +41,18 @@ func QuestionToModel(protoQuestion *pb.CreateQuestionRequest) (*Question, error)
 	}, nil
 }
 
-func (q *Question) ToProto() *pb.Question {
-	protoOptionsWeights := make(map[string]*pb.OptionWeights)
+func (q *Question) ToProto() *questionv1.Question {
+	protoOptionsWeights := make(map[string]*questionv1.OptionWeights)
 
 	for option, weights := range q.OptionsWeights {
-		protoWeights := &pb.OptionWeights{
+		protoWeights := &questionv1.OptionWeights{
 			Weights: make([]float32, len(weights)),
 		}
 		copy(protoWeights.Weights, weights)
 		protoOptionsWeights[option] = protoWeights
 	}
 
-	return &pb.Question{
+	return &questionv1.Question{
 		Id:             q.ID.String(),
 		QuizId:         q.QuizID.String(),
 		Body:           q.Body,
@@ -60,13 +60,13 @@ func (q *Question) ToProto() *pb.Question {
 	}
 }
 
-func (q *Question) ToProtoWithoutWeights() *pb.QuestionResponse {
+func (q *Question) ToProtoWithoutWeights() *questionv1.QuestionResponse {
 	var options []string
 	for option := range q.OptionsWeights {
 		options = append(options, option)
 	}
 
-	return &pb.QuestionResponse{
+	return &questionv1.QuestionResponse{
 		Id:      q.ID.String(),
 		QuizId:  q.QuizID.String(),
 		Body:    q.Body,
