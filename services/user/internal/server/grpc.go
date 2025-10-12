@@ -9,7 +9,7 @@ import (
 	"github.com/mibrgmv/whoami-server/shared/keycloak"
 	"github.com/mibrgmv/whoami-server/user/internal/config"
 	usergrpc "github.com/mibrgmv/whoami-server/user/internal/grpc"
-	userpb "github.com/mibrgmv/whoami-server/user/internal/protogen/user"
+	userv1 "github.com/mibrgmv/whoami-server/user/internal/protogen/user/v1"
 	"github.com/mibrgmv/whoami-server/user/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -37,7 +37,7 @@ func NewGrpcServer(cfg config.Config) *grpc.Server {
 	)
 
 	userGrpcServer := usergrpc.NewUserServiceServer(userService)
-	userpb.RegisterUserServiceServer(server, userGrpcServer)
+	userv1.RegisterUserServiceServer(server, userGrpcServer)
 
 	reflection.Register(server)
 	return server

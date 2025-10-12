@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY shared ./shared
 
-COPY services/users ./services/users
+COPY services/user ./services/user
 
-WORKDIR /app/services/users
+WORKDIR /app/services/user
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o users ./cmd/app
+RUN CGO_ENABLED=0 GOOS=linux go build -o user ./cmd/app
 
 FROM alpine:latest
 
@@ -16,9 +16,9 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /app
 
-COPY --from=builder /app/services/users/users .
-COPY --from=builder /app/services/users/internal/config ./internal/config
+COPY --from=builder /app/services/user/user .
+COPY --from=builder /app/services/user/internal/config ./internal/config
 
 EXPOSE 50052
 
-CMD ["./users"]
+CMD ["./user"]

@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	userpb "github.com/mibrgmv/whoami-server/user/internal/protogen/user"
+	userv1 "github.com/mibrgmv/whoami-server/user/internal/protogen/user/v1"
 	"github.com/mibrgmv/whoami-server/user/internal/service"
 	"github.com/mibrgmv/whoami-server/user/internal/service/models"
 	"google.golang.org/grpc/codes"
@@ -13,16 +13,16 @@ import (
 
 type userServiceServer struct {
 	service service.UserService
-	userpb.UnimplementedUserServiceServer
+	userv1.UnimplementedUserServiceServer
 }
 
-func NewUserServiceServer(service service.UserService) userpb.UserServiceServer {
+func NewUserServiceServer(service service.UserService) userv1.UserServiceServer {
 	return &userServiceServer{
 		service: service,
 	}
 }
 
-func (s *userServiceServer) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) (*userpb.User, error) {
+func (s *userServiceServer) GetCurrentUser(ctx context.Context, empty *emptypb.Empty) (*userv1.User, error) {
 	userID, _ := ctx.Value("user_id").(string)
 	if userID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
@@ -36,7 +36,7 @@ func (s *userServiceServer) GetCurrentUser(ctx context.Context, empty *emptypb.E
 	return user.ToProto(), nil
 }
 
-func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userpb.BatchGetUsersRequest) (*userpb.BatchGetUsersResponse, error) {
+func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userv1.BatchGetUsersRequest) (*userv1.BatchGetUsersResponse, error) {
 	if _, ok := ctx.Value("user_id").(string); !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
@@ -46,18 +46,18 @@ func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userpb.Batch
 		return nil, s.handleError(err)
 	}
 
-	pbUsers := make([]*userpb.User, len(users))
+	pbUsers := make([]*userv1.User, len(users))
 	for i, user := range users {
 		pbUsers[i] = user.ToProto()
 	}
 
-	return &userpb.BatchGetUsersResponse{
+	return &userv1.BatchGetUsersResponse{
 		Users:      pbUsers,
 		NextOffset: nextOffset,
 	}, nil
 }
 
-func (s *userServiceServer) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest) (*userpb.User, error) {
+func (s *userServiceServer) UpdateUser(ctx context.Context, req *userv1.UpdateUserRequest) (*userv1.User, error) {
 	authUserID, ok := ctx.Value("user_id").(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
@@ -81,7 +81,7 @@ func (s *userServiceServer) UpdateUser(ctx context.Context, req *userpb.UpdateUs
 	return user.ToProto(), nil
 }
 
-func (s *userServiceServer) ChangePassword(ctx context.Context, req *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
+func (s *userServiceServer) ChangePassword(ctx context.Context, req *userv1.ChangePasswordRequest) (*userv1.ChangePasswordResponse, error) {
 	authUserID, ok := ctx.Value("user_id").(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
@@ -95,12 +95,12 @@ func (s *userServiceServer) ChangePassword(ctx context.Context, req *userpb.Chan
 		return nil, s.handleError(err)
 	}
 
-	return &userpb.ChangePasswordResponse{
+	return &userv1.ChangePasswordResponse{
 		Message: "Password updated successfully",
 	}, nil
 }
 
-func (s *userServiceServer) DeleteUser(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.DeleteUserResponse, error) {
+func (s *userServiceServer) DeleteUser(ctx context.Context, req *userv1.DeleteUserRequest) (*userv1.DeleteUserResponse, error) {
 	authUserID, ok := ctx.Value("user_id").(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
@@ -114,7 +114,7 @@ func (s *userServiceServer) DeleteUser(ctx context.Context, req *userpb.DeleteUs
 		return nil, s.handleError(err)
 	}
 
-	return &userpb.DeleteUserResponse{
+	return &userv1.DeleteUserResponse{
 		Id:      req.Id,
 		Message: "User deleted successfully",
 	}, nil

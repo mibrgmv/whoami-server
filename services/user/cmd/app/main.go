@@ -16,13 +16,11 @@ func main() {
 	var cfg appcfg.Config
 	var err = config.NewBuilder().
 		WithConfigPaths("internal/config").
-		WithConfigName("default").
-		WithConfigType("yaml").
 		WithEnvFiles("../../.env").
 		Load(&cfg)
 
 	if err != nil {
-		log.Fatalf("failed to read quizzes service config: %v", err)
+		log.Fatalf("failed to read user service config: %v", err)
 	}
 
 	s := server.NewGrpcServer(cfg)

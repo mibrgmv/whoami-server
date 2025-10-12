@@ -1,6 +1,6 @@
 package models
 
-import userpb "github.com/mibrgmv/whoami-server/user/internal/protogen/user"
+import userv1 "github.com/mibrgmv/whoami-server/user/internal/protogen/user/v1"
 
 type User struct {
 	ID            string
@@ -20,8 +20,8 @@ type UpdateUserData struct {
 	LastName  string
 }
 
-func (u *User) ToProto() *userpb.User {
-	return &userpb.User{
+func (u *User) ToProto() *userv1.User {
+	return &userv1.User{
 		Id:            u.ID,
 		Username:      u.Username,
 		Email:         u.Email,

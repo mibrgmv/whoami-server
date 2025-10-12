@@ -4,7 +4,6 @@ lint:
 	golangci-lint run
 
 gen:
-	@mkdir -p internal/protogen/history
 	protoc -I=api/v1 -I=../../shared/third_party \
 		--go_out=. \
 		--go_opt=module=github.com/mibrgmv/whoami-server/history \

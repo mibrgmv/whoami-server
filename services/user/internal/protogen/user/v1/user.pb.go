@@ -4,9 +4,10 @@
 // 	protoc        v5.29.3
 // source: user.proto
 
-package user
+package userv1
 
 import (
+	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -516,7 +517,7 @@ var File_user_proto protoreflect.FileDescriptor
 const file_user_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"user.proto\x12\x04user\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xe4\x01\n" +
+	"user.proto\x12\auser.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xe4\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -530,10 +531,9 @@ const file_user_proto_rawDesc = "" +
 	"created_at\x18\b \x01(\tR\tcreatedAt\"K\n" +
 	"\x14BatchGetUsersRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x16\n" +
-	"\x06offset\x18\x02 \x01(\x05R\x06offset\"o\n" +
-	"\x15BatchGetUsersResponse\x12 \n" +
-	"\x05users\x18\x01 \x03(\v2\n" +
-	".user.UserR\x05users\x12$\n" +
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\"r\n" +
+	"\x15BatchGetUsersResponse\x12#\n" +
+	"\x05users\x18\x01 \x03(\v2\r.user.v1.UserR\x05users\x12$\n" +
 	"\vnext_offset\x18\x02 \x01(\x05H\x00R\n" +
 	"nextOffset\x88\x01\x01B\x0e\n" +
 	"\f_next_offset\"\x91\x01\n" +
@@ -555,17 +555,30 @@ const file_user_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\">\n" +
 	"\x12DeleteUserResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xe7\x03\n" +
-	"\vUserService\x12S\n" +
-	"\x0eGetCurrentUser\x12\x16.google.protobuf.Empty\x1a\n" +
-	".user.User\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/users/current\x12_\n" +
-	"\rBatchGetUsers\x12\x1a.user.BatchGetUsersRequest\x1a\x1b.user.BatchGetUsersResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/api/v1/users\x12P\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xec\x04\n" +
+	"\vUserService\x12k\n" +
+	"\x0eGetCurrentUser\x12\x16.google.protobuf.Empty\x1a\r.user.v1.User\"2\x92A\x12b\x10\n" +
+	"\x0e\n" +
 	"\n" +
-	"UpdateUser\x12\x17.user.UpdateUserRequest\x1a\n" +
-	".user.User\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/api/v1/users/{id}\x12s\n" +
-	"\x0eChangePassword\x12\x1b.user.ChangePasswordRequest\x1a\x1c.user.ChangePasswordResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\x1a\x1b/api/v1/users/{id}/password\x12[\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/users/current\x12z\n" +
+	"\rBatchGetUsers\x12\x1d.user.v1.BatchGetUsersRequest\x1a\x1e.user.v1.BatchGetUsersResponse\"*\x92A\x12b\x10\n" +
+	"\x0e\n" +
 	"\n" +
-	"DeleteUser\x12\x17.user.DeleteUserRequest\x1a\x18.user.DeleteUserResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/api/v1/users/{id}B?Z=github.com/mibrgmv/whoami-server/users/internal/protogen/userb\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x0f\x12\r/api/v1/users\x12k\n" +
+	"\n" +
+	"UpdateUser\x12\x1a.user.v1.UpdateUserRequest\x1a\r.user.v1.User\"2\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x17:\x01*\x1a\x12/api/v1/users/{id}\x12\x8e\x01\n" +
+	"\x0eChangePassword\x12\x1e.user.v1.ChangePasswordRequest\x1a\x1f.user.v1.ChangePasswordResponse\";\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02 :\x01*\x1a\x1b/api/v1/users/{id}/password\x12v\n" +
+	"\n" +
+	"DeleteUser\x12\x1a.user.v1.DeleteUserRequest\x1a\x1b.user.v1.DeleteUserResponse\"/\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x14*\x12/api/v1/users/{id}BHZFgithub.com/mibrgmv/whoami-server/user/internal/protogen/user/v1;userv1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
@@ -581,28 +594,28 @@ func file_user_proto_rawDescGZIP() []byte {
 
 var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_user_proto_goTypes = []any{
-	(*User)(nil),                   // 0: user.User
-	(*BatchGetUsersRequest)(nil),   // 1: user.BatchGetUsersRequest
-	(*BatchGetUsersResponse)(nil),  // 2: user.BatchGetUsersResponse
-	(*UpdateUserRequest)(nil),      // 3: user.UpdateUserRequest
-	(*ChangePasswordRequest)(nil),  // 4: user.ChangePasswordRequest
-	(*ChangePasswordResponse)(nil), // 5: user.ChangePasswordResponse
-	(*DeleteUserRequest)(nil),      // 6: user.DeleteUserRequest
-	(*DeleteUserResponse)(nil),     // 7: user.DeleteUserResponse
+	(*User)(nil),                   // 0: user.v1.User
+	(*BatchGetUsersRequest)(nil),   // 1: user.v1.BatchGetUsersRequest
+	(*BatchGetUsersResponse)(nil),  // 2: user.v1.BatchGetUsersResponse
+	(*UpdateUserRequest)(nil),      // 3: user.v1.UpdateUserRequest
+	(*ChangePasswordRequest)(nil),  // 4: user.v1.ChangePasswordRequest
+	(*ChangePasswordResponse)(nil), // 5: user.v1.ChangePasswordResponse
+	(*DeleteUserRequest)(nil),      // 6: user.v1.DeleteUserRequest
+	(*DeleteUserResponse)(nil),     // 7: user.v1.DeleteUserResponse
 	(*emptypb.Empty)(nil),          // 8: google.protobuf.Empty
 }
 var file_user_proto_depIdxs = []int32{
-	0, // 0: user.BatchGetUsersResponse.users:type_name -> user.User
-	8, // 1: user.UserService.GetCurrentUser:input_type -> google.protobuf.Empty
-	1, // 2: user.UserService.BatchGetUsers:input_type -> user.BatchGetUsersRequest
-	3, // 3: user.UserService.UpdateUser:input_type -> user.UpdateUserRequest
-	4, // 4: user.UserService.ChangePassword:input_type -> user.ChangePasswordRequest
-	6, // 5: user.UserService.DeleteUser:input_type -> user.DeleteUserRequest
-	0, // 6: user.UserService.GetCurrentUser:output_type -> user.User
-	2, // 7: user.UserService.BatchGetUsers:output_type -> user.BatchGetUsersResponse
-	0, // 8: user.UserService.UpdateUser:output_type -> user.User
-	5, // 9: user.UserService.ChangePassword:output_type -> user.ChangePasswordResponse
-	7, // 10: user.UserService.DeleteUser:output_type -> user.DeleteUserResponse
+	0, // 0: user.v1.BatchGetUsersResponse.users:type_name -> user.v1.User
+	8, // 1: user.v1.UserService.GetCurrentUser:input_type -> google.protobuf.Empty
+	1, // 2: user.v1.UserService.BatchGetUsers:input_type -> user.v1.BatchGetUsersRequest
+	3, // 3: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
+	4, // 4: user.v1.UserService.ChangePassword:input_type -> user.v1.ChangePasswordRequest
+	6, // 5: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
+	0, // 6: user.v1.UserService.GetCurrentUser:output_type -> user.v1.User
+	2, // 7: user.v1.UserService.BatchGetUsers:output_type -> user.v1.BatchGetUsersResponse
+	0, // 8: user.v1.UserService.UpdateUser:output_type -> user.v1.User
+	5, // 9: user.v1.UserService.ChangePassword:output_type -> user.v1.ChangePasswordResponse
+	7, // 10: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
 	6, // [6:11] is the sub-list for method output_type
 	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
