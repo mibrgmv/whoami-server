@@ -131,12 +131,12 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) 
 		MaxAge:           time.Duration(cfg.HTTP.CORS.MaxAge) * time.Second,
 	}))
 
-	router.GET("/api/swagger.json", func(c *gin.Context) {
-		c.File("./api/swagger/swagger.json")
+	router.GET("/api/v1/swagger.json", func(c *gin.Context) {
+		c.File("./api/v1/gateway.swagger.json")
 	})
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
-		ginSwagger.URL("/api/swagger.json")))
+		ginSwagger.URL("/api/v1/swagger.json")))
 
 	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
 
