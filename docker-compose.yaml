@@ -41,36 +41,57 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak
-      - quizzes-service
+      - auth-service
+      - quiz-service
+      - user-service
       - history-service
     networks:
       - app-network
     environment:
       - HTTP_MODE=debug
-      - QUIZZES_SERVICE_HOST=quizzes-service
+      - AUTH_SERVICE_HOST=auth-service
+      - QUIZ_SERVICE_HOST=quiz-service
       - USER_SERVICE_HOST=user-service
       - HISTORY_SERVICE_HOST=history-service
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    ports:
+      - "50055:50055"
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+    environment:
+      - GRPC_HOST=0.0.0.0
       - KEYCLOAK_BASE_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=54GAA3S0o8whUd3mUKG1jRvazKaFvfj0
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
+    restart:
+      unless-stopped
 
-  quizzes-service:
-    container_name: quizzes-service
+  quiz-service:
+    container_name: quiz-service
     build:
       context: .
-      dockerfile: services/quizzes/Dockerfile
+      dockerfile: services/quiz/Dockerfile
     ports:
       - "50051:50051"
     depends_on:
-      - postgres-quizzes
+      - postgres-quiz
       - redis
     networks:
       - app-network
     environment:
-      POSTGRES_HOST: postgres-quizzes
+      POSTGRES_HOST: postgres-quiz
       POSTGRES_PORT: 5432
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
@@ -99,7 +120,7 @@ services:
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=54GAA3S0o8whUd3mUKG1jRvazKaFvfj0
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
     restart:
       unless-stopped
 
@@ -113,7 +134,7 @@ services:
     depends_on:
       - postgres-history
       - redis
-      - quizzes-service
+      - quiz-service
     networks:
       - app-network
     environment:
@@ -126,7 +147,7 @@ services:
     restart:
       unless-stopped
 
-  postgres-quizzes:
+  postgres-quiz:
     image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
@@ -138,7 +159,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - postgres-quizzes-data:/var/lib/postgresql/data
+      - postgres-quiz-data:/var/lib/postgresql/data
 
   postgres-history:
     image: postgres:18-alpine
@@ -171,5 +192,5 @@ networks:
 
 volumes:
   postgres-keycloak-data:
-  postgres-quizzes-data:
+  postgres-quiz-data:
   postgres-history-data:
