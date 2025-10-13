@@ -1,15 +1,15 @@
 ## архитектура бэкенда
-![image](/whoami.png)
+![image](docs/whoami.png)
 ## как запустить
 ```shell
 # поднять окружение
 docker compose up -d
 
 # запустить скрипт и получить секретный ключ
-bash setup-keycloak.sh
+bash scripts/setup-keycloak.sh
 
 # обновить значение `KEYCLOAK_ADMIN_CLIENT_SECRET` и пересоздать нужные сервисы
-docker compose up -d --force-recreate gateway user-service
+docker compose up -d --force-recreate auth-service user-service
 ```
 ## `.env` для локального запуска
 ```dotenv
