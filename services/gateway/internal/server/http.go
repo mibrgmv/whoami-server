@@ -12,9 +12,9 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/mibrgmv/whoami-server/gateway/internal/auth"
 	"github.com/mibrgmv/whoami-server/gateway/internal/config"
 	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
+	"github.com/mibrgmv/whoami-server/gateway/internal/middleware"
 	authv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/auth/v1"
 	historyv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/history/v1"
 	questionv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/question/v1"
@@ -99,7 +99,12 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) 
 		return nil, fmt.Errorf("failed to register history service: %w", err)
 	}
 
-	authMiddleware := auth.NewMiddleware(cfg.Keycloak.BaseURL, cfg.Keycloak.Realm)
+	jwtMiddleware := middleware.JWT(middleware.JWTConfig{
+		KeycloakBaseURL: cfg.Keycloak.BaseURL,
+		Realm:           cfg.Keycloak.Realm,
+		KeyRefreshTTL:   1 * time.Hour,
+		HTTPTimeout:     10 * time.Second,
+	})
 
 	switch cfg.HTTP.Mode {
 	case "debug":
@@ -136,7 +141,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) 
 	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
 
 	gwmuxGroup := router.Group("/api/v1")
-	gwmuxGroup.Use(authMiddleware.Authorization())
+	gwmuxGroup.Use(jwtMiddleware)
 	{
 		gwmuxGroup.Any("/quizzes", gin.WrapH(gwmux))
 		gwmuxGroup.Any("/quizzes/*path", gin.WrapH(gwmux))
