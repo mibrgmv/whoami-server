@@ -2,13 +2,11 @@ module github.com/mibrgmv/whoami-server/history
 
 go 1.24.0
 
-replace github.com/mibrgmv/whoami-server/shared => ../../shared
-
 require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1
 	github.com/jackc/pgx/v5 v5.7.5
-	github.com/mibrgmv/whoami-server/shared v0.0.0-00010101000000-000000000000
+	github.com/mibrgmv/whoami-server/shared v0.0.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822
 	google.golang.org/grpc v1.74.0
 	google.golang.org/protobuf v1.36.6
