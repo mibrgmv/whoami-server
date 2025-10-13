@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/mibrgmv/whoami-server/gateway/internal/config"
 	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
 	"github.com/mibrgmv/whoami-server/gateway/internal/middleware"
 	authv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/auth/v1"
@@ -27,7 +25,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -160,24 +158,8 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*gin.Engine, error) 
 		c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
 	})
 
-	return router, nil
-}
-
-func StartHTTP(ctx context.Context, cfg config.Config) error {
-	router, err := NewHttpServer(ctx, cfg)
-	if err != nil {
-		return fmt.Errorf("failed to create HTTP server: %w", err)
-	}
-
-	server := &http.Server{
+	return &http.Server{
 		Addr:    cfg.HTTP.GetAddr(),
 		Handler: router,
-	}
-
-	log.Println("Starting HTTP server on", server.Addr)
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("failed to serve: %w", err)
-	}
-
-	return nil
+	}, nil
 }

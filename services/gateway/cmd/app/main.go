@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,9 +28,15 @@ func main() {
 		log.Fatalf("failed to read gateway config: %v", err)
 	}
 
+	s, err := server.NewHttpServer(ctx, cfg)
+	if err != nil {
+		log.Fatal("Failed to create HTTP server:", err)
+	}
+
 	go func() {
-		if err := server.StartHTTP(ctx, cfg); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v", err)
+		log.Printf("Gateway HTTP server starting on %s", s.Addr)
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Failed to serve HTTP:", err)
 		}
 	}()
 
