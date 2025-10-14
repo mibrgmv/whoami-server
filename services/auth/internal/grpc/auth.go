@@ -20,13 +20,13 @@ func NewAuthServiceServer(service service.AuthService) authv1.AuthServiceServer 
 	}
 }
 
-func (h *authServiceServer) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
+func (h *authServiceServer) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.TokenResponse, error) {
 	accessToken, refreshToken, tokenType, expiresIn, err := h.service.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		return nil, h.handleError(err)
 	}
 
-	return &authv1.LoginResponse{
+	return &authv1.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		TokenType:    tokenType,
@@ -48,13 +48,13 @@ func (h *authServiceServer) Register(ctx context.Context, req *authv1.RegisterRe
 	}, nil
 }
 
-func (h *authServiceServer) RefreshToken(ctx context.Context, req *authv1.RefreshTokenRequest) (*authv1.RefreshTokenResponse, error) {
+func (h *authServiceServer) RefreshToken(ctx context.Context, req *authv1.RefreshTokenRequest) (*authv1.TokenResponse, error) {
 	accessToken, refreshToken, tokenType, expiresIn, err := h.service.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return nil, h.handleError(err)
 	}
 
-	return &authv1.RefreshTokenResponse{
+	return &authv1.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		TokenType:    tokenType,

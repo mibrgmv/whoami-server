@@ -19,6 +19,3 @@ gen:
 		--openapiv2_out=$(PROTO_DIR) \
 		--openapiv2_opt=allow_merge=true,merge_file_name=gateway \
 		$(PROTO_DIR)/*.proto
-
-swag:
-	swag init -g cmd/app/main.go -o api/swagger/custom --parseDependency --parseInternal
