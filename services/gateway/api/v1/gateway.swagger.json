@@ -10,7 +10,7 @@
       "name": "AuthService"
     },
     {
-      "name": "QuizCompletionHistoryService"
+      "name": "HistoryService"
     },
     {
       "name": "QuestionService"
@@ -164,7 +164,7 @@
     },
     "/api/v1/history": {
       "get": {
-        "operationId": "QuizCompletionHistoryService_BatchGetItems",
+        "operationId": "HistoryService_BatchGetItems",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -215,7 +215,7 @@
           }
         ],
         "tags": [
-          "QuizCompletionHistoryService"
+          "HistoryService"
         ],
         "security": [
           {
@@ -226,7 +226,7 @@
     },
     "/api/v1/history/me": {
       "get": {
-        "operationId": "QuizCompletionHistoryService_BatchGetMyItems",
+        "operationId": "HistoryService_BatchGetMyItems",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -267,7 +267,7 @@
           }
         ],
         "tags": [
-          "QuizCompletionHistoryService"
+          "HistoryService"
         ],
         "security": [
           {

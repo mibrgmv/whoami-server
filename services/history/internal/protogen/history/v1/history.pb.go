@@ -343,8 +343,8 @@ const file_history_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"|\n" +
 	"\x15BatchGetItemsResponse\x12;\n" +
 	"\x05items\x18\x01 \x03(\v2%.history.v1.QuizCompletionHistoryItemR\x05items\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\x85\x03\n" +
-	"\x1cQuizCompletionHistoryService\x12T\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xf7\x02\n" +
+	"\x0eHistoryService\x12T\n" +
 	"\n" +
 	"CreateItem\x12\x1d.history.v1.CreateItemRequest\x1a%.history.v1.QuizCompletionHistoryItem\"\x00\x12\x89\x01\n" +
 	"\x0fBatchGetMyItems\x12\".history.v1.BatchGetMyItemsRequest\x1a!.history.v1.BatchGetItemsResponse\"/\x92A\x12b\x10\n" +
@@ -383,12 +383,12 @@ var file_history_proto_depIdxs = []int32{
 	5, // 2: history.v1.BatchGetItemsRequest.user_ids:type_name -> google.protobuf.StringValue
 	5, // 3: history.v1.BatchGetItemsRequest.quiz_ids:type_name -> google.protobuf.StringValue
 	0, // 4: history.v1.BatchGetItemsResponse.items:type_name -> history.v1.QuizCompletionHistoryItem
-	1, // 5: history.v1.QuizCompletionHistoryService.CreateItem:input_type -> history.v1.CreateItemRequest
-	2, // 6: history.v1.QuizCompletionHistoryService.BatchGetMyItems:input_type -> history.v1.BatchGetMyItemsRequest
-	3, // 7: history.v1.QuizCompletionHistoryService.BatchGetItems:input_type -> history.v1.BatchGetItemsRequest
-	0, // 8: history.v1.QuizCompletionHistoryService.CreateItem:output_type -> history.v1.QuizCompletionHistoryItem
-	4, // 9: history.v1.QuizCompletionHistoryService.BatchGetMyItems:output_type -> history.v1.BatchGetItemsResponse
-	4, // 10: history.v1.QuizCompletionHistoryService.BatchGetItems:output_type -> history.v1.BatchGetItemsResponse
+	1, // 5: history.v1.HistoryService.CreateItem:input_type -> history.v1.CreateItemRequest
+	2, // 6: history.v1.HistoryService.BatchGetMyItems:input_type -> history.v1.BatchGetMyItemsRequest
+	3, // 7: history.v1.HistoryService.BatchGetItems:input_type -> history.v1.BatchGetItemsRequest
+	0, // 8: history.v1.HistoryService.CreateItem:output_type -> history.v1.QuizCompletionHistoryItem
+	4, // 9: history.v1.HistoryService.BatchGetMyItems:output_type -> history.v1.BatchGetItemsResponse
+	4, // 10: history.v1.HistoryService.BatchGetItems:output_type -> history.v1.BatchGetItemsResponse
 	8, // [8:11] is the sub-list for method output_type
 	5, // [5:8] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name

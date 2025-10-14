@@ -35,9 +35,9 @@ var (
 	_ = metadata.Join
 )
 
-var filter_QuizCompletionHistoryService_BatchGetMyItems_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+var filter_HistoryService_BatchGetMyItems_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
-func request_QuizCompletionHistoryService_BatchGetMyItems_0(ctx context.Context, marshaler runtime.Marshaler, client QuizCompletionHistoryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_HistoryService_BatchGetMyItems_0(ctx context.Context, marshaler runtime.Marshaler, client HistoryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq BatchGetMyItemsRequest
 		metadata runtime.ServerMetadata
@@ -48,14 +48,14 @@ func request_QuizCompletionHistoryService_BatchGetMyItems_0(ctx context.Context,
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_QuizCompletionHistoryService_BatchGetMyItems_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HistoryService_BatchGetMyItems_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.BatchGetMyItems(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_QuizCompletionHistoryService_BatchGetMyItems_0(ctx context.Context, marshaler runtime.Marshaler, server QuizCompletionHistoryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_HistoryService_BatchGetMyItems_0(ctx context.Context, marshaler runtime.Marshaler, server HistoryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq BatchGetMyItemsRequest
 		metadata runtime.ServerMetadata
@@ -63,16 +63,16 @@ func local_request_QuizCompletionHistoryService_BatchGetMyItems_0(ctx context.Co
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_QuizCompletionHistoryService_BatchGetMyItems_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HistoryService_BatchGetMyItems_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.BatchGetMyItems(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-var filter_QuizCompletionHistoryService_BatchGetItems_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+var filter_HistoryService_BatchGetItems_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
-func request_QuizCompletionHistoryService_BatchGetItems_0(ctx context.Context, marshaler runtime.Marshaler, client QuizCompletionHistoryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_HistoryService_BatchGetItems_0(ctx context.Context, marshaler runtime.Marshaler, client HistoryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq BatchGetItemsRequest
 		metadata runtime.ServerMetadata
@@ -83,14 +83,14 @@ func request_QuizCompletionHistoryService_BatchGetItems_0(ctx context.Context, m
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_QuizCompletionHistoryService_BatchGetItems_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HistoryService_BatchGetItems_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.BatchGetItems(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_QuizCompletionHistoryService_BatchGetItems_0(ctx context.Context, marshaler runtime.Marshaler, server QuizCompletionHistoryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_HistoryService_BatchGetItems_0(ctx context.Context, marshaler runtime.Marshaler, server HistoryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq BatchGetItemsRequest
 		metadata runtime.ServerMetadata
@@ -98,66 +98,66 @@ func local_request_QuizCompletionHistoryService_BatchGetItems_0(ctx context.Cont
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_QuizCompletionHistoryService_BatchGetItems_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HistoryService_BatchGetItems_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.BatchGetItems(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-// RegisterQuizCompletionHistoryServiceHandlerServer registers the http handlers for service QuizCompletionHistoryService to "mux".
-// UnaryRPC     :call QuizCompletionHistoryServiceServer directly.
+// RegisterHistoryServiceHandlerServer registers the http handlers for service HistoryService to "mux".
+// UnaryRPC     :call HistoryServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterQuizCompletionHistoryServiceHandlerFromEndpoint instead.
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterHistoryServiceHandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
-func RegisterQuizCompletionHistoryServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server QuizCompletionHistoryServiceServer) error {
-	mux.Handle(http.MethodGet, pattern_QuizCompletionHistoryService_BatchGetMyItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+func RegisterHistoryServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server HistoryServiceServer) error {
+	mux.Handle(http.MethodGet, pattern_HistoryService_BatchGetMyItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.HistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_QuizCompletionHistoryService_BatchGetMyItems_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_HistoryService_BatchGetMyItems_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuizCompletionHistoryService_BatchGetMyItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_HistoryService_BatchGetMyItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_QuizCompletionHistoryService_BatchGetItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_HistoryService_BatchGetItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/history.v1.HistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_QuizCompletionHistoryService_BatchGetItems_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_HistoryService_BatchGetItems_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuizCompletionHistoryService_BatchGetItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_HistoryService_BatchGetItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
 }
 
-// RegisterQuizCompletionHistoryServiceHandlerFromEndpoint is same as RegisterQuizCompletionHistoryServiceHandler but
+// RegisterHistoryServiceHandlerFromEndpoint is same as RegisterHistoryServiceHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterHistoryServiceHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.NewClient(endpoint, opts...)
 	if err != nil {
 		return err
@@ -176,64 +176,64 @@ func RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(ctx context.Context
 			}
 		}()
 	}()
-	return RegisterQuizCompletionHistoryServiceHandler(ctx, mux, conn)
+	return RegisterHistoryServiceHandler(ctx, mux, conn)
 }
 
-// RegisterQuizCompletionHistoryServiceHandler registers the http handlers for service QuizCompletionHistoryService to "mux".
+// RegisterHistoryServiceHandler registers the http handlers for service HistoryService to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterQuizCompletionHistoryServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterQuizCompletionHistoryServiceHandlerClient(ctx, mux, NewQuizCompletionHistoryServiceClient(conn))
+func RegisterHistoryServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterHistoryServiceHandlerClient(ctx, mux, NewHistoryServiceClient(conn))
 }
 
-// RegisterQuizCompletionHistoryServiceHandlerClient registers the http handlers for service QuizCompletionHistoryService
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "QuizCompletionHistoryServiceClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "QuizCompletionHistoryServiceClient"
+// RegisterHistoryServiceHandlerClient registers the http handlers for service HistoryService
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "HistoryServiceClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "HistoryServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "QuizCompletionHistoryServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
-func RegisterQuizCompletionHistoryServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client QuizCompletionHistoryServiceClient) error {
-	mux.Handle(http.MethodGet, pattern_QuizCompletionHistoryService_BatchGetMyItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+// "HistoryServiceClient" to call the correct interceptors. This client ignores the HTTP middlewares.
+func RegisterHistoryServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client HistoryServiceClient) error {
+	mux.Handle(http.MethodGet, pattern_HistoryService_BatchGetMyItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.HistoryService/BatchGetMyItems", runtime.WithHTTPPathPattern("/api/v1/history/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_QuizCompletionHistoryService_BatchGetMyItems_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_HistoryService_BatchGetMyItems_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuizCompletionHistoryService_BatchGetMyItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_HistoryService_BatchGetMyItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_QuizCompletionHistoryService_BatchGetItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_HistoryService_BatchGetItems_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.QuizCompletionHistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/history.v1.HistoryService/BatchGetItems", runtime.WithHTTPPathPattern("/api/v1/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_QuizCompletionHistoryService_BatchGetItems_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_HistoryService_BatchGetItems_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_QuizCompletionHistoryService_BatchGetItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_HistoryService_BatchGetItems_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	return nil
 }
 
 var (
-	pattern_QuizCompletionHistoryService_BatchGetMyItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "history", "me"}, ""))
-	pattern_QuizCompletionHistoryService_BatchGetItems_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "history"}, ""))
+	pattern_HistoryService_BatchGetMyItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "history", "me"}, ""))
+	pattern_HistoryService_BatchGetItems_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "history"}, ""))
 )
 
 var (
-	forward_QuizCompletionHistoryService_BatchGetMyItems_0 = runtime.ForwardResponseMessage
-	forward_QuizCompletionHistoryService_BatchGetItems_0   = runtime.ForwardResponseMessage
+	forward_HistoryService_BatchGetMyItems_0 = runtime.ForwardResponseMessage
+	forward_HistoryService_BatchGetItems_0   = runtime.ForwardResponseMessage
 )

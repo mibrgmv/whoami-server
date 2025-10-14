@@ -1,4 +1,4 @@
-package history
+package repository
 
 import "github.com/google/uuid"
 

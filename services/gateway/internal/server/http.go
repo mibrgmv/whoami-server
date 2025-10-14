@@ -88,7 +88,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error)
 		return nil, fmt.Errorf("failed to register user service: %w", err)
 	}
 
-	if err := historyv1.RegisterQuizCompletionHistoryServiceHandlerFromEndpoint(
+	if err := historyv1.RegisterHistoryServiceHandlerFromEndpoint(
 		ctx,
 		gwmux,
 		cfg.HistoryService.GetAddr(),

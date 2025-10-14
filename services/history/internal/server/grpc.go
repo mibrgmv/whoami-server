@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	historygrpc "github.com/mibrgmv/whoami-server/history/internal/grpc"
 	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
-	"github.com/mibrgmv/whoami-server/history/internal/service/history"
-	historygrpc "github.com/mibrgmv/whoami-server/history/internal/service/history/grpc"
-	pg "github.com/mibrgmv/whoami-server/history/internal/service/history/postgresql"
+	"github.com/mibrgmv/whoami-server/history/internal/repository/postgres"
+	"github.com/mibrgmv/whoami-server/history/internal/service"
 	sharedInterceptors "github.com/mibrgmv/whoami-server/shared/grpc"
 	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
 	"google.golang.org/grpc"
@@ -40,11 +40,13 @@ func NewGrpcServer(pool *pgxpool.Pool) GrpcServer {
 		),
 	)
 
-	repo := pg.NewRepository(pool)
-	service := history.NewService(repo)
-	grpcServer := historygrpc.NewService(service)
-	historyv1.RegisterQuizCompletionHistoryServiceServer(s, grpcServer)
+	historyRepo := postgres.NewHistoryRepository(pool)
+	historyService := service.NewHistoryService(historyRepo)
+	historyGrpc := historygrpc.NewHistoryServiceServer(historyService)
+	historyv1.RegisterHistoryServiceServer(s, historyGrpc)
+
 	reflection.Register(s)
+
 	return GrpcServer{
 		grpcServer: s,
 	}

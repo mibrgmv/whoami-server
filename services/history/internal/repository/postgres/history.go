@@ -1,4 +1,4 @@
-package postgresql
+package postgres
 
 import (
 	"context"
@@ -7,18 +7,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mibrgmv/whoami-server/history/internal/models"
-	"github.com/mibrgmv/whoami-server/history/internal/service/history"
+	"github.com/mibrgmv/whoami-server/history/internal/repository"
 )
 
-type Repository struct {
+type historyRepo struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepository(pool *pgxpool.Pool) *Repository {
-	return &Repository{pool: pool}
+func NewHistoryRepository(pool *pgxpool.Pool) repository.HistoryRepository {
+	return &historyRepo{pool: pool}
 }
 
-func (r Repository) Add(ctx context.Context, historyItems []*models.QuizCompletionHistoryItem) ([]*models.QuizCompletionHistoryItem, error) {
+func (r historyRepo) Add(ctx context.Context, historyItems []*models.QuizCompletionHistoryItem) ([]*models.QuizCompletionHistoryItem, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -58,7 +58,7 @@ func (r Repository) Add(ctx context.Context, historyItems []*models.QuizCompleti
 	return createdItems, nil
 }
 
-func (r Repository) Query(ctx context.Context, query history.Query) ([]*models.QuizCompletionHistoryItem, error) {
+func (r historyRepo) Query(ctx context.Context, query repository.Query) ([]*models.QuizCompletionHistoryItem, error) {
 	sql := `
 	select quiz_completion_history_item_id,
 		   user_id,

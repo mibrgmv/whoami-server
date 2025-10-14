@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/history/internal/models"
 	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
-	"github.com/mibrgmv/whoami-server/history/internal/service/history"
+	"github.com/mibrgmv/whoami-server/history/internal/service"
 	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 	"google.golang.org/grpc/codes"
@@ -14,17 +14,19 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-type Service struct {
-	service *history.Service
-	historyv1.UnimplementedQuizCompletionHistoryServiceServer
+type historyServiceServer struct {
+	service service.HistoryService
+	historyv1.UnimplementedHistoryServiceServer
 }
 
-func NewService(service *history.Service) *Service {
-	return &Service{service: service}
+func NewHistoryServiceServer(service service.HistoryService) historyv1.HistoryServiceServer {
+	return &historyServiceServer{
+		service: service,
+	}
 }
 
-func (s Service) CreateItem(ctx context.Context, request *historyv1.CreateItemRequest) (*historyv1.QuizCompletionHistoryItem, error) {
-	itemToCreate, err := models.ToModel(request.Item)
+func (s *historyServiceServer) CreateItem(ctx context.Context, req *historyv1.CreateItemRequest) (*historyv1.QuizCompletionHistoryItem, error) {
+	itemToCreate, err := models.ToModel(req.Item)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create history item: %v", err)
 	}
@@ -37,8 +39,8 @@ func (s Service) CreateItem(ctx context.Context, request *historyv1.CreateItemRe
 	return createdItems[0].ToProto(), nil
 }
 
-func (s Service) BatchGetMyItems(ctx context.Context, request *historyv1.BatchGetMyItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
-	parsedToken, err := tools.ParsePageToken(request.PageToken)
+func (s *historyServiceServer) BatchGetMyItems(ctx context.Context, req *historyv1.BatchGetMyItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
+	parsedToken, err := tools.ParsePageToken(req.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
 	}
@@ -48,12 +50,12 @@ func (s Service) BatchGetMyItems(ctx context.Context, request *historyv1.BatchGe
 		return nil, status.Errorf(codes.Unauthenticated, "failed to get user ID from context: %v", err)
 	}
 
-	quizIDs, err := parseUUIDs(request.QuizIds)
+	quizIDs, err := parseUUIDs(req.QuizIds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse quiz IDs: %v", err)
 	}
 
-	items, nextPageToken, err := s.service.GetItems(ctx, []*uuid.UUID{&userID}, quizIDs, request.PageSize, parsedToken)
+	items, nextPageToken, err := s.service.GetItems(ctx, []*uuid.UUID{&userID}, quizIDs, req.PageSize, parsedToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
@@ -69,23 +71,23 @@ func (s Service) BatchGetMyItems(ctx context.Context, request *historyv1.BatchGe
 	}, nil
 }
 
-func (s Service) BatchGetItems(ctx context.Context, request *historyv1.BatchGetItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
-	parsedToken, err := tools.ParsePageToken(request.PageToken)
+func (s *historyServiceServer) BatchGetItems(ctx context.Context, req *historyv1.BatchGetItemsRequest) (*historyv1.BatchGetItemsResponse, error) {
+	parsedToken, err := tools.ParsePageToken(req.PageToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
 	}
 
-	userIDs, err := parseUUIDs(request.UserIds)
+	userIDs, err := parseUUIDs(req.UserIds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse user IDs: %v", err)
 	}
 
-	quizIDs, err := parseUUIDs(request.QuizIds)
+	quizIDs, err := parseUUIDs(req.QuizIds)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse quiz IDs: %v", err)
 	}
 
-	items, nextPageToken, err := s.service.GetItems(ctx, userIDs, quizIDs, request.PageSize, parsedToken)
+	items, nextPageToken, err := s.service.GetItems(ctx, userIDs, quizIDs, req.PageSize, parsedToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
 	}
