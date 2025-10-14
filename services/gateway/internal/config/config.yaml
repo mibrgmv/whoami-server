@@ -9,7 +9,7 @@ http:
     allowed_headers: [ "Origin", "Content-Type", "Accept", "Authorization" ]
     expose_headers: [ ]
     allow_credentials: true
-    max_age: 86400 #24h
+    max_age: 24h
 
 auth_service:
   host: localhost

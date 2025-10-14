@@ -11,7 +11,7 @@ import (
 	appcfg "github.com/mibrgmv/whoami-server/quiz/internal/config"
 	"github.com/mibrgmv/whoami-server/quiz/internal/server"
 	"github.com/mibrgmv/whoami-server/shared/config"
-	"github.com/mibrgmv/whoami-server/shared/dbs/redis"
+	"github.com/mibrgmv/whoami-server/shared/storage/redis"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 )
 
@@ -45,13 +45,13 @@ func main() {
 		log.Fatalf("failed to migrate up: %v", err)
 	}
 
-	client, err := redis.NewClient(ctx, cfg.Redis)
+	client, err := redis.NewClient(ctx, *cfg.Redis)
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Fatalf("Failed to create Redis client: %v", err)
 	}
 	log.Println("Connected to Redis successfully")
 
-	s, err := server.NewGrpcServer(pool, client, cfg.Redis.GetTTL(), cfg.HistoryService.GetAddr())
+	s, err := server.NewGrpcServer(pool, client, cfg.HistoryService.GetAddr())
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}

@@ -4,8 +4,7 @@ import (
 	"log"
 	"os"
 
-	sharedgrpc "github.com/mibrgmv/whoami-server/shared/grpc"
-	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
+	"github.com/mibrgmv/whoami-server/shared/grpc/interceptor"
 	"github.com/mibrgmv/whoami-server/shared/keycloak"
 	"github.com/mibrgmv/whoami-server/user/internal/config"
 	usergrpc "github.com/mibrgmv/whoami-server/user/internal/grpc"
@@ -17,21 +16,20 @@ import (
 
 func NewGrpcServer(cfg config.Config) *grpc.Server {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := sharedgrpc.NewConfig(logger)
 	kc := keycloak.NewClient(&cfg.Keycloak)
 	userService := service.NewUserService(kc)
 
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			append(
-				interceptorCfg.BuildUnaryInterceptors(),
-				metadata.UnaryInterceptor(),
+				interceptor.DefaultUnaryInterceptors(logger),
+				interceptor.UnaryMetadataInterceptor(),
 			)...,
 		),
 		grpc.ChainStreamInterceptor(
 			append(
-				interceptorCfg.BuildStreamInterceptors(),
-				metadata.StreamInterceptor(),
+				interceptor.DefaultStreamInterceptors(logger),
+				interceptor.StreamMetadataInterceptor(),
 			)...,
 		),
 	)

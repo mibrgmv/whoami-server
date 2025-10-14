@@ -1,14 +1,14 @@
 package config
 
 import (
-	"github.com/mibrgmv/whoami-server/shared/config/api/grpc"
-	"github.com/mibrgmv/whoami-server/shared/dbs/postgresql"
-	"github.com/mibrgmv/whoami-server/shared/dbs/redis"
+	"github.com/mibrgmv/whoami-server/shared/grpc"
+	"github.com/mibrgmv/whoami-server/shared/storage/postgres"
+	"github.com/mibrgmv/whoami-server/shared/storage/redis"
 )
 
 type Config struct {
-	Grpc           *grpc.Config       `mapstructure:"grpc"`
-	Postgres       *postgresql.Config `mapstructure:"postgres"`
-	Redis          *redis.Config      `mapstructure:"redis"`
-	HistoryService *grpc.Config       `mapstructure:"history-service"`
+	Grpc           *grpc.Config     `mapstructure:"grpc"`
+	Postgres       *postgres.Config `mapstructure:"postgres"`
+	Redis          *redis.Config    `mapstructure:"redis"`
+	HistoryService *grpc.Config     `mapstructure:"history-service"`
 }

@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/mibrgmv/whoami-server/shared/config/api/grpc"
-	"github.com/mibrgmv/whoami-server/shared/config/api/http"
+	"github.com/mibrgmv/whoami-server/shared/grpc"
+	"github.com/mibrgmv/whoami-server/shared/http"
 	"github.com/mibrgmv/whoami-server/shared/keycloak"
 )
 

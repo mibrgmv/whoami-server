@@ -14,7 +14,7 @@ redis:
   address: "localhost:6379"
   password: ""
   db: 0
-  ttl_minutes: 15
+  ttl: 15m
 
 history-service:
   host: localhost

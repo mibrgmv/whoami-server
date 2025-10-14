@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/quiz/internal/models"
-	"github.com/mibrgmv/whoami-server/shared/dbs"
+	"github.com/mibrgmv/whoami-server/shared/storage"
 )
 
 const (
@@ -21,10 +21,10 @@ var (
 
 type Service struct {
 	repo  Repository
-	cache dbs.Cache
+	cache storage.Cache
 }
 
-func NewService(repo Repository, cache dbs.Cache) *Service {
+func NewService(repo Repository, cache storage.Cache) *Service {
 	return &Service{
 		repo:  repo,
 		cache: cache,

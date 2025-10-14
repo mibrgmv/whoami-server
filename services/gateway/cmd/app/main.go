@@ -33,6 +33,9 @@ func main() {
 		log.Fatal("Failed to create HTTP server:", err)
 	}
 
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
 		log.Printf("Gateway HTTP server starting on %s", s.Addr)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -40,8 +43,15 @@ func main() {
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down...")
+	sig := <-quit
+	log.Printf("Shutting down, received signal: %v", sig)
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
+	defer shutdownCancel()
+
+	if err := s.Shutdown(shutdownCtx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Gateway server exited gracefully")
 }

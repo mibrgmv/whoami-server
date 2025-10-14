@@ -11,8 +11,7 @@ import (
 	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
 	"github.com/mibrgmv/whoami-server/history/internal/repository/postgres"
 	"github.com/mibrgmv/whoami-server/history/internal/service"
-	sharedInterceptors "github.com/mibrgmv/whoami-server/shared/grpc"
-	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
+	"github.com/mibrgmv/whoami-server/shared/grpc/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -23,19 +22,18 @@ type GrpcServer struct {
 
 func NewGrpcServer(pool *pgxpool.Pool) GrpcServer {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			append(
-				interceptorCfg.BuildUnaryInterceptors(),
-				metadata.UnaryInterceptor(),
+				interceptor.DefaultUnaryInterceptors(logger),
+				interceptor.UnaryMetadataInterceptor(),
 			)...,
 		),
 		grpc.ChainStreamInterceptor(
 			append(
-				interceptorCfg.BuildStreamInterceptors(),
-				metadata.StreamInterceptor(),
+				interceptor.DefaultStreamInterceptors(logger),
+				interceptor.StreamMetadataInterceptor(),
 			)...,
 		),
 	)

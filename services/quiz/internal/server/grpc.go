@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	questionv1 "github.com/mibrgmv/whoami-server/quiz/internal/protogen/question/v1"
@@ -16,9 +15,8 @@ import (
 	"github.com/mibrgmv/whoami-server/quiz/internal/service/quiz"
 	quizgrpc "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/grpc"
 	quizpg "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/postgresql"
-	redis2 "github.com/mibrgmv/whoami-server/shared/dbs/redis"
-	sharedInterceptors "github.com/mibrgmv/whoami-server/shared/grpc"
-	"github.com/redis/go-redis/v9"
+	"github.com/mibrgmv/whoami-server/shared/grpc/interceptor"
+	"github.com/mibrgmv/whoami-server/shared/storage/redis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -28,27 +26,21 @@ type GrpcServer struct {
 	questionServer *questiongrpc.QuestionService
 }
 
-func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, redisTTL time.Duration, historyServiceAddr string) (*GrpcServer, error) {
+func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyServiceAddr string) (*GrpcServer, error) {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-	interceptorCfg := sharedInterceptors.NewConfig(logger)
 
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			interceptorCfg.BuildUnaryInterceptors()...,
-		),
-		grpc.ChainStreamInterceptor(
-			interceptorCfg.BuildStreamInterceptors()...,
-		),
+		grpc.ChainUnaryInterceptor(interceptor.DefaultUnaryInterceptors(logger)...),
+		grpc.ChainStreamInterceptor(interceptor.DefaultStreamInterceptors(logger)...),
 	)
 
-	redisService := redis2.NewService(redisClient, redisTTL)
 	quizRepo := quizpg.NewRepository(pool)
 	quizService := quiz.NewService(quizRepo)
 	quizServer := quizgrpc.NewService(quizService)
 	quizv1.RegisterQuizServiceServer(s, quizServer)
 
 	questionRepo := questionpg.NewRepository(pool)
-	questionService := question.NewService(questionRepo, redisService)
+	questionService := question.NewService(questionRepo, redisClient)
 	questionServer, err := questiongrpc.NewService(questionService, quizService, historyServiceAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create question service: %w", err)

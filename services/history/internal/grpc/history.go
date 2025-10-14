@@ -7,7 +7,7 @@ import (
 	"github.com/mibrgmv/whoami-server/history/internal/models"
 	historyv1 "github.com/mibrgmv/whoami-server/history/internal/protogen/history/v1"
 	"github.com/mibrgmv/whoami-server/history/internal/service"
-	"github.com/mibrgmv/whoami-server/shared/grpc/metadata"
+	"github.com/mibrgmv/whoami-server/shared/grpc/interceptor"
 	"github.com/mibrgmv/whoami-server/shared/tools"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,7 +45,7 @@ func (s *historyServiceServer) BatchGetMyItems(ctx context.Context, req *history
 		return nil, status.Errorf(codes.Internal, "failed to parse page token: %v", err)
 	}
 
-	userID, err := metadata.GetUserIDFromContext(ctx)
+	userID, err := interceptor.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "failed to get user ID from context: %v", err)
 	}

@@ -126,7 +126,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error)
 		AllowHeaders:     cfg.HTTP.CORS.AllowedHeaders,
 		ExposeHeaders:    cfg.HTTP.CORS.ExposeHeaders,
 		AllowCredentials: cfg.HTTP.CORS.AllowCredentials,
-		MaxAge:           time.Duration(cfg.HTTP.CORS.MaxAge) * time.Second,
+		MaxAge:           cfg.HTTP.CORS.MaxAge,
 	}))
 
 	router.GET("/api/v1/swagger.json", func(c *gin.Context) {
