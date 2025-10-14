@@ -41,7 +41,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1LoginResponse"
+              "$ref": "#/definitions/v1TokenResponse"
             }
           },
           "default": {
@@ -105,7 +105,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1RefreshTokenResponse"
+              "$ref": "#/definitions/v1TokenResponse"
             }
           },
           "default": {
@@ -934,24 +934,6 @@
         }
       }
     },
-    "v1LoginResponse": {
-      "type": "object",
-      "properties": {
-        "accessToken": {
-          "type": "string"
-        },
-        "refreshToken": {
-          "type": "string"
-        },
-        "tokenType": {
-          "type": "string"
-        },
-        "expiresIn": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
     "v1LogoutRequest": {
       "type": "object",
       "properties": {
@@ -1062,24 +1044,6 @@
         }
       }
     },
-    "v1RefreshTokenResponse": {
-      "type": "object",
-      "properties": {
-        "accessToken": {
-          "type": "string"
-        },
-        "refreshToken": {
-          "type": "string"
-        },
-        "tokenType": {
-          "type": "string"
-        },
-        "expiresIn": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
     "v1RegisterRequest": {
       "type": "object",
       "properties": {
@@ -1114,6 +1078,24 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "v1TokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "tokenType": {
+          "type": "string"
+        },
+        "expiresIn": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
