@@ -1,12 +1,13 @@
-package metadata
+package interceptor
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strconv"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 	EmailVerifiedKey string = "email_verified"
 )
 
-func UnaryInterceptor() grpc.UnaryServerInterceptor {
+func UnaryMetadataInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		newCtx := enrichContextFromMetadata(ctx)
 
@@ -24,7 +25,7 @@ func UnaryInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
-func StreamInterceptor() grpc.StreamServerInterceptor {
+func StreamMetadataInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		newCtx := enrichContextFromMetadata(ss.Context())
 
@@ -63,15 +64,6 @@ func enrichContextFromMetadata(ctx context.Context) context.Context {
 	}
 
 	return newCtx
-}
-
-type wrappedStream struct {
-	grpc.ServerStream
-	ctx context.Context
-}
-
-func (w *wrappedStream) Context() context.Context {
-	return w.ctx
 }
 
 func GetUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
