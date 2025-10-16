@@ -1,0 +1,1 @@
+drop table if exists quiz_completion_history;

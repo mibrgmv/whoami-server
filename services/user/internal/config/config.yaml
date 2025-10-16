@@ -1,0 +1,11 @@
+grpc:
+  host: localhost
+  port: 50052
+
+keycloak:
+  base_url:
+  realm:
+  public_client_id:
+  public_client_secret:
+  admin_client_id:
+  admin_client_secret:

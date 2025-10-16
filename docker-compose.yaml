@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.4
     ports:
       - "8088:8080"
     container_name: keycloak
@@ -19,7 +19,7 @@ services:
       - postgres-keycloak
 
   postgres-keycloak:
-    image: postgres:latest
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=keycloak
       - POSTGRES_PASSWORD=keycloak
@@ -33,37 +33,66 @@ services:
       - postgres-keycloak-data:/var/lib/postgresql/data
 
   gateway:
-    image: ghcr.io/mibrgmv/whoami-server-gateway:latest
+    container_name: gateway
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
       - keycloak
-      - quizzes-service
+      - auth-service
+      - quiz-service
+      - user-service
       - history-service
     networks:
       - app-network
     environment:
       - HTTP_MODE=debug
-      - QUIZZES_SERVICE_HOST=quizzes-service
+      - AUTH_SERVICE_HOST=auth-service
+      - QUIZ_SERVICE_HOST=quiz-service
+      - USER_SERVICE_HOST=user-service
       - HISTORY_SERVICE_HOST=history-service
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    ports:
+      - "50055:50055"
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+    environment:
+      - GRPC_HOST=0.0.0.0
       - KEYCLOAK_BASE_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=oRnu9DCUeLg4KqkrGMSGHntBBFHlxDD7
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
+    restart:
+      unless-stopped
 
-  quizzes-service:
-    image: ghcr.io/mibrgmv/whoami-server-quizzes:latest
+  quiz-service:
+    container_name: quiz-service
+    build:
+      context: .
+      dockerfile: services/quiz/Dockerfile
     ports:
       - "50051:50051"
     depends_on:
-      - postgres-quizzes
+      - postgres-quiz
       - redis
     networks:
       - app-network
     environment:
-      POSTGRES_HOST: postgres-quizzes
+      POSTGRES_HOST: postgres-quiz
+      POSTGRES_PORT: 5432
       POSTGRES_DATABASE: postgres
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
@@ -73,14 +102,39 @@ services:
     restart:
       unless-stopped
 
+  user-service:
+    container_name: user-service
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
+    ports:
+      - "50052:50052"
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+      - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
+      - KEYCLOAK_PUBLIC_CLIENT_SECRET=
+      - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
+    restart:
+      unless-stopped
+
   history-service:
-    image: ghcr.io/mibrgmv/whoami-server-history:latest
+    container_name: history-service
+    build:
+      context: .
+      dockerfile: services/history/Dockerfile
     ports:
       - "50053:50053"
     depends_on:
       - postgres-history
       - redis
-      - quizzes-service
+      - quiz-service
     networks:
       - app-network
     environment:
@@ -93,8 +147,8 @@ services:
     restart:
       unless-stopped
 
-  postgres-quizzes:
-    image: postgres:latest
+  postgres-quiz:
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -105,10 +159,10 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - postgres-quizzes-data:/var/lib/postgresql/data
+      - postgres-quiz-data:/var/lib/postgresql/data
 
   postgres-history:
-    image: postgres:latest
+    image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -122,7 +176,7 @@ services:
       - postgres-history-data:/var/lib/postgresql/data
 
   redis:
-    image: redis:latest
+    image: redis:8-alpine
     networks:
       - app-network
     ports:
@@ -138,5 +192,5 @@ networks:
 
 volumes:
   postgres-keycloak-data:
-  postgres-quizzes-data:
+  postgres-quiz-data:
   postgres-history-data:
