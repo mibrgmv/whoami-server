@@ -21,7 +21,7 @@ WORKDIR /app
 
 COPY --from=builder /app/services/gateway/gateway .
 COPY --from=builder /app/services/gateway/internal/config ./internal/config
-COPY --from=builder /app/services/gateway/api/v1/gateway.swagger.json ./api/v1/
+COPY --from=builder /app/services/gateway/api/v1/gateway.swagger.json ./api/v1
 
 EXPOSE 8080
 
