@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
+	"github.com/mibrgmv/whoami-server/gateway/internal/metrics"
 	"github.com/mibrgmv/whoami-server/gateway/internal/server"
 	"github.com/mibrgmv/whoami-server/shared/config"
 )
@@ -28,13 +29,22 @@ func main() {
 		log.Fatalf("failed to read gateway config: %v", err)
 	}
 
-	s, err := server.NewHttpServer(ctx, cfg)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	collector := metrics.NewMetricsCollector()
+	metricsServer := server.NewMetricsServer(&cfg, collector)
+	go func() {
+		err := metricsServer.Start()
+		if err != nil {
+			log.Fatal("metrics server failed to serve: ", err)
+		}
+	}()
+
+	s, err := server.NewHttpServer(ctx, cfg, collector)
 	if err != nil {
 		log.Fatal("Failed to create HTTP server:", err)
 	}
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		log.Printf("Gateway HTTP server starting on %s", s.Addr)
@@ -48,6 +58,10 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer shutdownCancel()
+
+	if err := metricsServer.Stop(shutdownCtx); err != nil {
+		log.Fatal("Metrics server forced to shutdown:", err)
+	}
 
 	if err := s.Shutdown(shutdownCtx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)

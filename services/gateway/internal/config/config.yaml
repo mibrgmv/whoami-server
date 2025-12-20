@@ -11,6 +11,10 @@ http:
     allow_credentials: true
     max_age: 24h
 
+metrics:
+  host: 0.0.0.0
+  port: 9090
+
 auth_service:
   host: localhost
   port: 50055

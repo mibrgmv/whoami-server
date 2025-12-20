@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	appcfg "github.com/mibrgmv/whoami-server/gateway/internal/config"
+	"github.com/mibrgmv/whoami-server/gateway/internal/metrics"
 	"github.com/mibrgmv/whoami-server/gateway/internal/middleware"
 	authv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/auth/v1"
 	historyv1 "github.com/mibrgmv/whoami-server/gateway/internal/protogen/history/v1"
@@ -25,7 +26,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector) (*http.Server, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -52,49 +53,22 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error)
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	if err := authv1.RegisterAuthServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.AuthService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register auth service: %w", err)
+	services := []struct {
+		name     string
+		register func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error
+		addr     string
+	}{
+		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.AuthService.GetAddr()},
+		{"quiz", quizv1.RegisterQuizServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
+		{"question", questionv1.RegisterQuestionServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
+		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.UserService.GetAddr()},
+		{"history", historyv1.RegisterHistoryServiceHandlerFromEndpoint, cfg.HistoryService.GetAddr()},
 	}
 
-	if err := quizv1.RegisterQuizServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.QuizService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register quiz service: %w", err)
-	}
-
-	if err := questionv1.RegisterQuestionServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.QuizService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register question service: %w", err)
-	}
-
-	if err := userv1.RegisterUserServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.UserService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register user service: %w", err)
-	}
-
-	if err := historyv1.RegisterHistoryServiceHandlerFromEndpoint(
-		ctx,
-		gwmux,
-		cfg.HistoryService.GetAddr(),
-		dialOpts,
-	); err != nil {
-		return nil, fmt.Errorf("failed to register history service: %w", err)
+	for _, svc := range services {
+		if err := svc.register(ctx, gwmux, svc.addr, dialOpts); err != nil {
+			return nil, fmt.Errorf("failed to register %s server service: %w", svc.name, err)
+		}
 	}
 
 	jwtMiddleware := middleware.JWT(middleware.JWTConfig{
@@ -120,6 +94,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error)
 	}
 
 	router := gin.Default()
+
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.HTTP.CORS.AllowedOrigins,
 		AllowMethods:     cfg.HTTP.CORS.AllowedMethods,
@@ -128,6 +103,12 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config) (*http.Server, error)
 		AllowCredentials: cfg.HTTP.CORS.AllowCredentials,
 		MaxAge:           cfg.HTTP.CORS.MaxAge,
 	}))
+
+	router.Use(metrics.GinMiddleware(collector))
+
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	router.GET("/api/v1/swagger.json", func(c *gin.Context) {
 		c.File("./api/v1/gateway.swagger.json")
