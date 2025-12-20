@@ -1,0 +1,42 @@
+networks:
+  app-network:
+    external: true
+    name: whoami_app-network
+  keycloak-network:
+    driver: bridge
+    name: whoami_keycloak-network
+
+volumes:
+  postgres-keycloak-data:
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    ports:
+      - "8088:8080"
+    container_name: keycloak
+    networks:
+      - app-network
+      - keycloak-network
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+    command: [ "start-dev" ]
+    depends_on:
+      - postgres-keycloak
+
+  postgres-keycloak:
+    image: postgres:18-alpine
+    environment:
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak
+      - POSTGRES_DB=keycloak
+    networks:
+      - keycloak-network
+    restart: unless-stopped
+    volumes:
+      - postgres-keycloak-data:/var/lib/postgresql/data

@@ -1,46 +1,22 @@
+networks:
+  app-network:
+    name: whoami_app-network
+    driver: bridge
+
+volumes:
+  postgres-quiz-data:
+  postgres-history-data:
+
 services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.4
-    ports:
-      - "8088:8080"
-    container_name: keycloak
-    networks:
-      - keycloak-network
-      - app-network
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-    command: [ "start-dev" ]
-    depends_on:
-      - postgres-keycloak
-
-  postgres-keycloak:
-    image: postgres:18-alpine
-    environment:
-      - POSTGRES_USER=keycloak
-      - POSTGRES_PASSWORD=keycloak
-      - POSTGRES_DB=keycloak
-    ports:
-      - "6432:5432"
-    networks:
-      - keycloak-network
-    restart: unless-stopped
-    volumes:
-      - postgres-keycloak-data:/var/lib/postgresql/data
-
   gateway:
     container_name: gateway
     build:
-      context: .
+      context: ../..
       dockerfile: services/gateway/Dockerfile
     ports:
       - "8080:8080"
+      - "9090:9090"
     depends_on:
-      - keycloak
       - auth-service
       - quiz-service
       - user-service
@@ -59,12 +35,10 @@ services:
   auth-service:
     container_name: auth-service
     build:
-      context: .
+      context: ../..
       dockerfile: services/auth/Dockerfile
     ports:
       - "50055:50055"
-    depends_on:
-      - keycloak
     networks:
       - app-network
     environment:
@@ -74,14 +48,14 @@ services:
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=yLeSqqauHGkUsUzcng7yvTGudq9FRaWU
     restart:
       unless-stopped
 
   quiz-service:
     container_name: quiz-service
     build:
-      context: .
+      context: ../..
       dockerfile: services/quiz/Dockerfile
     ports:
       - "50051:50051"
@@ -105,12 +79,10 @@ services:
   user-service:
     container_name: user-service
     build:
-      context: .
+      context: ../..
       dockerfile: services/user/Dockerfile
     ports:
       - "50052:50052"
-    depends_on:
-      - keycloak
     networks:
       - app-network
     environment:
@@ -120,14 +92,14 @@ services:
       - KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
       - KEYCLOAK_PUBLIC_CLIENT_SECRET=
       - KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=yLeSqqauHGkUsUzcng7yvTGudq9FRaWU
     restart:
       unless-stopped
 
   history-service:
     container_name: history-service
     build:
-      context: .
+      context: ../..
       dockerfile: services/history/Dockerfile
     ports:
       - "50053:50053"
@@ -148,6 +120,7 @@ services:
       unless-stopped
 
   postgres-quiz:
+    container_name: postgres-quiz
     image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
@@ -162,6 +135,7 @@ services:
       - postgres-quiz-data:/var/lib/postgresql/data
 
   postgres-history:
+    container_name: postgres-history
     image: postgres:18-alpine
     environment:
       - POSTGRES_USER=postgres
@@ -176,21 +150,10 @@ services:
       - postgres-history-data:/var/lib/postgresql/data
 
   redis:
+    container_name: redis
     image: redis:8-alpine
     networks:
       - app-network
     ports:
       - "6379:6379"
     restart: unless-stopped
-
-
-networks:
-  keycloak-network:
-    driver: bridge
-  app-network:
-    driver: bridge
-
-volumes:
-  postgres-keycloak-data:
-  postgres-quiz-data:
-  postgres-history-data:
