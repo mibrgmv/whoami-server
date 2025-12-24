@@ -1,103 +1,125 @@
 package metrics
 
 import (
-	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	uuidRegex = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
-	numRegex  = regexp.MustCompile(`^\d+$`)
-)
-
 func GinMiddleware(collector *Collector) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/metrics" || c.Request.URL.Path == "/health" {
+		if c.Request.URL.Path == "/metrics" ||
+			c.Request.URL.Path == "/health" ||
+			c.Request.URL.Path == "/swagger" ||
+			strings.HasPrefix(c.Request.URL.Path, "/swagger/") {
 			c.Next()
 			return
 		}
 
-		collector.HTTPInflightRequests.Inc()
-		defer collector.HTTPInflightRequests.Dec()
+		collector.IncHTTPInflight()
+		defer collector.DecHTTPInflight()
 
 		start := time.Now()
-
 		c.Next()
 
 		duration := time.Since(start).Seconds()
 		status := strconv.Itoa(c.Writer.Status())
-		path := normalizePath(c.Request.URL.Path)
 
-		collector.HTTPRequestsTotal.WithLabelValues(
-			c.Request.Method,
-			path,
-			status,
-		).Inc()
+		endpoint := normalizeEndpoint(c.FullPath())
+		method := c.Request.Method
 
-		collector.HTTPRequestDuration.WithLabelValues(
-			c.Request.Method,
-			path,
-		).Observe(duration)
-	}
-}
+		responseSize := float64(c.Writer.Size())
 
-func normalizePath(path string) string {
-	if idx := indexOf(path, '?'); idx != -1 {
-		path = path[:idx]
-	}
+		collector.RecordHTTPRequest(method, endpoint, status, duration, responseSize)
 
-	path = uuidRegex.ReplaceAllString(path, ":uuid")
+		api := extractAPI(c.Request.URL.Path)
+		operation := extractOperation(method, c.Request.URL.Path)
+		collector.RecordAPIRequest(api, operation)
 
-	result := ""
-	segments := splitPath(path)
-
-	for i, seg := range segments {
-		if i > 0 {
-			result += "/"
-		}
-
-		if i > 0 && numRegex.MatchString(seg) {
-			result += ":id"
-		} else {
-			result += seg
-		}
-	}
-
-	return result
-}
-
-func splitPath(path string) []string {
-	if path == "" || path == "/" {
-		return []string{"/"}
-	}
-
-	var segments []string
-	start := 0
-
-	for i := 0; i < len(path); i++ {
-		if path[i] == '/' {
-			if i > start {
-				segments = append(segments, path[start:i])
+		if status[0] == '4' || status[0] == '5' {
+			errorType := "client"
+			if status[0] == '5' {
+				errorType = "server"
 			}
-			start = i + 1
+			collector.RecordAPIError(api, errorType)
 		}
 	}
-
-	if start < len(path) {
-		segments = append(segments, path[start:])
-	}
-
-	return segments
 }
 
-func indexOf(s string, ch rune) int {
-	for i, c := range s {
-		if c == ch {
-			return i
+func normalizeEndpoint(path string) string {
+	path = strings.Split(path, "?")[0]
+	parts := strings.Split(path, "/")
+
+	for i, part := range parts {
+		if isUUID(part) || isNumericID(part) {
+			parts[i] = ":id"
 		}
 	}
-	return -1
+
+	return strings.Join(parts, "/")
+}
+
+func isUUID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+	parts := strings.Split(s, "-")
+	return len(parts) == 5 &&
+		len(parts[0]) == 8 &&
+		len(parts[1]) == 4 &&
+		len(parts[2]) == 4 &&
+		len(parts[3]) == 4 &&
+		len(parts[4]) == 12
+}
+
+func isNumericID(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func extractAPI(path string) string {
+	if strings.HasPrefix(path, "/api/v1/auth") {
+		return "auth"
+	} else if strings.HasPrefix(path, "/api/v1/quizzes") {
+		return "quizzes"
+	} else if strings.HasPrefix(path, "/api/v1/questions") {
+		return "questions"
+	} else if strings.HasPrefix(path, "/api/v1/users") {
+		return "users"
+	} else if strings.HasPrefix(path, "/api/v1/history") {
+		return "history"
+	}
+	return "other"
+}
+
+func extractOperation(method, path string) string {
+	method = strings.ToLower(method)
+
+	switch method {
+	case "get":
+		if strings.Contains(path, "/api/v1/quizzes") && !strings.Contains(path, ":id") {
+			return "list"
+		}
+		if strings.Contains(path, "/api/v1/questions") && !strings.Contains(path, ":id") {
+			return "list"
+		}
+		return "get"
+	case "post":
+		return "create"
+	case "put", "patch":
+		return "update"
+	case "delete":
+		return "delete"
+	default:
+		return method
+	}
 }

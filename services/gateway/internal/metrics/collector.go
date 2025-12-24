@@ -14,11 +14,15 @@ type Collector struct {
 	HTTPRequestsTotal    *prometheus.CounterVec
 	HTTPRequestDuration  *prometheus.HistogramVec
 	HTTPInflightRequests prometheus.Gauge
+	HTTPResponseSize     *prometheus.HistogramVec
 
 	BackendRequestsTotal    *prometheus.CounterVec
 	BackendRequestDuration  *prometheus.HistogramVec
 	BackendInflightRequests *prometheus.GaugeVec
 	BackendConnectionErrors *prometheus.CounterVec
+
+	APIRequestsTotal *prometheus.CounterVec
+	APIErrorsTotal   *prometheus.CounterVec
 }
 
 func NewMetricsCollector() *Collector {
@@ -35,18 +39,18 @@ func NewMetricsCollector() *Collector {
 		HTTPRequestsTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "gateway_http_requests_total",
-				Help: "Total HTTP requests received by gateway (server-side)",
+				Help: "Total HTTP requests received by gateway",
 			},
-			[]string{"method", "path", "status"},
+			[]string{"method", "endpoint", "status"},
 		),
 
 		HTTPRequestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "gateway_http_request_duration_seconds",
-				Help:    "HTTP request duration in gateway (server-side)",
-				Buckets: []float64{.001, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+				Help:    "HTTP request duration in seconds",
+				Buckets: prometheus.DefBuckets,
 			},
-			[]string{"method", "path"},
+			[]string{"method", "endpoint"},
 		),
 
 		HTTPInflightRequests: prometheus.NewGauge(
@@ -56,21 +60,30 @@ func NewMetricsCollector() *Collector {
 			},
 		),
 
+		HTTPResponseSize: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "gateway_http_response_size_bytes",
+				Help:    "HTTP response size in bytes",
+				Buckets: prometheus.ExponentialBuckets(100, 10, 8),
+			},
+			[]string{"method", "endpoint"},
+		),
+
 		BackendRequestsTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "gateway_backend_requests_total",
-				Help: "Total requests sent from gateway to backend services (client-side)",
+				Help: "Total requests sent from gateway to backend services",
 			},
-			[]string{"service", "method", "status"},
+			[]string{"backend", "method", "status"},
 		),
 
 		BackendRequestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "gateway_backend_request_duration_seconds",
-				Help:    "Duration of requests to backend services including network (client-side)",
-				Buckets: []float64{.001, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5},
+				Help:    "Duration of requests to backend services",
+				Buckets: prometheus.DefBuckets,
 			},
-			[]string{"service", "method"},
+			[]string{"backend", "method"},
 		),
 
 		BackendInflightRequests: prometheus.NewGaugeVec(
@@ -78,7 +91,7 @@ func NewMetricsCollector() *Collector {
 				Name: "gateway_backend_inflight_requests",
 				Help: "Number of outgoing requests to backend services currently in flight",
 			},
-			[]string{"service"},
+			[]string{"backend"},
 		),
 
 		BackendConnectionErrors: prometheus.NewCounterVec(
@@ -86,7 +99,23 @@ func NewMetricsCollector() *Collector {
 				Name: "gateway_backend_connection_errors_total",
 				Help: "Total connection/network errors when calling backend services",
 			},
-			[]string{"service", "error_type"},
+			[]string{"backend", "error_type"},
+		),
+
+		APIRequestsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "gateway_api_requests_total",
+				Help: "Total requests by API endpoint",
+			},
+			[]string{"api", "operation"},
+		),
+
+		APIErrorsTotal: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "gateway_api_errors_total",
+				Help: "Total errors by API endpoint",
+			},
+			[]string{"api", "error_type"},
 		),
 	}
 
@@ -94,10 +123,13 @@ func NewMetricsCollector() *Collector {
 		gc.HTTPRequestsTotal,
 		gc.HTTPRequestDuration,
 		gc.HTTPInflightRequests,
+		gc.HTTPResponseSize,
 		gc.BackendRequestsTotal,
 		gc.BackendRequestDuration,
 		gc.BackendInflightRequests,
 		gc.BackendConnectionErrors,
+		gc.APIRequestsTotal,
+		gc.APIErrorsTotal,
 	)
 
 	return gc
@@ -111,19 +143,43 @@ func (gc *Collector) Handler() http.Handler {
 	return promhttp.HandlerFor(gc.registry, promhttp.HandlerOpts{})
 }
 
-func (gc *Collector) RecordBackendRequest(service, method, status string, duration float64) {
-	gc.BackendRequestsTotal.WithLabelValues(service, method, status).Inc()
-	gc.BackendRequestDuration.WithLabelValues(service, method).Observe(duration)
+func (gc *Collector) RecordHTTPRequest(method, endpoint, status string, duration, responseSize float64) {
+	gc.HTTPRequestsTotal.WithLabelValues(method, endpoint, status).Inc()
+	gc.HTTPRequestDuration.WithLabelValues(method, endpoint).Observe(duration)
+	if responseSize > 0 {
+		gc.HTTPResponseSize.WithLabelValues(method, endpoint).Observe(responseSize)
+	}
 }
 
-func (gc *Collector) RecordBackendError(service, errorType string) {
-	gc.BackendConnectionErrors.WithLabelValues(service, errorType).Inc()
+func (gc *Collector) RecordBackendRequest(backend, method, status string, duration float64) {
+	gc.BackendRequestsTotal.WithLabelValues(backend, method, status).Inc()
+	gc.BackendRequestDuration.WithLabelValues(backend, method).Observe(duration)
 }
 
-func (gc *Collector) IncBackendInflight(service string) {
-	gc.BackendInflightRequests.WithLabelValues(service).Inc()
+func (gc *Collector) RecordBackendError(backend, errorType string) {
+	gc.BackendConnectionErrors.WithLabelValues(backend, errorType).Inc()
 }
 
-func (gc *Collector) DecBackendInflight(service string) {
-	gc.BackendInflightRequests.WithLabelValues(service).Dec()
+func (gc *Collector) RecordAPIRequest(api, operation string) {
+	gc.APIRequestsTotal.WithLabelValues(api, operation).Inc()
+}
+
+func (gc *Collector) RecordAPIError(api, errorType string) {
+	gc.APIErrorsTotal.WithLabelValues(api, errorType).Inc()
+}
+
+func (gc *Collector) IncHTTPInflight() {
+	gc.HTTPInflightRequests.Inc()
+}
+
+func (gc *Collector) DecHTTPInflight() {
+	gc.HTTPInflightRequests.Dec()
+}
+
+func (gc *Collector) IncBackendInflight(backend string) {
+	gc.BackendInflightRequests.WithLabelValues(backend).Inc()
+}
+
+func (gc *Collector) DecBackendInflight(backend string) {
+	gc.BackendInflightRequests.WithLabelValues(backend).Dec()
 }
