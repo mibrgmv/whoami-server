@@ -1,11 +1,11 @@
-package http
+package server
 
 import (
 	"fmt"
 	"time"
 )
 
-type Config struct {
+type HTTPConfig struct {
 	Host            string        `mapstructure:"host"`
 	Port            int           `mapstructure:"port"`
 	Mode            string        `mapstructure:"mode"`
@@ -22,6 +22,6 @@ type CORS struct {
 	MaxAge           time.Duration `mapstructure:"max_age"`
 }
 
-func (c *Config) GetAddr() string {
+func (c *HTTPConfig) GetAddr() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
