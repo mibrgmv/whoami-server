@@ -1,39 +1,83 @@
-.PHONY: \
-	up-keycloak down-keycloak init-keycloak \
-	up-monitoring down-monitoring \
-	up down down-v
+COMPOSE_DIR := deployments/docker
+COMPOSE := docker compose -f $(COMPOSE_DIR)/docker-compose.yaml
 
+SERVICES := shared gateway quiz auth user history
 
-up-keycloak:
-	cd deployments/docker && \
- 	docker-compose -f docker-compose.keycloak.yaml up -d
-
-down-keycloak:
-	cd deployments/docker && docker-compose -f docker-compose.keycloak.yaml down
-
-init-keycloak:
-	bash scripts/setup-keycloak.sh
-
-
-up-monitoring:
-	cd deployments/docker && \
-	docker-compose -f docker-compose.monitoring.yaml up -d
-
-down-monitoring:
-	cd deployments/docker && \
-	docker-compose -f docker-compose.monitoring.yaml down
-
+.PHONY: up down down-v logs \
+	up-keycloak up-monitoring up-all \
+	build lint test \
+	lint-all test-all \
+	proto tidy
 
 up:
-	cd deployments/docker && \
- 	docker-compose up -d
+	$(COMPOSE) up -d
+
+up-keycloak:
+	$(COMPOSE) --profile keycloak up -d
+
+up-monitoring:
+	$(COMPOSE) --profile monitoring up -d
+
+up-all:
+	$(COMPOSE) --profile keycloak --profile monitoring up -d
 
 down:
-	cd deployments/docker && docker-compose -f docker-compose.keycloak.yaml down
-	cd deployments/docker && docker-compose -f docker-compose.monitoring.yaml down
-	cd deployments/docker && docker-compose down
+	$(COMPOSE) --profile keycloak --profile monitoring down
 
 down-v:
-	cd deployments/docker && docker-compose -f docker-compose.keycloak.yaml down -v
-	cd deployments/docker && docker-compose -f docker-compose.monitoring.yaml down -v
-	cd deployments/docker && docker-compose down -v
+	$(COMPOSE) --profile keycloak --profile monitoring down -v
+
+logs:
+	$(COMPOSE) logs -f
+
+build:
+	$(COMPOSE) build
+
+lint:
+	@for svc in $(SERVICES); do \
+		echo "==> Linting $$svc"; \
+		if [ "$$svc" = "shared" ]; then \
+			cd $$svc && golangci-lint run --timeout=5m && cd ..; \
+		else \
+			cd services/$$svc && golangci-lint run --timeout=5m && cd ../..; \
+		fi \
+	done
+
+test:
+	@for svc in $(SERVICES); do \
+		echo "==> Testing $$svc"; \
+		if [ "$$svc" = "shared" ]; then \
+			cd $$svc && go test -race ./... && cd ..; \
+		else \
+			cd services/$$svc && go test -race ./... && cd ../..; \
+		fi \
+	done
+
+tidy:
+	@for svc in $(SERVICES); do \
+		echo "==> Tidying $$svc"; \
+		if [ "$$svc" = "shared" ]; then \
+			cd $$svc && go mod tidy && cd ..; \
+		else \
+			cd services/$$svc && go mod tidy && cd ../..; \
+		fi \
+	done
+
+proto:
+	@echo "Generate proto files (implement as needed)"
+
+help:
+	@echo "Docker:"
+	@echo "  up            - start core services"
+	@echo "  up-keycloak   - start with keycloak"
+	@echo "  up-monitoring - start with prometheus/grafana"
+	@echo "  up-all        - start everything"
+	@echo "  down          - stop all"
+	@echo "  down-v        - stop all + remove volumes"
+	@echo "  logs          - follow logs"
+	@echo "  build         - rebuild images"
+	@echo ""
+	@echo "Dev:"
+	@echo "  lint          - run golangci-lint"
+	@echo "  test          - run tests"
+	@echo "  tidy          - go mod tidy all modules"

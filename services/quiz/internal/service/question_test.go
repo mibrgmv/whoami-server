@@ -74,7 +74,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("Query", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	tests := []struct {
@@ -206,7 +206,7 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("Query", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
@@ -249,7 +249,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("Query", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
