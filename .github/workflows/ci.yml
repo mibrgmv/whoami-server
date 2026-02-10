@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main, dev]
 
-env:
-  GO_VERSION: '1.24'
-
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -28,7 +25,6 @@ jobs:
             shared:
               - 'shared/**'
               - '.golangci.yml'
-              - '.github/**'
             gateway:
               - 'services/gateway/**'
             quiz:
@@ -46,12 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: shared
-      - uses: ./.github/actions/test-go
-        with:
-          module: shared
+          working-directory: shared
 
   gateway:
     needs: changes
@@ -59,12 +52,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: services/gateway
-      - uses: ./.github/actions/test-go
-        with:
-          module: services/gateway
+          working-directory: services/gateway
 
   quiz:
     needs: changes
@@ -72,12 +62,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: services/quiz
-      - uses: ./.github/actions/test-go
-        with:
-          module: services/quiz
+          working-directory: services/quiz
 
   auth:
     needs: changes
@@ -85,12 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: services/auth
-      - uses: ./.github/actions/test-go
-        with:
-          module: services/auth
+          working-directory: services/auth
 
   user:
     needs: changes
@@ -98,12 +82,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: services/user
-      - uses: ./.github/actions/test-go
-        with:
-          module: services/user
+          working-directory: services/user
 
   history:
     needs: changes
@@ -111,10 +92,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint-go
+      - uses: ./.github/actions/ci-go
         with:
-          module: services/history
-      - uses: ./.github/actions/test-go
-        with:
-          module: services/history
-
+          working-directory: services/history

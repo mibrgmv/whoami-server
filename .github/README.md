@@ -5,45 +5,55 @@
 ```
 .github/
 ├── actions/
-│   ├── setup-go/action.yml   # setup Go + cache
-│   ├── lint-go/action.yml    # golangci-lint
-│   └── test-go/action.yml    # go test + coverage
+│   └── ci-go/action.yml   # setup + lint + test
 ├── workflows/
-│   └── ci.yml                # основной пайплайн
+│   ├── ci.yml    # lint + test
+│   └── cd.yml    # build + deploy
 └── README.md
 ```
 
 ## Триггеры
 
-| Событие        | Ветки         |
-|----------------|---------------|
-| `push`         | `main`, `dev` |
-| `pull_request` | `main`, `dev` |
+| Событие        | Ветки         | Workflow |
+|----------------|---------------|----------|
+| `push`         | `main`, `dev` | CI       |
+| `pull_request` | `main`, `dev` | CI       |
+| `push`         | `main`        | CD       |
 
-## Что запускается
+## Что запускается (CI)
 
 | Изменился             | Запустится     |
 |-----------------------|----------------|
 | `services/gateway/**` | только gateway |
 | `services/quiz/**`    | только quiz    |
 | `shared/**`           | ВСЕ сервисы    |
-| `.github/**`          | ВСЕ сервисы    |
 | `.golangci.yml`       | ВСЕ сервисы    |
 
-## Jobs
+## Jobs (CI)
 
 ```
-changes ──► shared   ──►
-        ├─► gateway  ──►
-        ├─► quiz     ──► build (Docker)
-        ├─► auth     ──►
-        ├─► user     ──►
-        └─► history  ──►
+changes ──► shared
+        ├─► gateway
+        ├─► quiz
+        ├─► auth
+        ├─► user
+        └─► history
 ```
 
-Каждый job использует actions:
-- `lint-go` — golangci-lint
-- `test-go` — go test с coverage
+Каждый job вызывает `ci-go` action:
+1. setup-go
+2. go mod download
+3. golangci-lint
+4. go test
+
+## Jobs (CD)
+
+```
+build-and-push ──► deploy
+```
+
+- `build-and-push` — собирает Docker образы для всех сервисов, пушит в ghcr.io
+- `deploy` — SSH на сервер, docker compose pull && up
 
 ## Добавление нового сервиса
 
@@ -68,18 +78,9 @@ newservice:
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
-    - uses: ./.github/actions/lint-go
+    - uses: ./.github/actions/ci-go
       with:
-        module: services/newservice
-    - uses: ./.github/actions/test-go
-      with:
-        module: services/newservice
-```
-
-4. Добавить в build matrix:
-```yaml
-- service: newservice
-  run: ${{ needs.changes.outputs.newservice == 'true' || needs.changes.outputs.shared == 'true' }}
+        working-directory: services/newservice
 ```
 
 ## Локальный запуск
