@@ -1,172 +1,96 @@
 # CI/CD Pipeline
 
-## Обзор
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              CI Pipeline                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
-│  │ Lint/shared  │    │ Test/shared  │    │Build/gateway │               │
-│  │ Lint/gateway │    │ Test/gateway │    │ Build/quiz   │               │
-│  │ Lint/quiz    │───▶│ Test/quiz    │───▶│ Build/auth   │───▶Integration│
-│  │ Lint/auth    │    │ Test/auth    │    │ Build/user   │               │
-│  │ Lint/user    │    │ Test/user    │    │Build/history │               │
-│  │ Lint/history │    │ Test/history │    └──────────────┘               │
-│  └──────────────┘    └──────────────┘                                   │
-│     (parallel)          (parallel)          (parallel)                  │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-## Триггеры
-
-| Событие | Ветки |
-|---------|-------|
-| `push` | `main`, `dev` |
-| `pull_request` | `main` |
-
-## Jobs
-
-### 1. Lint
-
-Запускает `golangci-lint` для каждого Go модуля параллельно.
-
-- **Конфиг:** `/.golangci.yml`
-- **Timeout:** 5 минут
-- **Линтеры:** errcheck, govet, staticcheck, bodyclose, sqlclosecheck, и др.
-
-### 2. Test
-
-Запускает unit тесты с race detector и собирает coverage.
-
-- **Флаги:** `-v -race -coverprofile=coverage.out -covermode=atomic`
-- **Coverage:** отправляется в Codecov (нужен `CODECOV_TOKEN` в secrets)
-
-### 3. Build
-
-Собирает Docker образы для каждого сервиса.
-
-- **Dockerfile:** `/Dockerfile` (multi-stage)
-- **Cache:** GitHub Actions cache (`type=gha`)
-- **Push:** отключен (только проверка сборки)
-
-### 4. Integration
-
-Поднимает зависимости и запускает интеграционные тесты.
-
-- **Зависимости:** postgres-quiz, postgres-history, redis
-- **Тесты:** `go test -tags=integration`
-
-## Composite Actions
-
-Переиспользуемые actions в `/.github/actions/`:
-
-### setup-go
-
-Setup Go окружения с кэшированием.
-
-```yaml
-- uses: ./.github/actions/setup-go
-  with:
-    module: services/quiz      # обязательный
-    go-version: '1.24'         # опциональный, default: 1.24
-```
-
-### lint-go
-
-Запуск golangci-lint.
-
-```yaml
-- uses: ./.github/actions/lint-go
-  with:
-    module: services/quiz      # обязательный
-    go-version: '1.24'         # опциональный
-```
-
-### test-go
-
-Запуск тестов с coverage.
-
-```yaml
-- uses: ./.github/actions/test-go
-  with:
-    module: services/quiz      # обязательный
-    go-version: '1.24'         # опциональный
-    upload-coverage: 'true'    # опциональный, default: true
-    codecov-token: ${{ secrets.CODECOV_TOKEN }}  # опциональный
-```
-
-## Добавление нового сервиса
-
-1. Добавить в matrix в `ci.yml`:
-
-```yaml
-matrix:
-  module:
-    - shared
-    - services/gateway
-    - services/quiz
-    - services/auth
-    - services/user
-    - services/history
-    - services/new-service  # добавить сюда
-```
-
-2. Для build job (если нужен Docker):
-
-```yaml
-matrix:
-  service:
-    - gateway
-    - quiz
-    - auth
-    - user
-    - history
-    - new-service  # добавить сюда
-```
-
-## Secrets
-
-| Secret | Описание | Обязательный |
-|--------|----------|--------------|
-| `CODECOV_TOKEN` | Токен для загрузки coverage | Нет (CI не упадёт) |
-
-## Локальный запуск
-
-### Lint
-```bash
-cd services/quiz
-golangci-lint run
-```
-
-### Tests
-```bash
-cd services/quiz
-go test -v -race ./...
-```
-
-### Integration tests
-```bash
-cd deployments/docker
-docker compose up -d postgres-quiz redis
-cd ../../services/quiz
-go test -v -tags=integration ./...
-```
-
-## Структура файлов
+## Структура
 
 ```
 .github/
 ├── actions/
-│   ├── setup-go/
-│   │   └── action.yml
-│   ├── lint-go/
-│   │   └── action.yml
-│   └── test-go/
-│       └── action.yml
+│   ├── setup-go/action.yml   # setup Go + cache
+│   ├── lint-go/action.yml    # golangci-lint
+│   └── test-go/action.yml    # go test + coverage
 ├── workflows/
-│   └── ci.yml
-└── README.md              # этот файл
+│   └── ci.yml                # основной пайплайн
+└── README.md
+```
+
+## Триггеры
+
+| Событие        | Ветки         |
+|----------------|---------------|
+| `push`         | `main`, `dev` |
+| `pull_request` | `main`, `dev` |
+
+## Что запускается
+
+| Изменился             | Запустится     |
+|-----------------------|----------------|
+| `services/gateway/**` | только gateway |
+| `services/quiz/**`    | только quiz    |
+| `shared/**`           | ВСЕ сервисы    |
+| `.github/**`          | ВСЕ сервисы    |
+| `.golangci.yml`       | ВСЕ сервисы    |
+
+## Jobs
+
+```
+changes ──► shared   ──►
+        ├─► gateway  ──►
+        ├─► quiz     ──► build (Docker)
+        ├─► auth     ──►
+        ├─► user     ──►
+        └─► history  ──►
+```
+
+Каждый job использует actions:
+- `lint-go` — golangci-lint
+- `test-go` — go test с coverage
+
+## Добавление нового сервиса
+
+1. Добавить фильтр в `ci.yml`:
+```yaml
+# jobs.changes.steps.filter.with.filters
+newservice:
+  - 'services/newservice/**'
+```
+
+2. Добавить output:
+```yaml
+# jobs.changes.outputs
+newservice: ${{ steps.filter.outputs.newservice }}
+```
+
+3. Добавить job:
+```yaml
+newservice:
+  needs: changes
+  if: needs.changes.outputs.newservice == 'true' || needs.changes.outputs.shared == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/lint-go
+      with:
+        module: services/newservice
+    - uses: ./.github/actions/test-go
+      with:
+        module: services/newservice
+```
+
+4. Добавить в build matrix:
+```yaml
+- service: newservice
+  run: ${{ needs.changes.outputs.newservice == 'true' || needs.changes.outputs.shared == 'true' }}
+```
+
+## Локальный запуск
+
+```bash
+# Lint
+cd services/quiz && golangci-lint run
+
+# Tests
+cd services/quiz && go test -race ./...
+
+# Docker build
+docker build --target quiz --build-arg SERVICE=quiz -t quiz:test .
 ```
