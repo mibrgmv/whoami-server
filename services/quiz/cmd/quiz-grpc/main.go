@@ -15,7 +15,6 @@ import (
 	"github.com/mibrgmv/whoami-server/shared/tools"
 )
 
-// todo test
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)

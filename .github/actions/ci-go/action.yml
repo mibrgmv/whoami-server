@@ -29,6 +29,11 @@ runs:
         args: --timeout=5m
         skip-cache: true
 
+    - name: Build
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: go build ./...
+
     - name: Test
       shell: bash
       working-directory: ${{ inputs.working-directory }}

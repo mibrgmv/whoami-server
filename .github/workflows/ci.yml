@@ -25,6 +25,7 @@ jobs:
             shared:
               - 'shared/**'
               - '.golangci.yml'
+              - '.github/**'
             gateway:
               - 'services/gateway/**'
             quiz:
