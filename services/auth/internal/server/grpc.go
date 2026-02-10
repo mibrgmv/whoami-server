@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func NewGrpcServer(cfg config.Config) *grpc.Server {
+func NewGrpcServer(cfg *config.Config) *grpc.Server {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 	kc := keycloak.NewClient(&cfg.Keycloak)
 	authService := service.NewAuthService(kc)

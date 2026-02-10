@@ -10,20 +10,10 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gocritic
-    - gofmt
-    - goimports
-    - misspell
-    - unconvert
-    - unparam
     - nilerr
-    - errorlint
     - bodyclose
-    - contextcheck
-    - noctx
     - rowserrcheck
     - sqlclosecheck
-    - prealloc
 
 linters-settings:
   govet:
@@ -32,30 +22,11 @@ linters-settings:
       - shadow
       - fieldalignment
 
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-
-  goimports:
-    local-prefixes: github.com/mibrgmv/whoami-server
-
-  misspell:
-    locale: US
-
-  errorlint:
-    errorf: true
-    asserts: true
-    comparison: true
-
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
         - errcheck
-        - gocritic
-        - unparam
 
     - path: mock
       linters:

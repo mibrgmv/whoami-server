@@ -24,27 +24,16 @@ down-monitoring:
 	docker-compose -f docker-compose.monitoring.yaml down
 
 
-up-services:
-	cd deployments/docker && \
-	docker-compose -f docker-compose.services.yaml up -d
-
-down-services:
-	cd deployments/docker && \
-	docker-compose -f docker-compose.services.yaml down
-
-
 up:
 	cd deployments/docker && \
  	docker-compose up -d
 
 down:
 	cd deployments/docker && docker-compose -f docker-compose.keycloak.yaml down
-	cd deployments/docker && docker-compose -f docker-compose.services.yaml down
 	cd deployments/docker && docker-compose -f docker-compose.monitoring.yaml down
 	cd deployments/docker && docker-compose down
 
 down-v:
 	cd deployments/docker && docker-compose -f docker-compose.keycloak.yaml down -v
-	cd deployments/docker && docker-compose -f docker-compose.services.yaml down -v
 	cd deployments/docker && docker-compose -f docker-compose.monitoring.yaml down -v
 	cd deployments/docker && docker-compose down -v

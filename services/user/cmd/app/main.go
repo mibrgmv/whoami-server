@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("failed to read user service config: %v", err)
 	}
 
-	s := server.NewGrpcServer(cfg)
+	s := server.NewGrpcServer(&cfg)
 	lis, err := net.Listen("tcp", cfg.Grpc.GetAddr())
 	if err != nil {
 		log.Fatal("Failed to listen:", err)
