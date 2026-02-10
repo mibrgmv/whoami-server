@@ -1,4 +1,4 @@
-package question
+package service
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/quiz/internal/models"
+	"github.com/mibrgmv/whoami-server/quiz/internal/repository"
 	"github.com/mibrgmv/whoami-server/shared/storage"
 )
 
@@ -19,19 +20,28 @@ var (
 	ErrQuestionQuizIdMismatch = errors.New("question quiz ID does not match quiz ID")
 )
 
-type Service struct {
-	repo  Repository
-	cache storage.Cache
+type QuestionService interface {
+	Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error)
+	GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.Question, error)
+	EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz *models.Quiz) (string, error)
 }
 
-func NewService(repo Repository, cache storage.Cache) *Service {
-	return &Service{
-		repo:  repo,
-		cache: cache,
+type questionService struct {
+	questionRepo repository.QuestionRepository
+	cache        storage.Cache
+}
+
+func NewQuestionService(
+	questionRepo repository.QuestionRepository,
+	cache storage.Cache,
+) QuestionService {
+	return &questionService{
+		questionRepo: questionRepo,
+		cache:        cache,
 	}
 }
 
-func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
+func (s *questionService) Add(ctx context.Context, quizID uuid.UUID, questions []*models.Question) ([]*models.Question, error) {
 	cacheKey := fmt.Sprintf(questionsCacheKey, quizID)
 
 	err := s.cache.Delete(ctx, cacheKey)
@@ -39,10 +49,10 @@ func (s *Service) Add(ctx context.Context, quizID uuid.UUID, questions []*models
 		return nil, err
 	}
 
-	return s.repo.Add(ctx, questions)
+	return s.questionRepo.Add(ctx, questions)
 }
 
-func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.Question, error) {
+func (s *questionService) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.Question, error) {
 	cacheKey := fmt.Sprintf(questionsCacheKey, quizID)
 
 	var questions []*models.Question
@@ -51,7 +61,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.
 		return questions, nil
 	}
 
-	questions, err = s.repo.Query(ctx, Query{QuizIds: []uuid.UUID{quizID}})
+	questions, err = s.questionRepo.Query(ctx, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}})
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +73,7 @@ func (s *Service) GetByQuizID(ctx context.Context, quizID uuid.UUID) ([]*models.
 	return questions, nil
 }
 
-func (s *Service) EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz *models.Quiz) (string, error) {
+func (s *questionService) EvaluateAnswers(ctx context.Context, answers []models.Answer, quiz *models.Quiz) (string, error) {
 	questions, err := s.GetByQuizID(ctx, quiz.ID)
 	if err != nil {
 		return "", err

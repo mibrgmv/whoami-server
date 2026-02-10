@@ -1,4 +1,4 @@
-package question_test
+package service_test
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mibrgmv/whoami-server/quiz/internal/models"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/question"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/question/mocks"
+	"github.com/mibrgmv/whoami-server/quiz/internal/service"
+	"github.com/mibrgmv/whoami-server/quiz/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -16,7 +16,7 @@ import (
 func TestEvaluateAnswers(t *testing.T) {
 	mockRepo := new(mocks.MockRepository)
 	mockCache := new(mocks.MockCache)
-	service := question.NewService(mockRepo, mockCache)
+	questionService := service.NewQuestionService(mockRepo, mockCache)
 
 	quizID := uuid.New()
 	quiz := models.Quiz{
@@ -74,7 +74,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	tests := []struct {
@@ -159,7 +159,7 @@ func TestEvaluateAnswers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			result, err := service.EvaluateAnswers(ctx, tt.answers, &quiz)
+			result, err := questionService.EvaluateAnswers(ctx, tt.answers, &quiz)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -180,7 +180,7 @@ func TestEvaluateAnswers(t *testing.T) {
 func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	mockRepo := new(mocks.MockRepository)
 	mockCache := new(mocks.MockCache)
-	service := question.NewService(mockRepo, mockCache)
+	questionService := service.NewQuestionService(mockRepo, mockCache)
 
 	quizID := uuid.New()
 	wrongQuizID := uuid.New()
@@ -206,7 +206,7 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
@@ -214,9 +214,9 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
+	result, err := questionService.EvaluateAnswers(ctx, answers, &quiz)
 	assert.Error(t, err)
-	assert.Equal(t, err, question.ErrQuestionQuizIdMismatch)
+	assert.Equal(t, err, service.ErrQuestionQuizIdMismatch)
 	assert.Empty(t, result)
 }
 
@@ -224,7 +224,7 @@ func TestEvaluateAnswers_QuestionQuizIDMismatch(t *testing.T) {
 func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	mockRepo := new(mocks.MockRepository)
 	mockCache := new(mocks.MockCache)
-	service := question.NewService(mockRepo, mockCache)
+	questionService := service.NewQuestionService(mockRepo, mockCache)
 
 	quizID := uuid.New()
 	questionID := uuid.New()
@@ -249,7 +249,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	cacheKey := "questions:quiz:" + quizID.String()
 
 	mockCache.On("Get", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(errors.New("cache miss"))
-	mockRepo.On("Query", mock.Anything, question.Query{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
+	mockRepo.On("QuestionQuery", mock.Anything, models.QuestionQuery{QuizIds: []uuid.UUID{quizID}}).Return(questions, nil)
 	mockCache.On("Set", mock.Anything, cacheKey, mock.AnythingOfType("*[]*models.Question")).Return(nil)
 
 	answers := []models.Answer{
@@ -257,7 +257,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
+	result, err := questionService.EvaluateAnswers(ctx, answers, &quiz)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "weights length for option 'Yes' does not match number of results")
 	assert.Empty(t, result)
@@ -266,7 +266,7 @@ func TestEvaluateAnswers_WeightLengthMismatch(t *testing.T) {
 func TestEvaluateAnswers_CacheHit(t *testing.T) {
 	mockRepo := new(mocks.MockRepository)
 	mockCache := new(mocks.MockCache)
-	service := question.NewService(mockRepo, mockCache)
+	questionService := service.NewQuestionService(mockRepo, mockCache)
 
 	quizID := uuid.New()
 	questionID := uuid.New()
@@ -301,9 +301,9 @@ func TestEvaluateAnswers_CacheHit(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := service.EvaluateAnswers(ctx, answers, &quiz)
+	result, err := questionService.EvaluateAnswers(ctx, answers, &quiz)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "Trevor", result)
-	mockRepo.AssertNotCalled(t, "Query")
+	mockRepo.AssertNotCalled(t, "QuestionQuery")
 }

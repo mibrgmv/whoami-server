@@ -1,7 +1,7 @@
-package question
+package models
 
 import "github.com/google/uuid"
 
-type Query struct {
+type QuestionQuery struct {
 	QuizIds []uuid.UUID
 }

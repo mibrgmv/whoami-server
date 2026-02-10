@@ -7,14 +7,11 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	quizgrpc "github.com/mibrgmv/whoami-server/quiz/internal/grpc"
 	questionv1 "github.com/mibrgmv/whoami-server/quiz/internal/protogen/question/v1"
 	quizv1 "github.com/mibrgmv/whoami-server/quiz/internal/protogen/quiz/v1"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/question"
-	questiongrpc "github.com/mibrgmv/whoami-server/quiz/internal/service/question/grpc"
-	questionpg "github.com/mibrgmv/whoami-server/quiz/internal/service/question/postgresql"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/quiz"
-	quizgrpc "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/grpc"
-	quizpg "github.com/mibrgmv/whoami-server/quiz/internal/service/quiz/postgresql"
+	"github.com/mibrgmv/whoami-server/quiz/internal/repository/postgres"
+	"github.com/mibrgmv/whoami-server/quiz/internal/service"
 	"github.com/mibrgmv/whoami-server/shared/grpc/interceptor"
 	"github.com/mibrgmv/whoami-server/shared/storage/redis"
 	"google.golang.org/grpc"
@@ -23,7 +20,7 @@ import (
 
 type GrpcServer struct {
 	grpcServer     *grpc.Server
-	questionServer *questiongrpc.QuestionService
+	questionServer quizgrpc.QuestionServer
 }
 
 func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyServiceAddr string) (*GrpcServer, error) {
@@ -34,14 +31,14 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyService
 		grpc.ChainStreamInterceptor(interceptor.DefaultStreamInterceptors(logger)...),
 	)
 
-	quizRepo := quizpg.NewRepository(pool)
-	quizService := quiz.NewService(quizRepo)
-	quizServer := quizgrpc.NewService(quizService)
+	quizRepo := postgres.NewQuizRepository(pool)
+	quizService := service.NewQuizService(quizRepo)
+	quizServer := quizgrpc.NewQuizServer(quizService)
 	quizv1.RegisterQuizServiceServer(s, quizServer)
 
-	questionRepo := questionpg.NewRepository(pool)
-	questionService := question.NewService(questionRepo, redisClient)
-	questionServer, err := questiongrpc.NewService(questionService, quizService, historyServiceAddr)
+	questionRepo := postgres.NewQuestionRepository(pool)
+	questionService := service.NewQuestionService(questionRepo, redisClient)
+	questionServer, err := quizgrpc.NewQuestionServer(questionService, quizService, historyServiceAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create question service: %w", err)
 	}
@@ -49,8 +46,7 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyService
 
 	reflection.Register(s)
 	return &GrpcServer{
-		grpcServer:     s,
-		questionServer: questionServer,
+		grpcServer: s,
 	}, nil
 }
 

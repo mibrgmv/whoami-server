@@ -1,4 +1,4 @@
-package postgresql
+package postgres
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mibrgmv/whoami-server/quiz/internal/models"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/question"
+	"github.com/mibrgmv/whoami-server/quiz/internal/repository"
 )
 
-type Repository struct {
+type questionRepo struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepository(pool *pgxpool.Pool) *Repository {
-	return &Repository{pool: pool}
+func NewQuestionRepository(pool *pgxpool.Pool) repository.QuestionRepository {
+	return &questionRepo{pool: pool}
 }
 
-func (r *Repository) Add(ctx context.Context, questions []*models.Question) ([]*models.Question, error) {
+func (r *questionRepo) Add(ctx context.Context, questions []*models.Question) ([]*models.Question, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("begin transaction failed: %w", err)
@@ -88,7 +88,7 @@ func (r *Repository) Add(ctx context.Context, questions []*models.Question) ([]*
 	return createdQuestions, nil
 }
 
-func (r *Repository) Query(ctx context.Context, query question.Query) ([]*models.Question, error) {
+func (r *questionRepo) Query(ctx context.Context, query models.QuestionQuery) ([]*models.Question, error) {
 	sql := `
 	select question_id,
 	       quiz_id,

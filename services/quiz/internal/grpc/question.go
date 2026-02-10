@@ -10,50 +10,58 @@ import (
 	"github.com/mibrgmv/whoami-server/quiz/internal/models"
 	historyv1 "github.com/mibrgmv/whoami-server/quiz/internal/protogen/history/v1"
 	questionv1 "github.com/mibrgmv/whoami-server/quiz/internal/protogen/question/v1"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/question"
-	"github.com/mibrgmv/whoami-server/quiz/internal/service/quiz"
+	"github.com/mibrgmv/whoami-server/quiz/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
-type QuestionService struct {
-	service       *question.Service
-	quizService   *quiz.Service
-	historyClient historyv1.QuizCompletionHistoryServiceClient
-	historyConn   *grpc.ClientConn
+type QuestionServer interface {
+	questionv1.QuestionServiceServer
+	Close() error
+}
+
+type questionServer struct {
+	questionService service.QuestionService
+	quizService     service.QuizService
+	historyClient   historyv1.QuizCompletionHistoryServiceClient
+	historyConn     *grpc.ClientConn
 	questionv1.UnimplementedQuestionServiceServer
 }
 
-func NewService(service *question.Service, quizService *quiz.Service, historyServiceAddr string) (*QuestionService, error) {
+func NewQuestionServer(
+	questionService service.QuestionService,
+	quizService service.QuizService,
+	historyServiceAddr string,
+) (QuestionServer, error) {
 	conn, err := grpc.NewClient(historyServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to history service: %w", err)
+		return nil, fmt.Errorf("failed to connect to history questionService: %w", err)
 	}
 
 	historyClient := historyv1.NewQuizCompletionHistoryServiceClient(conn)
 
-	return &QuestionService{
-		service:       service,
-		quizService:   quizService,
-		historyClient: historyClient,
-		historyConn:   conn,
+	return &questionServer{
+		questionService: questionService,
+		quizService:     quizService,
+		historyClient:   historyClient,
+		historyConn:     conn,
 	}, nil
 }
 
-func (s *QuestionService) Close() error {
+func (s *questionServer) Close() error {
 	if s.historyConn != nil {
 		err := s.historyConn.Close()
 		if err != nil {
-			return fmt.Errorf("failed to close connection to history service: %w", err)
+			return fmt.Errorf("failed to close connection to history questionService: %w", err)
 		}
 		log.Printf("closed connection with quiz completion history")
 	}
 	return nil
 }
 
-func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *questionv1.BatchCreateQuestionsRequest) (*questionv1.BatchCreateQuestionsResponse, error) {
+func (s *questionServer) BatchCreateQuestions(ctx context.Context, request *questionv1.BatchCreateQuestionsRequest) (*questionv1.BatchCreateQuestionsResponse, error) {
 	var questionsToCreate []*models.Question
 	for _, req := range request.Requests {
 		if req.QuizId != request.QuizId {
@@ -75,13 +83,13 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *que
 
 	_, err = s.quizService.GetByID(ctx, quizID)
 	if err != nil {
-		if errors.Is(err, quiz.ErrQuizNotFound) {
+		if errors.Is(err, service.ErrQuizNotFound) {
 			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get quiz: %v", err)
 	}
 
-	createdQuestions, err := s.service.Add(ctx, quizID, questionsToCreate)
+	createdQuestions, err := s.questionService.Add(ctx, quizID, questionsToCreate)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error creating questions: %v", err)
 	}
@@ -96,13 +104,13 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, request *que
 	}, nil
 }
 
-func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *questionv1.BatchGetQuestionsRequest) (*questionv1.BatchGetQuestionsResponse, error) {
+func (s *questionServer) BatchGetQuestions(ctx context.Context, request *questionv1.BatchGetQuestionsRequest) (*questionv1.BatchGetQuestionsResponse, error) {
 	quizID, err := uuid.Parse(request.QuizId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
 	}
 
-	questions, err := s.service.GetByQuizID(ctx, quizID)
+	questions, err := s.questionService.GetByQuizID(ctx, quizID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get questions by quiz id: %v", err)
 	}
@@ -117,7 +125,7 @@ func (s *QuestionService) BatchGetQuestions(ctx context.Context, request *questi
 	}, nil
 }
 
-func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *questionv1.EvaluateAnswersRequest) (*questionv1.EvaluateAnswersResponse, error) {
+func (s *questionServer) EvaluateAnswers(ctx context.Context, request *questionv1.EvaluateAnswersRequest) (*questionv1.EvaluateAnswersResponse, error) {
 	var answers []models.Answer
 	for _, answer := range request.Answers {
 		modelAnswer, err := models.AnswerToModel(answer)
@@ -134,13 +142,13 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *question
 
 	q, err := s.quizService.GetByID(ctx, quizID)
 	if err != nil {
-		if errors.Is(err, quiz.ErrQuizNotFound) {
+		if errors.Is(err, service.ErrQuizNotFound) {
 			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get quiz: %v", err)
 	}
 
-	result, err := s.service.EvaluateAnswers(ctx, answers, q)
+	result, err := s.questionService.EvaluateAnswers(ctx, answers, q)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to evaluate answers: %v", err)
 	}
@@ -163,7 +171,7 @@ func (s *QuestionService) EvaluateAnswers(ctx context.Context, request *question
 	return &questionv1.EvaluateAnswersResponse{Result: result}, nil
 }
 
-func (s *QuestionService) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
+func (s *questionServer) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
 	historyItem := &historyv1.QuizCompletionHistoryItem{
 		UserId:     userID.String(),
 		QuizId:     quizID.String(),
