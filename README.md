@@ -21,15 +21,9 @@ docker compose --profile keycloak --profile monitoring up -d
 
 Переменные окружения: `deployments/docker/.env`
 
-### настройка keycloak
+### keycloak
 
-```shell
-# запустить скрипт и получить секретный ключ
-bash scripts/setup-keycloak.sh
-
-# обновить KEYCLOAK_ADMIN_CLIENT_SECRET в .env и пересоздать сервисы
-docker compose --profile keycloak up -d --force-recreate auth-service user-service
-```
+Realm автоматически импортируется при первом запуске из `deployments/keycloak/realm.json`.
 
 ## локальный запуск (без Docker)
 
