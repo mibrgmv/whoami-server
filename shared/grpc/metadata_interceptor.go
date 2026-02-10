@@ -10,11 +10,13 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type contextKey string
+
 const (
-	UserIDKey        string = "user_id"
-	UsernameKey      string = "username"
-	EmailKey         string = "email"
-	EmailVerifiedKey string = "email_verified"
+	UserIDKey        contextKey = "user_id"
+	UsernameKey      contextKey = "username"
+	EmailKey         contextKey = "email"
+	EmailVerifiedKey contextKey = "email_verified"
 )
 
 func UnaryMetadataInterceptor() grpc.UnaryServerInterceptor {

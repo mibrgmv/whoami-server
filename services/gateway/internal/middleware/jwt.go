@@ -18,6 +18,15 @@ import (
 	"github.com/mibrgmv/whoami-server/shared/keycloak"
 )
 
+type contextKey string
+
+const (
+	UserIDKey        contextKey = "user_id"
+	UsernameKey      contextKey = "username"
+	EmailKey         contextKey = "email"
+	EmailVerifiedKey contextKey = "email_verified"
+)
+
 type JWK struct {
 	Kty string `json:"kty"`
 	Kid string `json:"kid"`
@@ -86,10 +95,10 @@ func (v *jwtValidator) handler(c *gin.Context) {
 	c.Set("claims", claims)
 
 	ctx := c.Request.Context()
-	ctx = context.WithValue(ctx, "user_id", claims.Subject)
-	ctx = context.WithValue(ctx, "username", claims.PreferredUsername)
-	ctx = context.WithValue(ctx, "email", claims.Email)
-	ctx = context.WithValue(ctx, "email_verified", claims.EmailVerified)
+	ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
+	ctx = context.WithValue(ctx, UsernameKey, claims.PreferredUsername)
+	ctx = context.WithValue(ctx, EmailKey, claims.Email)
+	ctx = context.WithValue(ctx, EmailVerifiedKey, claims.EmailVerified)
 
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()

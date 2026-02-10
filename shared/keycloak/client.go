@@ -562,10 +562,6 @@ type BatchGetUsersResponse struct {
 	NextFirst *int32 `json:"next_first"`
 }
 
-type pageTokenData struct {
-	First int `json:"first"`
-}
-
 func (c *Client) BatchGetUsers(ctx context.Context, req BatchGetUsersRequest) (*BatchGetUsersResponse, error) {
 	adminToken, err := c.GetAdminToken(ctx)
 	if err != nil {
