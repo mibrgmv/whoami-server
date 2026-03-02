@@ -17,29 +17,29 @@ linters:
     - rowserrcheck
     - sqlclosecheck
 
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - shadow
-      - fieldalignment
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - shadow
+        - fieldalignment
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
 
-    - path: mock
-      linters:
-        - errcheck
-        - govet
-        - staticcheck
-        - unused
+      - path: mock
+        linters:
+          - errcheck
+          - govet
+          - staticcheck
+          - unused
 
-    - path: protogen
-      linters:
-        - errcheck
-        - govet
-        - staticcheck
-        - unused
+      - path: protogen
+        linters:
+          - errcheck
+          - govet
+          - staticcheck
+          - unused
