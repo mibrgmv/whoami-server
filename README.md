@@ -1,77 +1,49 @@
-## архитектура бэкенда
-![image](docs/whoami.png)
+## структура проекта
 
-## локальный запуск (Docker)
+```
+/
+├── auth/           # auth сервис (gRPC)
+├── gateway/        # HTTP gateway
+├── history/        # history сервис
+├── quiz/           # quiz сервис (legacy)
+├── user/           # user сервис
+├── libs/           # shared библиотеки
+├── docker-compose.yaml
+├── docker-compose.override.yaml
+├── Dockerfile
+├── go.work
+├── realm.json      # keycloak realm config
+└── prometheus.yml  # prometheus config
+```
+
+## запуск
 
 ```shell
-cd deployments/docker
-
-# поднять core сервисы (gateway, auth, quiz, user, history, postgres, redis)
+# core сервисы (локальная сборка)
 docker compose up -d
 
-# поднять с keycloak
+# + keycloak
 docker compose --profile keycloak up -d
 
-# поднять с мониторингом (prometheus, grafana)
+# + prometheus
 docker compose --profile monitoring up -d
 
-# поднять всё
+# всё
 docker compose --profile keycloak --profile monitoring up -d
 ```
 
-Переменные окружения: `deployments/docker/.env`
-
-### keycloak
-
-Realm автоматически импортируется при первом запуске из `deployments/keycloak/realm.json`.
-
-## локальный запуск (без Docker)
-
-Для запуска сервисов через `go run` используется `.env` в корне проекта.
+## разработка
 
 ```shell
-# скопировать пример
-cp deployments/docker/.env .env
-
-# изменить пути на localhost
-# KEYCLOAK_BASE_URL=http://localhost:8088
-
-# запустить сервис
-cd services/gateway && go run ./cmd/gateway
+make lint    # golangci-lint
+make test    # тесты
+make tidy    # go mod tidy
+make proto   # генерация proto
 ```
 
-Переменные окружения: `/.env`
+## keycloak
 
-## Makefile
+Realm импортируется автоматически из `realm.json`.
 
-```shell
-make up            # docker compose up
-make up-keycloak   # + keycloak
-make up-monitoring # + prometheus/grafana
-make up-all        # всё
-make down          # остановить
-make down-v        # остановить + удалить volumes
-make logs          # логи
-make lint          # golangci-lint
-make test          # тесты
-make tidy          # go mod tidy
-```
-
-## CI/CD
-
-- **CI**: `.github/workflows/ci.yml` — lint, test для изменённых сервисов
-- **CD**: `.github/workflows/cd.yml` — build, push в ghcr.io, deploy через SSH
-
-Документация: `.github/README.md`
-
-## возможные улучшения
-- kafka
-- исправить метрики
-- накрутить nginx
-- поднять несколько инстансов сервиса (load balancer — см. `LOAD_BALANCER.md`)
-- переделать главный сервис
-- придумать темплейт для сервиса
-- отдавать фронт с бэка
-- добавить данные в миграции
-- переделать конфигурацию реалма keycloak
-  - https://www.google.com/search?q=how+to+setup+keycloak+realm+on+startup+in+docker&sca_esv=50bdd2a08bdd7bce&ei=dedFaa5jr83A8A-ggfLgBQ&ved=0ahUKEwju8YS47sqRAxWvJhAIHaCAHFwQ4dUDCBA&uact=5&oq=how+to+setup+keycloak+realm+on+startup+in+docker&gs_lp=Egxnd3Mtd2l6LXNlcnAiMGhvdyB0byBzZXR1cCBrZXljbG9hayByZWFsbSBvbiBzdGFydHVwIGluIGRvY2tlcjIFEAAY7wUyCBAAGIAEGKIEMgUQABjvBTIIEAAYgAQYogQyCBAAGIAEGKIESLQjUO0HWKAgcAF4AZABAJgBogKgAfcTqgEGMC4xNi4xuAEDyAEA-AEBmAIKoAKpC8ICChAAGLADGNYEGEfCAgQQABgewgILEAAYgAQYhgMYigXCAggQIRigARjDBJgDAIgGAZAGCJIHBTEuNy4yoAevOrIHBTAuNy4yuAeiC8IHBTAuNi40yAcigAgA&sclient=gws-wiz-serp
+Тестовые юзеры:
+- `admin:admin` — роли: user, admin

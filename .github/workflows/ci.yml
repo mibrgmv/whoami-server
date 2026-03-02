@@ -10,7 +10,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      shared: ${{ steps.filter.outputs.shared }}
+      libs: ${{ steps.filter.outputs.libs }}
       gateway: ${{ steps.filter.outputs.gateway }}
       quiz: ${{ steps.filter.outputs.quiz }}
       auth: ${{ steps.filter.outputs.auth }}
@@ -22,77 +22,77 @@ jobs:
         id: filter
         with:
           filters: |
-            shared:
-              - 'shared/**'
+            libs:
+              - 'libs/**'
               - '.golangci.yml'
               - '.github/**'
             gateway:
-              - 'services/gateway/**'
+              - 'gateway/**'
             quiz:
-              - 'services/quiz/**'
+              - 'quiz/**'
             auth:
-              - 'services/auth/**'
+              - 'auth/**'
             user:
-              - 'services/user/**'
+              - 'user/**'
             history:
-              - 'services/history/**'
+              - 'history/**'
 
-  shared:
+  libs:
     needs: changes
-    if: needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: shared
+          working-directory: libs
 
   gateway:
     needs: changes
-    if: needs.changes.outputs.gateway == 'true' || needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.gateway == 'true' || needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: services/gateway
+          working-directory: gateway
 
   quiz:
     needs: changes
-    if: needs.changes.outputs.quiz == 'true' || needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.quiz == 'true' || needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: services/quiz
+          working-directory: quiz
 
   auth:
     needs: changes
-    if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.auth == 'true' || needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: services/auth
+          working-directory: auth
 
   user:
     needs: changes
-    if: needs.changes.outputs.user == 'true' || needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.user == 'true' || needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: services/user
+          working-directory: user
 
   history:
     needs: changes
-    if: needs.changes.outputs.history == 'true' || needs.changes.outputs.shared == 'true'
+    if: needs.changes.outputs.history == 'true' || needs.changes.outputs.libs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/ci-go
         with:
-          working-directory: services/history
+          working-directory: history

@@ -1,13 +1,10 @@
-COMPOSE_DIR := deployments/docker
-COMPOSE := docker compose -f $(COMPOSE_DIR)/docker-compose.yaml
+COMPOSE := docker compose
 
-SERVICES := shared gateway quiz auth user history
+SERVICES := libs gateway quiz auth user history
 
 .PHONY: up down down-v logs \
 	up-keycloak up-monitoring up-all \
-	build lint test \
-	lint-all test-all \
-	proto tidy
+	build lint test tidy proto help
 
 up:
 	$(COMPOSE) up -d
@@ -36,41 +33,32 @@ build:
 lint:
 	@for svc in $(SERVICES); do \
 		echo "==> Linting $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && golangci-lint run --timeout=5m && cd ..; \
-		else \
-			cd services/$$svc && golangci-lint run --timeout=5m && cd ../..; \
-		fi \
+		cd $$svc && golangci-lint run --timeout=5m && cd ..; \
 	done
 
 test:
 	@for svc in $(SERVICES); do \
 		echo "==> Testing $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && go test -race ./... && cd ..; \
-		else \
-			cd services/$$svc && go test -race ./... && cd ../..; \
-		fi \
+		cd $$svc && go test -race ./... && cd ..; \
 	done
 
 tidy:
 	@for svc in $(SERVICES); do \
 		echo "==> Tidying $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && go mod tidy && cd ..; \
-		else \
-			cd services/$$svc && go mod tidy && cd ../..; \
-		fi \
+		cd $$svc && go mod tidy && cd ..; \
 	done
 
 proto:
-	@echo "Generate proto files (implement as needed)"
+	@for svc in gateway auth quiz user history; do \
+		echo "==> Generating proto for $$svc"; \
+		cd $$svc && make gen && cd ..; \
+	done
 
 help:
 	@echo "Docker:"
 	@echo "  up            - start core services"
 	@echo "  up-keycloak   - start with keycloak"
-	@echo "  up-monitoring - start with prometheus/grafana"
+	@echo "  up-monitoring - start with prometheus"
 	@echo "  up-all        - start everything"
 	@echo "  down          - stop all"
 	@echo "  down-v        - stop all + remove volumes"
@@ -81,3 +69,4 @@ help:
 	@echo "  lint          - run golangci-lint"
 	@echo "  test          - run tests"
 	@echo "  tidy          - go mod tidy all modules"
+	@echo "  proto         - generate proto files"
