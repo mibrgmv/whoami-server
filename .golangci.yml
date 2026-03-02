@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   timeout: 5m
   modules-download-mode: readonly
@@ -30,8 +32,14 @@ issues:
 
     - path: mock
       linters:
-        - all
+        - errcheck
+        - govet
+        - staticcheck
+        - unused
 
     - path: protogen
       linters:
-        - all
+        - errcheck
+        - govet
+        - staticcheck
+        - unused
