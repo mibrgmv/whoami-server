@@ -661,7 +661,7 @@ const file_question_proto_rawDesc = "" +
 	"\x0fEvaluateAnswers\x12#.question.v1.EvaluateAnswersRequest\x1a$.question.v1.EvaluateAnswersResponse\"B\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/quizzes/{quiz_id}/evaluateBKZIwhoami-server/quiz/pkg/protogen/question/v1;questionv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/quizzes/{quiz_id}/evaluateB8Z6whoami-server/quiz/pkg/protogen/question/v1;questionv1b\x06proto3"
 
 var (
 	file_question_proto_rawDescOnce sync.Once

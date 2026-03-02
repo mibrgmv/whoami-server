@@ -318,7 +318,7 @@ const file_quiz_proto_rawDesc = "" +
 	"\x0fBatchGetQuizzes\x12\x1f.quiz.v1.BatchGetQuizzesRequest\x1a .quiz.v1.BatchGetQuizzesResponse\",\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzesBKZIwhoami-server/gateway/pkg/protogen/quiz/v1;quizv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzesB3Z1whoami-server/gateway/pkg/protogen/quiz/v1;quizv1b\x06proto3"
 
 var (
 	file_quiz_proto_rawDescOnce sync.Once

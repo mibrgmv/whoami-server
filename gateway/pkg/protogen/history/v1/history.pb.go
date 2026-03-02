@@ -354,7 +354,7 @@ const file_history_proto_rawDesc = "" +
 	"\rBatchGetItems\x12 .history.v1.BatchGetItemsRequest\x1a!.history.v1.BatchGetItemsResponse\",\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/historyBQZOwhoami-server/gateway/pkg/protogen/history/v1;historyv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/historyB9Z7whoami-server/gateway/pkg/protogen/history/v1;historyv1b\x06proto3"
 
 var (
 	file_history_proto_rawDescOnce sync.Once
