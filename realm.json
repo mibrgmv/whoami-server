@@ -58,8 +58,11 @@
     {
       "username": "admin",
       "email": "admin@example.com",
+      "firstName": "Adminus",
+      "lastName": "Adminskiy",
       "enabled": true,
       "emailVerified": true,
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",
@@ -68,6 +71,23 @@
         }
       ],
       "realmRoles": ["user", "admin"]
+    },
+    {
+      "username": "user",
+      "email": "user@example.com",
+      "firstName": "First",
+      "lastName": "Last",
+      "enabled": true,
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
     }
   ]
 }
