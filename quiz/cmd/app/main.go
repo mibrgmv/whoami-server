@@ -45,16 +45,13 @@ func main() {
 		log.Fatalf("failed to migrate up: %v", err)
 	}
 
-	client, err := redis.NewClient(ctx, *cfg.Redis)
+	redisClient, err := redis.NewClient(ctx, *cfg.Redis)
 	if err != nil {
 		log.Fatalf("Failed to create Redis client: %v", err)
 	}
 	log.Println("Connected to Redis successfully")
 
-	s, err := server.NewGrpcServer(pool, client, cfg.HistoryService.GetAddr())
-	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
-	}
+	s := server.NewGrpcServer(pool, redisClient, cfg.Kafka)
 
 	go func() {
 		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {

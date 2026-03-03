@@ -6,6 +6,8 @@ services:
       target: gateway
       args:
         SERVICE: gateway
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
 
   auth-service:
     build:
@@ -14,6 +16,8 @@ services:
       target: auth
       args:
         SERVICE: auth
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
 
   quiz-service:
     build:
@@ -30,6 +34,8 @@ services:
       target: user
       args:
         SERVICE: user
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
 
   history-service:
     build:

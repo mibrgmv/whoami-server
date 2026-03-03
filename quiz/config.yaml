@@ -16,6 +16,8 @@ redis:
   db: 0
   ttl: 15m
 
-history-service:
-  host: localhost
-  port: 50053
+kafka:
+  brokers:
+    - "localhost:29092"
+  topics:
+    quiz_completed: "quiz-completed"

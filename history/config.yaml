@@ -9,3 +9,10 @@ postgres:
   username: postgres
   password: postgres
   ssl_mode: prefer
+
+kafka:
+  brokers:
+    - "localhost:29092"
+  group_id: "history-service"
+  topics:
+    quiz_completed: "quiz-completed"

@@ -1,10 +1,11 @@
 COMPOSE := docker compose
 
 SERVICES := libs gateway quiz auth user history
+BUILD_SERVICES := gateway quiz auth user history
 
 .PHONY: up down down-v logs \
 	up-keycloak up-monitoring up-all \
-	build lint test tidy proto help
+	build build-binaries lint test tidy proto help
 
 up:
 	$(COMPOSE) up -d
@@ -28,7 +29,10 @@ logs:
 	$(COMPOSE) logs -f
 
 build:
-	$(COMPOSE) build
+	@for svc in $(BUILD_SERVICES); do \
+		echo "==> Building $$svc"; \
+		cd $$svc && make build && cd ..; \
+	done
 
 lint:
 	@for svc in $(SERVICES); do \
@@ -66,6 +70,7 @@ help:
 	@echo "  build         - rebuild images"
 	@echo ""
 	@echo "Dev:"
+	@echo "  build         - build all service binaries"
 	@echo "  lint          - run golangci-lint"
 	@echo "  test          - run tests"
 	@echo "  tidy          - go mod tidy all modules"

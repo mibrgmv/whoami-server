@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/user/internal/service"
 	"whoami-server/user/internal/service/models"
 	userv1 "whoami-server/user/pkg/protogen/user/v1"
@@ -23,7 +24,7 @@ func NewUserServiceServer(service service.UserService) userv1.UserServiceServer 
 }
 
 func (s *userServiceServer) GetCurrentUser(ctx context.Context, _ *emptypb.Empty) (*userv1.User, error) {
-	userID, _ := ctx.Value("user_id").(string)
+	userID, _ := ctx.Value(libsgrpc.UserIDKey).(string)
 	if userID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
@@ -37,7 +38,7 @@ func (s *userServiceServer) GetCurrentUser(ctx context.Context, _ *emptypb.Empty
 }
 
 func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userv1.BatchGetUsersRequest) (*userv1.BatchGetUsersResponse, error) {
-	if _, ok := ctx.Value("user_id").(string); !ok {
+	if _, ok := ctx.Value(libsgrpc.UserIDKey).(string); !ok {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
 
@@ -58,7 +59,7 @@ func (s *userServiceServer) BatchGetUsers(ctx context.Context, req *userv1.Batch
 }
 
 func (s *userServiceServer) UpdateUser(ctx context.Context, req *userv1.UpdateUserRequest) (*userv1.User, error) {
-	authUserID, ok := ctx.Value("user_id").(string)
+	authUserID, ok := ctx.Value(libsgrpc.UserIDKey).(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
@@ -82,7 +83,7 @@ func (s *userServiceServer) UpdateUser(ctx context.Context, req *userv1.UpdateUs
 }
 
 func (s *userServiceServer) ChangePassword(ctx context.Context, req *userv1.ChangePasswordRequest) (*userv1.ChangePasswordResponse, error) {
-	authUserID, ok := ctx.Value("user_id").(string)
+	authUserID, ok := ctx.Value(libsgrpc.UserIDKey).(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
@@ -101,7 +102,7 @@ func (s *userServiceServer) ChangePassword(ctx context.Context, req *userv1.Chan
 }
 
 func (s *userServiceServer) DeleteUser(ctx context.Context, req *userv1.DeleteUserRequest) (*userv1.DeleteUserResponse, error) {
-	authUserID, ok := ctx.Value("user_id").(string)
+	authUserID, ok := ctx.Value(libsgrpc.UserIDKey).(string)
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}

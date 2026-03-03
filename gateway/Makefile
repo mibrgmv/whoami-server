@@ -3,6 +3,9 @@
 GO_MODULE=whoami-server/gateway
 PROTO_DIR=api/v1
 
+build:
+	CGO_ENABLED=0 GOOS=linux go build -o bin/app ./cmd/*/
+
 lint:
 	golangci-lint run
 

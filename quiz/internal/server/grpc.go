@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	libsgrpc "whoami-server/libs/grpc"
+	"whoami-server/libs/kafka"
 	"whoami-server/libs/storage/redis"
 	quizgrpc "whoami-server/quiz/internal/grpc"
 	"whoami-server/quiz/internal/repository/postgres"
@@ -19,16 +19,31 @@ import (
 )
 
 type GrpcServer struct {
-	grpcServer     *grpc.Server
-	questionServer quizgrpc.QuestionServer
+	grpcServer *grpc.Server
+	producer   kafka.Producer
 }
 
-func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyServiceAddr string) (*GrpcServer, error) {
+func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, kafkaCfg *kafka.Config) *GrpcServer {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
+	producer := kafka.NewProducer(kafka.ProducerConfig{
+		Brokers:  kafkaCfg.Brokers,
+		ClientID: "quiz-service",
+	})
+
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(libsgrpc.DefaultUnaryInterceptors(logger)...),
-		grpc.ChainStreamInterceptor(libsgrpc.DefaultStreamInterceptors(logger)...),
+		grpc.ChainUnaryInterceptor(
+			append(
+				libsgrpc.DefaultUnaryInterceptors(logger),
+				libsgrpc.UnaryMetadataInterceptor(),
+			)...,
+		),
+		grpc.ChainStreamInterceptor(
+			append(
+				libsgrpc.DefaultStreamInterceptors(logger),
+				libsgrpc.StreamMetadataInterceptor(),
+			)...,
+		),
 	)
 
 	quizRepo := postgres.NewQuizRepository(pool)
@@ -38,27 +53,25 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, historyService
 
 	questionRepo := postgres.NewQuestionRepository(pool)
 	questionService := service.NewQuestionService(questionRepo, redisClient)
-	questionServer, err := quizgrpc.NewQuestionServer(questionService, quizService, historyServiceAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create question service: %w", err)
-	}
+	questionServer := quizgrpc.NewQuestionServer(questionService, quizService, producer, kafkaCfg.Topics.QuizCompleted)
 	questionv1.RegisterQuestionServiceServer(s, questionServer)
 
 	reflection.Register(s)
 	return &GrpcServer{
 		grpcServer: s,
-	}, nil
+		producer:   producer,
+	}
 }
 
 func (s *GrpcServer) Start(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %w", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 
 	log.Println("Serving gRPC on", lis.Addr())
 	if err := s.grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("failed to serve: %w", err)
+		log.Fatalf("failed to serve: %v", err)
 	}
 
 	return nil
@@ -67,9 +80,9 @@ func (s *GrpcServer) Start(addr string) error {
 func (s *GrpcServer) Stop() {
 	s.grpcServer.GracefulStop()
 
-	if s.questionServer != nil {
-		if err := s.questionServer.Close(); err != nil {
-			log.Printf("Error closing history service connection: %v", err)
+	if s.producer != nil {
+		if err := s.producer.Close(); err != nil {
+			log.Printf("Error closing Kafka producer: %v", err)
 		}
 	}
 

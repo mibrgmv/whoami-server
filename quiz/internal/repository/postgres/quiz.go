@@ -10,6 +10,8 @@ import (
 	"whoami-server/quiz/internal/repository"
 )
 
+const defaultPageSize int32 = 50
+
 type quizRepo struct {
 	pool *pgxpool.Pool
 }
@@ -89,12 +91,11 @@ func (r *quizRepo) Query(ctx context.Context, query models.QuizQuery) ([]*models
 
 	args = append(args, query.Ids)
 
-	var pageSize int32
-	if query.PageSize > 0 {
-		pageSize = query.PageSize + 1
-	} else {
-		pageSize = query.PageSize
+	pageSize := query.PageSize
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
 	}
+	pageSize++ // fetch one extra to determine if there's a next page
 	args = append(args, pageSize)
 
 	rows, err := r.pool.Query(ctx, sql, args...)

@@ -3,62 +3,38 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	libsgrpc "whoami-server/libs/grpc"
+	"whoami-server/libs/kafka"
 	"whoami-server/quiz/internal/models"
 	"whoami-server/quiz/internal/service"
-	historyv1 "whoami-server/quiz/pkg/protogen/history/v1"
 	questionv1 "whoami-server/quiz/pkg/protogen/question/v1"
 )
 
-type QuestionServer interface {
-	questionv1.QuestionServiceServer
-	Close() error
-}
-
 type questionServer struct {
-	questionService service.QuestionService
-	quizService     service.QuizService
-	historyClient   historyv1.QuizCompletionHistoryServiceClient
-	historyConn     *grpc.ClientConn
+	questionService    service.QuestionService
+	quizService        service.QuizService
+	producer           kafka.Producer
+	quizCompletedTopic string
 	questionv1.UnimplementedQuestionServiceServer
 }
 
 func NewQuestionServer(
 	questionService service.QuestionService,
 	quizService service.QuizService,
-	historyServiceAddr string,
-) (QuestionServer, error) {
-	conn, err := grpc.NewClient(historyServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to history questionService: %w", err)
-	}
-
-	historyClient := historyv1.NewQuizCompletionHistoryServiceClient(conn)
-
+	producer kafka.Producer,
+	quizCompletedTopic string,
+) questionv1.QuestionServiceServer {
 	return &questionServer{
-		questionService: questionService,
-		quizService:     quizService,
-		historyClient:   historyClient,
-		historyConn:     conn,
-	}, nil
-}
-
-func (s *questionServer) Close() error {
-	if s.historyConn != nil {
-		err := s.historyConn.Close()
-		if err != nil {
-			return fmt.Errorf("failed to close connection to history questionService: %w", err)
-		}
-		log.Printf("closed connection with quiz completion history")
+		questionService:    questionService,
+		quizService:        quizService,
+		producer:           producer,
+		quizCompletedTopic: quizCompletedTopic,
 	}
-	return nil
 }
 
 func (s *questionServer) BatchCreateQuestions(ctx context.Context, request *questionv1.BatchCreateQuestionsRequest) (*questionv1.BatchCreateQuestionsResponse, error) {
@@ -153,39 +129,24 @@ func (s *questionServer) EvaluateAnswers(ctx context.Context, request *questionv
 		return nil, status.Errorf(codes.Internal, "failed to evaluate answers: %v", err)
 	}
 
-	userIDStr, ok := ctx.Value("user_id").(string)
+	userIDStr, ok := ctx.Value(libsgrpc.UserIDKey).(string)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid user ID format: %v", err)
-	}
-
-	err = s.addToQuizCompletionHistory(ctx, userID, q.ID, result)
-	if err != nil {
-		log.Printf("failed to add to quiz completion history: %v", err)
+	if err := s.publishQuizCompleted(ctx, userIDStr, q.ID.String(), result); err != nil {
+		log.Printf("failed to publish quiz completed event: %v", err)
 	}
 
 	return &questionv1.EvaluateAnswersResponse{Result: result}, nil
 }
 
-func (s *questionServer) addToQuizCompletionHistory(ctx context.Context, userID, quizID uuid.UUID, result string) error {
-	historyItem := &historyv1.QuizCompletionHistoryItem{
-		UserId:     userID.String(),
-		QuizId:     quizID.String(),
+func (s *questionServer) publishQuizCompleted(ctx context.Context, userID, quizID, result string) error {
+	event := kafka.QuizCompletedEvent{
+		UserID:     userID,
+		QuizID:     quizID,
 		QuizResult: result,
 	}
 
-	request := &historyv1.CreateItemRequest{
-		Item: historyItem,
-	}
-
-	_, err := s.historyClient.CreateItem(ctx, request)
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to add quiz history: %v", err)
-	}
-
-	return nil
+	return s.producer.Produce(ctx, s.quizCompletedTopic, userID, event)
 }

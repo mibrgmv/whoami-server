@@ -33,15 +33,16 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 				"authorization": req.Header.Get("Authorization"),
 			})
 
-			if userId, ok := ctx.Value("user_id").(string); ok && userId != "" {
+			reqCtx := req.Context()
+			if userId, ok := reqCtx.Value(middleware.UserIDKey).(string); ok && userId != "" {
 				md.Set("user_id", userId)
 			}
 
-			if username, ok := ctx.Value("username").(string); ok && username != "" {
+			if username, ok := reqCtx.Value(middleware.UsernameKey).(string); ok && username != "" {
 				md.Set("username", username)
 			}
 
-			if email, ok := ctx.Value("email").(string); ok && email != "" {
+			if email, ok := reqCtx.Value(middleware.EmailKey).(string); ok && email != "" {
 				md.Set("email", email)
 			}
 

@@ -16,8 +16,6 @@ import (
 
 func main() {
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	var cfg appcfg.Config
 	var err = config.NewBuilder().
@@ -44,15 +42,17 @@ func main() {
 		log.Fatalf("failed to migrate up: %v", err)
 	}
 
-	s := server.NewGrpcServer(pool)
+	s := server.New(pool, cfg.Kafka)
+
 	go func() {
-		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
-			log.Fatalf("Failed to start gRPC server: %v", err)
+		if err := s.Start(ctx, cfg.Grpc.GetAddr()); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down servers...")
+	log.Println("Shutting down server...")
+	s.Stop()
 }

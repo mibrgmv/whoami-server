@@ -10,6 +10,8 @@ import (
 	"whoami-server/history/internal/repository"
 )
 
+const defaultPageSize int32 = 50
+
 type historyRepo struct {
 	pool *pgxpool.Pool
 }
@@ -68,7 +70,7 @@ func (r historyRepo) Query(ctx context.Context, query repository.Query) ([]*mode
 	where (quiz_completion_history_item_id > $1)
 	  and ($2::uuid[] is null or cardinality($2) = 0 or user_id = any ($2))
 	  and ($3::uuid[] is null or cardinality($3) = 0 or quiz_id = any ($3))
-	order by quiz_completion_history asc
+	order by quiz_completion_history_item_id asc
 	limit $4
 	`
 
@@ -86,12 +88,11 @@ func (r historyRepo) Query(ctx context.Context, query repository.Query) ([]*mode
 
 	args = append(args, query.UserIDs, query.QuizIDs)
 
-	var pageSize int32
-	if query.PageSize > 0 {
-		pageSize = query.PageSize + 1
-	} else {
-		pageSize = query.PageSize
+	pageSize := query.PageSize
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
 	}
+	pageSize++ // fetch one extra to determine if there's a next page
 	args = append(args, pageSize)
 
 	rows, err := r.pool.Query(ctx, sql, args...)
