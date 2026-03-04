@@ -25,7 +25,13 @@ func NewQuizServer(QuizService service.QuizService) quizv1.QuizServiceServer {
 }
 
 func (s *quizServer) CreateQuiz(ctx context.Context, request *quizv1.CreateQuizRequest) (*quizv1.Quiz, error) {
+	ownerID, err := libsgrpc.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get user ID: %v", err)
+	}
+
 	var q = &models.Quiz{
+		OwnerID: ownerID,
 		Title:   request.Title,
 		Results: request.Results,
 	}
@@ -73,13 +79,26 @@ func (s *quizServer) BatchGetQuizzes(ctx context.Context, request *quizv1.BatchG
 }
 
 func (s *quizServer) DeleteQuiz(ctx context.Context, request *quizv1.DeleteQuizRequest) (*quizv1.DeleteQuizResponse, error) {
-	if !libsgrpc.IsAdmin(ctx) {
-		return nil, status.Error(codes.PermissionDenied, "admin role required")
-	}
-
 	quizID, err := uuid.Parse(request.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+	}
+
+	quiz, err := s.quizService.GetByID(ctx, quizID)
+	if err != nil {
+		if errors.Is(err, service.ErrQuizNotFound) {
+			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get quiz: %v", err)
+	}
+
+	userID, err := libsgrpc.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get user ID: %v", err)
+	}
+
+	if !libsgrpc.IsAdmin(ctx) && quiz.OwnerID != userID {
+		return nil, status.Error(codes.PermissionDenied, "you can only delete your own quizzes")
 	}
 
 	if err := s.quizService.Delete(ctx, quizID); err != nil {

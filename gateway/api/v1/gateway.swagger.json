@@ -1052,6 +1052,9 @@
         "id": {
           "type": "string"
         },
+        "ownerId": {
+          "type": "string"
+        },
         "title": {
           "type": "string"
         },

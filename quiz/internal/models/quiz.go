@@ -7,6 +7,7 @@ import (
 
 type Quiz struct {
 	ID      uuid.UUID `json:"id"`
+	OwnerID uuid.UUID `json:"owner_id"`
 	Title   string    `json:"title"`
 	Results []string  `json:"results"`
 }
@@ -14,6 +15,7 @@ type Quiz struct {
 func (q *Quiz) ToProto() *quizv1.Quiz {
 	return &quizv1.Quiz{
 		Id:      q.ID.String(),
+		OwnerId: q.OwnerID.String(),
 		Title:   q.Title,
 		Results: q.Results,
 	}

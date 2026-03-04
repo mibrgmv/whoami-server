@@ -38,12 +38,12 @@ func (r *quizRepo) Add(ctx context.Context, quiz *models.Quiz) (*models.Quiz, er
 	}()
 
 	sql := `
-	insert into quizzes (quiz_id, quiz_title, quiz_results)
-	values ($1, $2, $3)
+	insert into quizzes (quiz_id, owner_id, quiz_title, quiz_results)
+	values ($1, $2, $3, $4)
 	returning quiz_id
 	`
 
-	rows, err := tx.Query(ctx, sql, uuid.New(), quiz.Title, quiz.Results)
+	rows, err := tx.Query(ctx, sql, uuid.New(), quiz.OwnerID, quiz.Title, quiz.Results)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert quizzes: %w", err)
 	}
@@ -68,6 +68,7 @@ func (r *quizRepo) Add(ctx context.Context, quiz *models.Quiz) (*models.Quiz, er
 func (r *quizRepo) Query(ctx context.Context, query models.QuizQuery) ([]*models.Quiz, error) {
 	sql := `
 	select quiz_id,
+		   owner_id,
 		   quiz_title,
 		   quiz_results
 	from quizzes
@@ -107,7 +108,7 @@ func (r *quizRepo) Query(ctx context.Context, query models.QuizQuery) ([]*models
 	var quizzes []*models.Quiz
 	for rows.Next() {
 		q := new(models.Quiz)
-		if err := rows.Scan(&q.ID, &q.Title, &q.Results); err != nil {
+		if err := rows.Scan(&q.ID, &q.OwnerID, &q.Title, &q.Results); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
 

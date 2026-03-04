@@ -1,7 +1,8 @@
 -- gta v character quiz
-insert into quizzes (quiz_id, quiz_title, quiz_results)
+insert into quizzes (quiz_id, owner_id, quiz_title, quiz_results)
 values (
     '11111111-1111-1111-1111-111111111111',
+    '00000000-0000-0000-0000-000000000000',
     'GTA V Character Quiz',
     array['Michael', 'Franklin', 'Trevor']
 );

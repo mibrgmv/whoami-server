@@ -68,8 +68,9 @@ service QuizService {
 
 message Quiz {
   string id = 1;
-  string title = 2;
-  repeated string results = 3;
+  string owner_id = 2;
+  string title = 3;
+  repeated string results = 4;
 }
 
 message CreateQuizRequest {
