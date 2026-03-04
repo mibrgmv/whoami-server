@@ -1,0 +1,46 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gateway
+      args:
+        SERVICE: gateway
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: auth
+      args:
+        SERVICE: auth
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+
+  quiz-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: quiz
+      args:
+        SERVICE: quiz
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: user
+      args:
+        SERVICE: user
+    environment:
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+
+  history-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: history
+      args:
+        SERVICE: history

@@ -1,46 +1,49 @@
-## архитектура бэкенда
-![image](docs/whoami.png)
-## как запустить
-```shell
-cd deployments/docker
+## структура проекта
 
-# поднять core сервисы (gateway, auth, quiz, user, history, postgres, redis)
+```
+/
+├── auth/           # auth сервис (gRPC)
+├── gateway/        # HTTP gateway
+├── history/        # history сервис
+├── quiz/           # quiz сервис (legacy)
+├── user/           # user сервис
+├── libs/           # shared библиотеки
+├── docker-compose.yaml
+├── docker-compose.override.yaml
+├── Dockerfile
+├── go.work
+├── realm.json      # keycloak realm config
+└── prometheus.yml  # prometheus config
+```
+
+## запуск
+
+```shell
+# core сервисы (локальная сборка)
 docker compose up -d
 
-# поднять с keycloak
+# + keycloak
 docker compose --profile keycloak up -d
 
-# поднять с мониторингом (prometheus, grafana)
+# + prometheus
 docker compose --profile monitoring up -d
 
-# поднять всё
+# всё
 docker compose --profile keycloak --profile monitoring up -d
-
-# запустить скрипт и получить секретный ключ
-bash scripts/setup-keycloak.sh
-
-# обновить значение `KEYCLOAK_ADMIN_CLIENT_SECRET` и пересоздать нужные сервисы
-docker compose --profile keycloak up -d --force-recreate auth-service user-service
-```
-## `.env` для локального запуска
-```dotenv
-KEYCLOAK_BASE_URL=http://localhost:8088
-KEYCLOAK_REALM=myrealm
-KEYCLOAK_PUBLIC_CLIENT_ID=whoami-public
-KEYCLOAK_PUBLIC_CLIENT_SECRET=
-KEYCLOAK_ADMIN_CLIENT_ID=whoami-admin
-KEYCLOAK_ADMIN_CLIENT_SECRET=<CHANGE_ME>
 ```
 
-## возможные улучшения
-- kafka
-- исправить метрики
-- накрутить nginx
-- поднять несколько инстансов какого-то сервиса
-- переделать главный сервис
-- придумать темплейт для сервиса 
-- отдавать фронт с бэка
-- поднять пайплайн для гитхаба (тесты)
-- добавить данные в миграции чтобы пользоваться из коробки
-- переделать конфигурацию реалма
-  - https://www.google.com/search?q=how+to+setup+keycloak+realm+on+startup+in+docker&sca_esv=50bdd2a08bdd7bce&ei=dedFaa5jr83A8A-ggfLgBQ&ved=0ahUKEwju8YS47sqRAxWvJhAIHaCAHFwQ4dUDCBA&uact=5&oq=how+to+setup+keycloak+realm+on+startup+in+docker&gs_lp=Egxnd3Mtd2l6LXNlcnAiMGhvdyB0byBzZXR1cCBrZXljbG9hayByZWFsbSBvbiBzdGFydHVwIGluIGRvY2tlcjIFEAAY7wUyCBAAGIAEGKIEMgUQABjvBTIIEAAYgAQYogQyCBAAGIAEGKIESLQjUO0HWKAgcAF4AZABAJgBogKgAfcTqgEGMC4xNi4xuAEDyAEA-AEBmAIKoAKpC8ICChAAGLADGNYEGEfCAgQQABgewgILEAAYgAQYhgMYigXCAggQIRigARjDBJgDAIgGAZAGCJIHBTEuNy4yoAevOrIHBTAuNy4yuAeiC8IHBTAuNi40yAcigAgA&sclient=gws-wiz-serp
+## разработка
+
+```shell
+make lint    # golangci-lint
+make test    # тесты
+make tidy    # go mod tidy
+make proto   # генерация proto
+```
+
+## keycloak
+
+Realm импортируется автоматически из `realm.json`.
+
+Тестовые юзеры:
+- `admin:admin` — роли: user, admin

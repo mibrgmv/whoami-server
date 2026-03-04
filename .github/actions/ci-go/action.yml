@@ -1,0 +1,40 @@
+name: CI Go
+description: Setup, lint, and test Go module
+
+inputs:
+  working-directory:
+    description: Path to Go module
+    required: true
+  go-version:
+    description: Go version
+    required: false
+    default: '1.25'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: ${{ inputs.working-directory }}/go.sum
+
+    - shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: go mod download
+
+    - uses: golangci/golangci-lint-action@v8
+      with:
+        version: latest
+        working-directory: ${{ inputs.working-directory }}
+        args: --timeout=5m
+        skip-cache: true
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: go build ./...
+
+    - name: Test
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: go test -v -race ./...

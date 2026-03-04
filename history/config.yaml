@@ -1,0 +1,18 @@
+grpc:
+  host: localhost
+  port: 50053
+
+postgres:
+  host: "localhost"
+  port: 5433
+  database: postgres
+  username: postgres
+  password: postgres
+  ssl_mode: prefer
+
+kafka:
+  brokers:
+    - "localhost:29092"
+  group_id: "history-service"
+  topics:
+    quiz_completed: "quiz-completed"

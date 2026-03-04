@@ -1,83 +1,62 @@
-COMPOSE_DIR := deployments/docker
-COMPOSE := docker compose -f $(COMPOSE_DIR)/docker-compose.yaml
+COMPOSE := docker compose --profile monitoring
 
-SERVICES := shared gateway quiz auth user history
+SERVICES := libs gateway quiz auth user history
+BUILD_SERVICES := gateway quiz auth user history
 
-.PHONY: up down down-v logs \
-	up-keycloak up-monitoring up-all \
-	build lint test \
-	lint-all test-all \
-	proto tidy
+.PHONY: up down down-v logs build lint test tidy gen help
 
-up:
-	$(COMPOSE) up -d
-
-up-keycloak:
-	$(COMPOSE) --profile keycloak up -d
-
-up-monitoring:
-	$(COMPOSE) --profile monitoring up -d
-
-up-all:
-	$(COMPOSE) --profile keycloak --profile monitoring up -d
+up: build
+	$(COMPOSE) up -d --build
 
 down:
-	$(COMPOSE) --profile keycloak --profile monitoring down
+	$(COMPOSE) down
 
 down-v:
-	$(COMPOSE) --profile keycloak --profile monitoring down -v
+	$(COMPOSE) down -v
 
 logs:
 	$(COMPOSE) logs -f
 
 build:
-	$(COMPOSE) build
+	@for svc in $(BUILD_SERVICES); do \
+		echo "==> Building $$svc"; \
+		cd $$svc && make build && cd ..; \
+	done
 
 lint:
 	@for svc in $(SERVICES); do \
 		echo "==> Linting $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && golangci-lint run --timeout=5m && cd ..; \
-		else \
-			cd services/$$svc && golangci-lint run --timeout=5m && cd ../..; \
-		fi \
+		cd $$svc && golangci-lint run --timeout=5m && cd ..; \
 	done
 
 test:
 	@for svc in $(SERVICES); do \
 		echo "==> Testing $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && go test -race ./... && cd ..; \
-		else \
-			cd services/$$svc && go test -race ./... && cd ../..; \
-		fi \
+		cd $$svc && go test -race ./... && cd ..; \
 	done
 
 tidy:
 	@for svc in $(SERVICES); do \
 		echo "==> Tidying $$svc"; \
-		if [ "$$svc" = "shared" ]; then \
-			cd $$svc && go mod tidy && cd ..; \
-		else \
-			cd services/$$svc && go mod tidy && cd ../..; \
-		fi \
+		cd $$svc && go mod tidy && cd ..; \
 	done
 
-proto:
-	@echo "Generate proto files (implement as needed)"
+gen:
+	@for svc in gateway auth quiz user history; do \
+		echo "==> Generating proto for $$svc"; \
+		cd $$svc && make gen && cd ..; \
+	done
 
 help:
 	@echo "Docker:"
-	@echo "  up            - start core services"
-	@echo "  up-keycloak   - start with keycloak"
-	@echo "  up-monitoring - start with prometheus/grafana"
-	@echo "  up-all        - start everything"
-	@echo "  down          - stop all"
-	@echo "  down-v        - stop all + remove volumes"
-	@echo "  logs          - follow logs"
-	@echo "  build         - rebuild images"
+	@echo "  up      - build binaries + docker images and start"
+	@echo "  down    - stop all"
+	@echo "  down-v  - stop all + remove volumes"
+	@echo "  logs    - follow logs"
 	@echo ""
 	@echo "Dev:"
-	@echo "  lint          - run golangci-lint"
-	@echo "  test          - run tests"
-	@echo "  tidy          - go mod tidy all modules"
+	@echo "  build   - build all service binaries"
+	@echo "  lint    - run golangci-lint"
+	@echo "  test    - run tests"
+	@echo "  tidy    - go mod tidy all modules"
+	@echo "  gen     - generate proto files"

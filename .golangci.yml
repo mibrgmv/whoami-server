@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   timeout: 5m
   modules-download-mode: readonly
@@ -5,7 +7,6 @@ run:
 linters:
   enable:
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
@@ -15,23 +16,33 @@ linters:
     - rowserrcheck
     - sqlclosecheck
 
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - shadow
-      - fieldalignment
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - shadow
+        - fieldalignment
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
 
-    - path: mock
-      linters:
-        - all
+      - path: mock
+        linters:
+          - errcheck
+          - govet
+          - staticcheck
+          - unused
 
-    - path: protogen
-      linters:
-        - all
+      - path: protogen
+        linters:
+          - errcheck
+          - govet
+          - staticcheck
+          - unused
+
+      - text: "Error return value of `.*.Close` is not checked"
+        linters:
+          - errcheck
