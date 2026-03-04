@@ -1,29 +1,18 @@
-COMPOSE := docker compose
+COMPOSE := docker compose --profile monitoring
 
 SERVICES := libs gateway quiz auth user history
 BUILD_SERVICES := gateway quiz auth user history
 
-.PHONY: up down down-v logs \
-	up-keycloak up-monitoring up-all \
-	build build-binaries lint test tidy proto help
+.PHONY: up down down-v logs build lint test tidy gen help
 
-up:
-	$(COMPOSE) up -d
-
-up-keycloak:
-	$(COMPOSE) --profile keycloak up -d
-
-up-monitoring:
-	$(COMPOSE) --profile monitoring up -d
-
-up-all:
-	$(COMPOSE) --profile keycloak --profile monitoring up -d
+up: build
+	$(COMPOSE) up -d --build
 
 down:
-	$(COMPOSE) --profile keycloak --profile monitoring down
+	$(COMPOSE) down
 
 down-v:
-	$(COMPOSE) --profile keycloak --profile monitoring down -v
+	$(COMPOSE) down -v
 
 logs:
 	$(COMPOSE) logs -f
@@ -52,7 +41,7 @@ tidy:
 		cd $$svc && go mod tidy && cd ..; \
 	done
 
-proto:
+gen:
 	@for svc in gateway auth quiz user history; do \
 		echo "==> Generating proto for $$svc"; \
 		cd $$svc && make gen && cd ..; \
@@ -60,18 +49,14 @@ proto:
 
 help:
 	@echo "Docker:"
-	@echo "  up            - start core services"
-	@echo "  up-keycloak   - start with keycloak"
-	@echo "  up-monitoring - start with prometheus"
-	@echo "  up-all        - start everything"
-	@echo "  down          - stop all"
-	@echo "  down-v        - stop all + remove volumes"
-	@echo "  logs          - follow logs"
-	@echo "  build         - rebuild images"
+	@echo "  up      - build binaries + docker images and start"
+	@echo "  down    - stop all"
+	@echo "  down-v  - stop all + remove volumes"
+	@echo "  logs    - follow logs"
 	@echo ""
 	@echo "Dev:"
-	@echo "  build         - build all service binaries"
-	@echo "  lint          - run golangci-lint"
-	@echo "  test          - run tests"
-	@echo "  tidy          - go mod tidy all modules"
-	@echo "  proto         - generate proto files"
+	@echo "  build   - build all service binaries"
+	@echo "  lint    - run golangci-lint"
+	@echo "  test    - run tests"
+	@echo "  tidy    - go mod tidy all modules"
+	@echo "  gen     - generate proto files"
