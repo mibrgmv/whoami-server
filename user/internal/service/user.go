@@ -10,6 +10,8 @@ import (
 	"whoami-server/user/internal/service/models"
 )
 
+const defaultPageSize int32 = 10
+
 var (
 	ErrUserNotFound    = errors.New("user not found")
 	ErrUsernameExists  = errors.New("username already exists")
@@ -58,6 +60,10 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*models.User,
 }
 
 func (s *userService) BatchGetUsers(ctx context.Context, pageSize, offset int32) ([]models.User, *int32, error) {
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
+	}
+
 	keycloakReq := keycloak.BatchGetUsersRequest{
 		PageSize: pageSize,
 		First:    offset,

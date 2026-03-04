@@ -106,8 +106,9 @@ func (s *userServiceServer) DeleteUser(ctx context.Context, req *userv1.DeleteUs
 	if !ok || authUserID == "" {
 		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
 	}
-	if authUserID != req.Id {
-		return nil, status.Error(codes.PermissionDenied, "not authorized to delete this user")
+
+	if !libsgrpc.IsAdmin(ctx) && authUserID != req.Id {
+		return nil, status.Error(codes.PermissionDenied, "you can only delete your own account")
 	}
 
 	err := s.service.DeleteUser(ctx, req.Id)
