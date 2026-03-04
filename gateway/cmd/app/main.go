@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,9 +12,12 @@ import (
 	"whoami-server/gateway/internal/metrics"
 	"whoami-server/gateway/internal/server"
 	"whoami-server/libs/config"
+	"whoami-server/libs/logging"
 )
 
 func main() {
+	logger := logging.NewLogger("gateway")
+
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -26,46 +29,50 @@ func main() {
 		Load(&cfg)
 
 	if err != nil {
-		log.Fatalf("failed to read gateway config: %v", err)
+		logger.Error("failed to read gateway config", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	collector := metrics.NewMetricsCollector()
-	metricsServer := server.NewMetricsServer(&cfg, collector)
+	metricsServer := server.NewMetricsServer(&cfg, collector, logger)
 	go func() {
 		err := metricsServer.Start()
 		if err != nil {
-			log.Fatal("metrics server failed to serve: ", err)
+			logger.Error("metrics server failed to serve", slog.String("error", err.Error()))
+			os.Exit(1)
 		}
 	}()
 
-	s, err := server.NewHttpServer(ctx, cfg, collector)
+	s, err := server.NewHttpServer(ctx, cfg, collector, logger)
 	if err != nil {
-		log.Fatal("Failed to create HTTP server:", err)
+		logger.Error("failed to create HTTP server", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	go func() {
-		log.Printf("Gateway HTTP server starting on %s", s.Addr)
+		logger.Info("gateway HTTP server starting", slog.String("addr", s.Addr))
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("Failed to serve HTTP:", err)
+			logger.Error("failed to serve HTTP", slog.String("error", err.Error()))
+			os.Exit(1)
 		}
 	}()
 
 	sig := <-quit
-	log.Printf("Shutting down, received signal: %v", sig)
+	logger.Info("shutting down", slog.String("signal", sig.String()))
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer shutdownCancel()
 
 	if err := metricsServer.Stop(shutdownCtx); err != nil {
-		log.Fatal("Metrics server forced to shutdown:", err)
+		logger.Error("metrics server forced to shutdown", slog.String("error", err.Error()))
 	}
 
 	if err := s.Shutdown(shutdownCtx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		logger.Error("server forced to shutdown", slog.String("error", err.Error()))
 	}
 
-	log.Println("Gateway server exited gracefully")
+	logger.Info("gateway server exited gracefully")
 }

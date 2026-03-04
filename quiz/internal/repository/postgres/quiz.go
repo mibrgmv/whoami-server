@@ -120,3 +120,21 @@ func (r *quizRepo) Query(ctx context.Context, query models.QuizQuery) ([]*models
 
 	return quizzes, nil
 }
+
+func (r *quizRepo) Delete(ctx context.Context, quizID uuid.UUID) error {
+	sql := `
+	delete from quizzes
+	where quiz_id = $1
+	`
+
+	result, err := r.pool.Exec(ctx, sql, quizID)
+	if err != nil {
+		return fmt.Errorf("failed to delete quiz: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("quiz not found")
+	}
+
+	return nil
+}

@@ -17,6 +17,7 @@ type QuizService interface {
 	Add(ctx context.Context, quiz *models.Quiz) (*models.Quiz, error)
 	Get(ctx context.Context, pageSize int32, pageToken string) ([]*models.Quiz, string, error)
 	GetByID(ctx context.Context, quizID uuid.UUID) (*models.Quiz, error)
+	Delete(ctx context.Context, quizID uuid.UUID) error
 }
 
 type quizService struct {
@@ -63,4 +64,8 @@ func (s *quizService) GetByID(ctx context.Context, quizID uuid.UUID) (*models.Qu
 	}
 
 	return quizzes[0], nil
+}
+
+func (s *quizService) Delete(ctx context.Context, quizID uuid.UUID) error {
+	return s.quizRepo.Delete(ctx, quizID)
 }

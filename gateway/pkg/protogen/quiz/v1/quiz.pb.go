@@ -283,6 +283,102 @@ func (x *BatchGetQuizzesResponse) GetNextPageToken() string {
 	return ""
 }
 
+type DeleteQuizRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteQuizRequest) Reset() {
+	*x = DeleteQuizRequest{}
+	mi := &file_quiz_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteQuizRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteQuizRequest) ProtoMessage() {}
+
+func (x *DeleteQuizRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_quiz_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteQuizRequest.ProtoReflect.Descriptor instead.
+func (*DeleteQuizRequest) Descriptor() ([]byte, []int) {
+	return file_quiz_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeleteQuizRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteQuizResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteQuizResponse) Reset() {
+	*x = DeleteQuizResponse{}
+	mi := &file_quiz_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteQuizResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteQuizResponse) ProtoMessage() {}
+
+func (x *DeleteQuizResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_quiz_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteQuizResponse.ProtoReflect.Descriptor instead.
+func (*DeleteQuizResponse) Descriptor() ([]byte, []int) {
+	return file_quiz_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeleteQuizResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *DeleteQuizResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_quiz_proto protoreflect.FileDescriptor
 
 const file_quiz_proto_rawDesc = "" +
@@ -304,7 +400,12 @@ const file_quiz_proto_rawDesc = "" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\"j\n" +
 	"\x17BatchGetQuizzesResponse\x12'\n" +
 	"\aquizzes\x18\x01 \x03(\v2\r.quiz.v1.QuizR\aquizzes\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xe2\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"#\n" +
+	"\x11DeleteQuizRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\">\n" +
+	"\x12DeleteQuizResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xdc\x03\n" +
 	"\vQuizService\x12h\n" +
 	"\n" +
 	"CreateQuiz\x12\x1a.quiz.v1.CreateQuizRequest\x1a\r.quiz.v1.Quiz\"/\x92A\x12b\x10\n" +
@@ -318,7 +419,12 @@ const file_quiz_proto_rawDesc = "" +
 	"\x0fBatchGetQuizzes\x12\x1f.quiz.v1.BatchGetQuizzesRequest\x1a .quiz.v1.BatchGetQuizzesResponse\",\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzesB3Z1whoami-server/gateway/pkg/protogen/quiz/v1;quizv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/quizzes\x12x\n" +
+	"\n" +
+	"DeleteQuiz\x12\x1a.quiz.v1.DeleteQuizRequest\x1a\x1b.quiz.v1.DeleteQuizResponse\"1\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x16*\x14/api/v1/quizzes/{id}B3Z1whoami-server/gateway/pkg/protogen/quiz/v1;quizv1b\x06proto3"
 
 var (
 	file_quiz_proto_rawDescOnce sync.Once
@@ -332,24 +438,28 @@ func file_quiz_proto_rawDescGZIP() []byte {
 	return file_quiz_proto_rawDescData
 }
 
-var file_quiz_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_quiz_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_quiz_proto_goTypes = []any{
 	(*Quiz)(nil),                    // 0: quiz.v1.Quiz
 	(*CreateQuizRequest)(nil),       // 1: quiz.v1.CreateQuizRequest
 	(*GetQuizRequest)(nil),          // 2: quiz.v1.GetQuizRequest
 	(*BatchGetQuizzesRequest)(nil),  // 3: quiz.v1.BatchGetQuizzesRequest
 	(*BatchGetQuizzesResponse)(nil), // 4: quiz.v1.BatchGetQuizzesResponse
+	(*DeleteQuizRequest)(nil),       // 5: quiz.v1.DeleteQuizRequest
+	(*DeleteQuizResponse)(nil),      // 6: quiz.v1.DeleteQuizResponse
 }
 var file_quiz_proto_depIdxs = []int32{
 	0, // 0: quiz.v1.BatchGetQuizzesResponse.quizzes:type_name -> quiz.v1.Quiz
 	1, // 1: quiz.v1.QuizService.CreateQuiz:input_type -> quiz.v1.CreateQuizRequest
 	2, // 2: quiz.v1.QuizService.GetQuiz:input_type -> quiz.v1.GetQuizRequest
 	3, // 3: quiz.v1.QuizService.BatchGetQuizzes:input_type -> quiz.v1.BatchGetQuizzesRequest
-	0, // 4: quiz.v1.QuizService.CreateQuiz:output_type -> quiz.v1.Quiz
-	0, // 5: quiz.v1.QuizService.GetQuiz:output_type -> quiz.v1.Quiz
-	4, // 6: quiz.v1.QuizService.BatchGetQuizzes:output_type -> quiz.v1.BatchGetQuizzesResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
+	5, // 4: quiz.v1.QuizService.DeleteQuiz:input_type -> quiz.v1.DeleteQuizRequest
+	0, // 5: quiz.v1.QuizService.CreateQuiz:output_type -> quiz.v1.Quiz
+	0, // 6: quiz.v1.QuizService.GetQuiz:output_type -> quiz.v1.Quiz
+	4, // 7: quiz.v1.QuizService.BatchGetQuizzes:output_type -> quiz.v1.BatchGetQuizzesResponse
+	6, // 8: quiz.v1.QuizService.DeleteQuiz:output_type -> quiz.v1.DeleteQuizResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -366,7 +476,7 @@ func file_quiz_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_quiz_proto_rawDesc), len(file_quiz_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

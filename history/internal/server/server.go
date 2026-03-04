@@ -2,9 +2,8 @@ package server
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net"
-	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,30 +16,22 @@ import (
 	historyv1 "whoami-server/history/pkg/protogen/history/v1"
 	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/libs/kafka"
+	"whoami-server/libs/logging"
 )
 
 type Server struct {
 	grpcServer    *grpc.Server
 	kafkaConsumer *kafka.Consumer
 	cancelFunc    context.CancelFunc
+	logger        *slog.Logger
 }
 
 func New(pool *pgxpool.Pool, kafkaCfg *kafka.Config) *Server {
-	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := logging.NewLogger("history-service")
 
 	grpcSrv := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			append(
-				libsgrpc.DefaultUnaryInterceptors(logger),
-				libsgrpc.UnaryMetadataInterceptor(),
-			)...,
-		),
-		grpc.ChainStreamInterceptor(
-			append(
-				libsgrpc.DefaultStreamInterceptors(logger),
-				libsgrpc.StreamMetadataInterceptor(),
-			)...,
-		),
+		grpc.ChainUnaryInterceptor(libsgrpc.DefaultUnaryInterceptors(logger)...),
+		grpc.ChainStreamInterceptor(libsgrpc.DefaultStreamInterceptors(logger)...),
 	)
 
 	historyRepo := postgres.NewHistoryRepository(pool)
@@ -61,6 +52,7 @@ func New(pool *pgxpool.Pool, kafkaCfg *kafka.Config) *Server {
 	return &Server{
 		grpcServer:    grpcSrv,
 		kafkaConsumer: kafkaConsumer,
+		logger:        logger,
 	}
 }
 
@@ -69,16 +61,17 @@ func (s *Server) Start(ctx context.Context, grpcAddr string) error {
 	s.cancelFunc = cancel
 
 	go func() {
-		log.Println("Starting Kafka consumer for quiz-completed events")
+		s.logger.Info("starting Kafka consumer for quiz-completed events")
 		s.kafkaConsumer.Start(ctx)
 	}()
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Fatalln("Failed to listen:", err)
+		s.logger.Error("failed to listen", slog.String("error", err.Error()))
+		return err
 	}
 
-	log.Println("Serving gRPC on", lis.Addr())
+	s.logger.Info("serving gRPC", slog.String("addr", lis.Addr().String()))
 	if err := s.grpcServer.Serve(lis); err != nil {
 		return err
 	}
@@ -94,8 +87,8 @@ func (s *Server) Stop() {
 	s.grpcServer.GracefulStop()
 
 	if err := s.kafkaConsumer.Close(); err != nil {
-		log.Printf("Error closing Kafka consumer: %v", err)
+		s.logger.Error("error closing Kafka consumer", slog.String("error", err.Error()))
 	}
 
-	log.Println("Server stopped")
+	s.logger.Info("server stopped")
 }

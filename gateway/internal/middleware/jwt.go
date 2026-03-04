@@ -25,6 +25,7 @@ const (
 	UsernameKey      contextKey = "username"
 	EmailKey         contextKey = "email"
 	EmailVerifiedKey contextKey = "email_verified"
+	RolesKey         contextKey = "roles"
 )
 
 type JWK struct {
@@ -39,11 +40,16 @@ type JWKSResponse struct {
 	Keys []JWK `json:"keys"`
 }
 
+type AuthFailureRecorder interface {
+	RecordAuthFailure(reason string)
+}
+
 type JWTConfig struct {
 	KeycloakBaseURL string
 	Realm           string
 	KeyRefreshTTL   time.Duration
 	HTTPTimeout     time.Duration
+	Metrics         AuthFailureRecorder
 }
 
 func JWT(cfg JWTConfig) gin.HandlerFunc {
@@ -66,9 +72,16 @@ type jwtValidator struct {
 	httpClient  *http.Client
 }
 
+func (v *jwtValidator) recordAuthFailure(reason string) {
+	if v.config.Metrics != nil {
+		v.config.Metrics.RecordAuthFailure(reason)
+	}
+}
+
 func (v *jwtValidator) handler(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
+		v.recordAuthFailure("missing_token")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 		c.Abort()
 		return
@@ -76,6 +89,7 @@ func (v *jwtValidator) handler(c *gin.Context) {
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	if tokenString == authHeader {
+		v.recordAuthFailure("invalid_format")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
 		c.Abort()
 		return
@@ -83,6 +97,7 @@ func (v *jwtValidator) handler(c *gin.Context) {
 
 	claims, err := v.validateToken(tokenString)
 	if err != nil {
+		v.recordAuthFailure("invalid_token")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid token: %v", err)})
 		c.Abort()
 		return
@@ -94,14 +109,37 @@ func (v *jwtValidator) handler(c *gin.Context) {
 	c.Set("email_verified", claims.EmailVerified)
 	c.Set("claims", claims)
 
+	roles := extractRoles(claims)
+	rolesStr := strings.Join(roles, ",")
+
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
 	ctx = context.WithValue(ctx, UsernameKey, claims.PreferredUsername)
 	ctx = context.WithValue(ctx, EmailKey, claims.Email)
 	ctx = context.WithValue(ctx, EmailVerifiedKey, claims.EmailVerified)
+	ctx = context.WithValue(ctx, RolesKey, rolesStr)
 
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
+}
+
+func extractRoles(claims *keycloak.Claims) []string {
+	if claims == nil || claims.RealmAccess == nil {
+		return nil
+	}
+
+	rolesInterface, ok := claims.RealmAccess["roles"].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	roles := make([]string, 0, len(rolesInterface))
+	for _, r := range rolesInterface {
+		if roleStr, ok := r.(string); ok {
+			roles = append(roles, roleStr)
+		}
+	}
+	return roles
 }
 
 func (v *jwtValidator) validateToken(tokenString string) (*keycloak.Claims, error) {

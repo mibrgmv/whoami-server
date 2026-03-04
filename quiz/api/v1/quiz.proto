@@ -50,6 +50,20 @@ service QuizService {
       }
     };
   }
+
+  rpc DeleteQuiz(DeleteQuizRequest) returns (DeleteQuizResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/quizzes/{id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
 }
 
 message Quiz {
@@ -75,4 +89,13 @@ message BatchGetQuizzesRequest {
 message BatchGetQuizzesResponse {
   repeated Quiz quizzes = 1;
   string next_page_token = 2;
+}
+
+message DeleteQuizRequest {
+  string id = 1;
+}
+
+message DeleteQuizResponse {
+  string id = 1;
+  string message = 2;
 }

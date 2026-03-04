@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -26,7 +26,7 @@ import (
 	userv1 "whoami-server/gateway/pkg/protogen/user/v1"
 )
 
-func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector) (*http.Server, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger) (*http.Server, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -44,6 +44,14 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 
 			if email, ok := reqCtx.Value(middleware.EmailKey).(string); ok && email != "" {
 				md.Set("email", email)
+			}
+
+			if roles, ok := reqCtx.Value(middleware.RolesKey).(string); ok && roles != "" {
+				md.Set("roles", roles)
+			}
+
+			if requestID, ok := reqCtx.Value(middleware.RequestIDKey).(string); ok && requestID != "" {
+				md.Set("request_id", requestID)
 			}
 
 			return md
@@ -77,21 +85,22 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		Realm:           cfg.Keycloak.Realm,
 		KeyRefreshTTL:   1 * time.Hour,
 		HTTPTimeout:     10 * time.Second,
+		Metrics:         collector,
 	})
 
 	switch cfg.HTTP.Mode {
 	case "debug":
 		gin.SetMode(gin.DebugMode)
-		log.Println("Running in debug mode")
+		logger.Info("running in debug mode")
 		if configJSON, err := json.MarshalIndent(cfg, "", "  "); err == nil {
-			log.Printf("Configuration:\n%s", configJSON)
+			logger.Debug("configuration", slog.String("config", string(configJSON)))
 		}
 	case "release":
 		gin.SetMode(gin.ReleaseMode)
-		log.Println("Running in release mode")
+		logger.Info("running in release mode")
 	default:
 		gin.SetMode(gin.ReleaseMode)
-		log.Printf("Unknown mode '%s', defaulting to release mode", cfg.HTTP.Mode)
+		logger.Warn("unknown mode, defaulting to release", slog.String("mode", cfg.HTTP.Mode))
 	}
 
 	router := gin.Default()
@@ -106,6 +115,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	}))
 
 	router.Use(metrics.GinMiddleware(collector))
+	router.Use(middleware.RequestID())
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -17,6 +18,8 @@ const (
 	UsernameKey      contextKey = "username"
 	EmailKey         contextKey = "email"
 	EmailVerifiedKey contextKey = "email_verified"
+	RolesKey         contextKey = "roles"
+	RequestIDKey     contextKey = "request_id"
 )
 
 func UnaryMetadataInterceptor() grpc.UnaryServerInterceptor {
@@ -65,6 +68,14 @@ func enrichContextFromMetadata(ctx context.Context) context.Context {
 		newCtx = context.WithValue(newCtx, EmailVerifiedKey, verified)
 	}
 
+	if roles := md.Get("roles"); len(roles) > 0 {
+		newCtx = context.WithValue(newCtx, RolesKey, roles[0])
+	}
+
+	if requestIDs := md.Get("request_id"); len(requestIDs) > 0 {
+		newCtx = context.WithValue(newCtx, RequestIDKey, requestIDs[0])
+	}
+
 	return newCtx
 }
 
@@ -96,4 +107,33 @@ func GetEmailFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("email not found in context")
 	}
 	return email, nil
+}
+
+func GetRolesFromContext(ctx context.Context) []string {
+	rolesStr, ok := ctx.Value(RolesKey).(string)
+	if !ok || rolesStr == "" {
+		return nil
+	}
+	return strings.Split(rolesStr, ",")
+}
+
+func HasRole(ctx context.Context, role string) bool {
+	roles := GetRolesFromContext(ctx)
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
+func IsAdmin(ctx context.Context) bool {
+	return HasRole(ctx, "admin")
+}
+
+func GetRequestIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(RequestIDKey).(string); ok {
+		return id
+	}
+	return ""
 }

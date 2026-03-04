@@ -1,15 +1,15 @@
 package server
 
 import (
-	"log"
+	"log/slog"
 	"net"
-	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/libs/kafka"
+	"whoami-server/libs/logging"
 	"whoami-server/libs/storage/redis"
 	quizgrpc "whoami-server/quiz/internal/grpc"
 	"whoami-server/quiz/internal/repository/postgres"
@@ -21,10 +21,11 @@ import (
 type GrpcServer struct {
 	grpcServer *grpc.Server
 	producer   kafka.Producer
+	logger     *slog.Logger
 }
 
 func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, kafkaCfg *kafka.Config) *GrpcServer {
-	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := logging.NewLogger("quiz-service")
 
 	producer := kafka.NewProducer(kafka.ProducerConfig{
 		Brokers:  kafkaCfg.Brokers,
@@ -32,18 +33,8 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, kafkaCfg *kafk
 	})
 
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			append(
-				libsgrpc.DefaultUnaryInterceptors(logger),
-				libsgrpc.UnaryMetadataInterceptor(),
-			)...,
-		),
-		grpc.ChainStreamInterceptor(
-			append(
-				libsgrpc.DefaultStreamInterceptors(logger),
-				libsgrpc.StreamMetadataInterceptor(),
-			)...,
-		),
+		grpc.ChainUnaryInterceptor(libsgrpc.DefaultUnaryInterceptors(logger)...),
+		grpc.ChainStreamInterceptor(libsgrpc.DefaultStreamInterceptors(logger)...),
 	)
 
 	quizRepo := postgres.NewQuizRepository(pool)
@@ -60,18 +51,21 @@ func NewGrpcServer(pool *pgxpool.Pool, redisClient *redis.Client, kafkaCfg *kafk
 	return &GrpcServer{
 		grpcServer: s,
 		producer:   producer,
+		logger:     logger,
 	}
 }
 
 func (s *GrpcServer) Start(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		s.logger.Error("failed to listen", slog.String("error", err.Error()))
+		return err
 	}
 
-	log.Println("Serving gRPC on", lis.Addr())
+	s.logger.Info("serving gRPC", slog.String("addr", lis.Addr().String()))
 	if err := s.grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		s.logger.Error("failed to serve", slog.String("error", err.Error()))
+		return err
 	}
 
 	return nil
@@ -82,9 +76,9 @@ func (s *GrpcServer) Stop() {
 
 	if s.producer != nil {
 		if err := s.producer.Close(); err != nil {
-			log.Printf("Error closing Kafka producer: %v", err)
+			s.logger.Error("error closing Kafka producer", slog.String("error", err.Error()))
 		}
 	}
 
-	log.Println("gRPC server stopped")
+	s.logger.Info("gRPC server stopped")
 }

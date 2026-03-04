@@ -386,6 +386,39 @@
             "BearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "operationId": "QuizService_DeleteQuiz",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteQuizResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "QuizService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/quizzes/{quizId}/evaluate": {
@@ -901,6 +934,17 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1DeleteQuizResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },

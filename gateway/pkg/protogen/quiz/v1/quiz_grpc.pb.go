@@ -22,6 +22,7 @@ const (
 	QuizService_CreateQuiz_FullMethodName      = "/quiz.v1.QuizService/CreateQuiz"
 	QuizService_GetQuiz_FullMethodName         = "/quiz.v1.QuizService/GetQuiz"
 	QuizService_BatchGetQuizzes_FullMethodName = "/quiz.v1.QuizService/BatchGetQuizzes"
+	QuizService_DeleteQuiz_FullMethodName      = "/quiz.v1.QuizService/DeleteQuiz"
 )
 
 // QuizServiceClient is the client API for QuizService service.
@@ -31,6 +32,7 @@ type QuizServiceClient interface {
 	CreateQuiz(ctx context.Context, in *CreateQuizRequest, opts ...grpc.CallOption) (*Quiz, error)
 	GetQuiz(ctx context.Context, in *GetQuizRequest, opts ...grpc.CallOption) (*Quiz, error)
 	BatchGetQuizzes(ctx context.Context, in *BatchGetQuizzesRequest, opts ...grpc.CallOption) (*BatchGetQuizzesResponse, error)
+	DeleteQuiz(ctx context.Context, in *DeleteQuizRequest, opts ...grpc.CallOption) (*DeleteQuizResponse, error)
 }
 
 type quizServiceClient struct {
@@ -71,6 +73,16 @@ func (c *quizServiceClient) BatchGetQuizzes(ctx context.Context, in *BatchGetQui
 	return out, nil
 }
 
+func (c *quizServiceClient) DeleteQuiz(ctx context.Context, in *DeleteQuizRequest, opts ...grpc.CallOption) (*DeleteQuizResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteQuizResponse)
+	err := c.cc.Invoke(ctx, QuizService_DeleteQuiz_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QuizServiceServer is the server API for QuizService service.
 // All implementations must embed UnimplementedQuizServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type QuizServiceServer interface {
 	CreateQuiz(context.Context, *CreateQuizRequest) (*Quiz, error)
 	GetQuiz(context.Context, *GetQuizRequest) (*Quiz, error)
 	BatchGetQuizzes(context.Context, *BatchGetQuizzesRequest) (*BatchGetQuizzesResponse, error)
+	DeleteQuiz(context.Context, *DeleteQuizRequest) (*DeleteQuizResponse, error)
 	mustEmbedUnimplementedQuizServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedQuizServiceServer) GetQuiz(context.Context, *GetQuizRequest) 
 }
 func (UnimplementedQuizServiceServer) BatchGetQuizzes(context.Context, *BatchGetQuizzesRequest) (*BatchGetQuizzesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchGetQuizzes not implemented")
+}
+func (UnimplementedQuizServiceServer) DeleteQuiz(context.Context, *DeleteQuizRequest) (*DeleteQuizResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteQuiz not implemented")
 }
 func (UnimplementedQuizServiceServer) mustEmbedUnimplementedQuizServiceServer() {}
 func (UnimplementedQuizServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +188,24 @@ func _QuizService_BatchGetQuizzes_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _QuizService_DeleteQuiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteQuizRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuizServiceServer).DeleteQuiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: QuizService_DeleteQuiz_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizServiceServer).DeleteQuiz(ctx, req.(*DeleteQuizRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // QuizService_ServiceDesc is the grpc.ServiceDesc for QuizService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var QuizService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchGetQuizzes",
 			Handler:    _QuizService_BatchGetQuizzes_Handler,
+		},
+		{
+			MethodName: "DeleteQuiz",
+			Handler:    _QuizService_DeleteQuiz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

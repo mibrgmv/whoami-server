@@ -1,9 +1,6 @@
 package server
 
 import (
-	"log"
-	"os"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"whoami-server/auth/internal/config"
@@ -12,10 +9,11 @@ import (
 	authv1 "whoami-server/auth/pkg/protogen/auth/v1"
 	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/libs/keycloak"
+	"whoami-server/libs/logging"
 )
 
 func NewGrpcServer(cfg *config.Config) *grpc.Server {
-	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := logging.NewLogger("auth-service")
 	kc := keycloak.NewClient(&cfg.Keycloak)
 	authService := service.NewAuthService(kc)
 

@@ -2,8 +2,7 @@ package grpc
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -12,38 +11,45 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func DefaultUnaryInterceptors(logger *log.Logger) []grpc.UnaryServerInterceptor {
+func DefaultUnaryInterceptors(logger *slog.Logger) []grpc.UnaryServerInterceptor {
 	return []grpc.UnaryServerInterceptor{
-		logging.UnaryServerInterceptor(loggingAdapter(logger), loggingOptions()...),
+		UnaryMetadataInterceptor(),
+		logging.UnaryServerInterceptor(slogAdapter(logger), loggingOptions()...),
 		recovery.UnaryServerInterceptor(recoveryOptions()...),
 	}
 }
 
-func DefaultStreamInterceptors(logger *log.Logger) []grpc.StreamServerInterceptor {
+func DefaultStreamInterceptors(logger *slog.Logger) []grpc.StreamServerInterceptor {
 	return []grpc.StreamServerInterceptor{
-		logging.StreamServerInterceptor(loggingAdapter(logger), loggingOptions()...),
+		StreamMetadataInterceptor(),
+		logging.StreamServerInterceptor(slogAdapter(logger), loggingOptions()...),
 		recovery.StreamServerInterceptor(recoveryOptions()...),
 	}
 }
 
-func loggingAdapter(logger *log.Logger) logging.Logger {
-	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
-		var prefix string
-		switch lvl {
-		case logging.LevelDebug:
-			prefix = "DEBUG"
-		case logging.LevelInfo:
-			prefix = "INFO"
-		case logging.LevelWarn:
-			prefix = "WARN"
-		case logging.LevelError:
-			prefix = "ERROR"
-		default:
-			panic(fmt.Sprintf("unknown level %v", lvl))
+func slogAdapter(logger *slog.Logger) logging.Logger {
+	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
+		l := logger
+
+		if requestID := GetRequestIDFromContext(ctx); requestID != "" {
+			l = l.With(slog.String("request_id", requestID))
+		}
+		if userID, _ := ctx.Value(UserIDKey).(string); userID != "" {
+			l = l.With(slog.String("user_id", userID))
 		}
 
-		formattedMsg := fmt.Sprintf("%s: %v", prefix, msg)
-		logger.Println(append([]any{"msg", formattedMsg}, fields...)...)
+		l = l.With(fields...)
+
+		switch lvl {
+		case logging.LevelDebug:
+			l.DebugContext(ctx, msg)
+		case logging.LevelInfo:
+			l.InfoContext(ctx, msg)
+		case logging.LevelWarn:
+			l.WarnContext(ctx, msg)
+		case logging.LevelError:
+			l.ErrorContext(ctx, msg)
+		}
 	})
 }
 
@@ -52,8 +58,6 @@ func loggingOptions() []logging.Option {
 		logging.WithLogOnEvents(
 			logging.StartCall,
 			logging.FinishCall,
-			logging.PayloadReceived,
-			logging.PayloadSent,
 		),
 		logging.WithLevels(func(code codes.Code) logging.Level {
 			switch code {

@@ -1,13 +1,11 @@
 package server
 
 import (
-	"log"
-	"os"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	grpc2 "whoami-server/libs/grpc"
+	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/libs/keycloak"
+	"whoami-server/libs/logging"
 	"whoami-server/user/internal/config"
 	usergrpc "whoami-server/user/internal/grpc"
 	"whoami-server/user/internal/service"
@@ -15,23 +13,13 @@ import (
 )
 
 func NewGrpcServer(cfg *config.Config) *grpc.Server {
-	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := logging.NewLogger("user-service")
 	kc := keycloak.NewClient(&cfg.Keycloak)
 	userService := service.NewUserService(kc)
 
 	server := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			append(
-				grpc2.DefaultUnaryInterceptors(logger),
-				grpc2.UnaryMetadataInterceptor(),
-			)...,
-		),
-		grpc.ChainStreamInterceptor(
-			append(
-				grpc2.DefaultStreamInterceptors(logger),
-				grpc2.StreamMetadataInterceptor(),
-			)...,
-		),
+		grpc.ChainUnaryInterceptor(libsgrpc.DefaultUnaryInterceptors(logger)...),
+		grpc.ChainStreamInterceptor(libsgrpc.DefaultStreamInterceptors(logger)...),
 	)
 
 	userGrpcServer := usergrpc.NewUserServiceServer(userService)

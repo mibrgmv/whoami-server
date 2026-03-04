@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	libsgrpc "whoami-server/libs/grpc"
 	"whoami-server/quiz/internal/models"
 	"whoami-server/quiz/internal/service"
 	quizv1 "whoami-server/quiz/pkg/protogen/quiz/v1"
@@ -68,5 +69,28 @@ func (s *quizServer) BatchGetQuizzes(ctx context.Context, request *quizv1.BatchG
 	return &quizv1.BatchGetQuizzesResponse{
 		Quizzes:       pbQuizzes,
 		NextPageToken: nextPageToken,
+	}, nil
+}
+
+func (s *quizServer) DeleteQuiz(ctx context.Context, request *quizv1.DeleteQuizRequest) (*quizv1.DeleteQuizResponse, error) {
+	if !libsgrpc.IsAdmin(ctx) {
+		return nil, status.Error(codes.PermissionDenied, "admin role required")
+	}
+
+	quizID, err := uuid.Parse(request.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid quiz ID format: %v", err)
+	}
+
+	if err := s.quizService.Delete(ctx, quizID); err != nil {
+		if errors.Is(err, service.ErrQuizNotFound) {
+			return nil, status.Errorf(codes.NotFound, "quiz not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to delete quiz: %v", err)
+	}
+
+	return &quizv1.DeleteQuizResponse{
+		Id:      request.Id,
+		Message: "quiz deleted successfully",
 	}, nil
 }

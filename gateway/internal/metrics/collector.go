@@ -14,15 +14,7 @@ type Collector struct {
 	HTTPRequestsTotal    *prometheus.CounterVec
 	HTTPRequestDuration  *prometheus.HistogramVec
 	HTTPInflightRequests prometheus.Gauge
-	HTTPResponseSize     *prometheus.HistogramVec
-
-	BackendRequestsTotal    *prometheus.CounterVec
-	BackendRequestDuration  *prometheus.HistogramVec
-	BackendInflightRequests *prometheus.GaugeVec
-	BackendConnectionErrors *prometheus.CounterVec
-
-	APIRequestsTotal *prometheus.CounterVec
-	APIErrorsTotal   *prometheus.CounterVec
+	AuthFailuresTotal    *prometheus.CounterVec
 }
 
 func NewMetricsCollector() *Collector {
@@ -33,24 +25,24 @@ func NewMetricsCollector() *Collector {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
-	gc := &Collector{
+	c := &Collector{
 		registry: registry,
 
 		HTTPRequestsTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "gateway_http_requests_total",
-				Help: "Total HTTP requests received by gateway",
+				Help: "Total HTTP requests",
 			},
-			[]string{"method", "endpoint", "status"},
+			[]string{"method", "path", "status"},
 		),
 
 		HTTPRequestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "gateway_http_request_duration_seconds",
 				Help:    "HTTP request duration in seconds",
-				Buckets: prometheus.DefBuckets,
+				Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5},
 			},
-			[]string{"method", "endpoint"},
+			[]string{"method", "path"},
 		),
 
 		HTTPInflightRequests: prometheus.NewGauge(
@@ -60,126 +52,42 @@ func NewMetricsCollector() *Collector {
 			},
 		),
 
-		HTTPResponseSize: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "gateway_http_response_size_bytes",
-				Help:    "HTTP response size in bytes",
-				Buckets: prometheus.ExponentialBuckets(100, 10, 8),
-			},
-			[]string{"method", "endpoint"},
-		),
-
-		BackendRequestsTotal: prometheus.NewCounterVec(
+		AuthFailuresTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "gateway_backend_requests_total",
-				Help: "Total requests sent from gateway to backend services",
+				Name: "gateway_auth_failures_total",
+				Help: "Total authentication failures",
 			},
-			[]string{"backend", "method", "status"},
-		),
-
-		BackendRequestDuration: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "gateway_backend_request_duration_seconds",
-				Help:    "Duration of requests to backend services",
-				Buckets: prometheus.DefBuckets,
-			},
-			[]string{"backend", "method"},
-		),
-
-		BackendInflightRequests: prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "gateway_backend_inflight_requests",
-				Help: "Number of outgoing requests to backend services currently in flight",
-			},
-			[]string{"backend"},
-		),
-
-		BackendConnectionErrors: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "gateway_backend_connection_errors_total",
-				Help: "Total connection/network errors when calling backend services",
-			},
-			[]string{"backend", "error_type"},
-		),
-
-		APIRequestsTotal: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "gateway_api_requests_total",
-				Help: "Total requests by API endpoint",
-			},
-			[]string{"api", "operation"},
-		),
-
-		APIErrorsTotal: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "gateway_api_errors_total",
-				Help: "Total errors by API endpoint",
-			},
-			[]string{"api", "error_type"},
+			[]string{"reason"},
 		),
 	}
 
 	registry.MustRegister(
-		gc.HTTPRequestsTotal,
-		gc.HTTPRequestDuration,
-		gc.HTTPInflightRequests,
-		gc.HTTPResponseSize,
-		gc.BackendRequestsTotal,
-		gc.BackendRequestDuration,
-		gc.BackendInflightRequests,
-		gc.BackendConnectionErrors,
-		gc.APIRequestsTotal,
-		gc.APIErrorsTotal,
+		c.HTTPRequestsTotal,
+		c.HTTPRequestDuration,
+		c.HTTPInflightRequests,
+		c.AuthFailuresTotal,
 	)
 
-	return gc
+	return c
 }
 
-func (gc *Collector) Registry() *prometheus.Registry {
-	return gc.registry
+func (c *Collector) Handler() http.Handler {
+	return promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{})
 }
 
-func (gc *Collector) Handler() http.Handler {
-	return promhttp.HandlerFor(gc.registry, promhttp.HandlerOpts{})
+func (c *Collector) RecordRequest(method, path, status string, duration float64) {
+	c.HTTPRequestsTotal.WithLabelValues(method, path, status).Inc()
+	c.HTTPRequestDuration.WithLabelValues(method, path).Observe(duration)
 }
 
-func (gc *Collector) RecordHTTPRequest(method, endpoint, status string, duration, responseSize float64) {
-	gc.HTTPRequestsTotal.WithLabelValues(method, endpoint, status).Inc()
-	gc.HTTPRequestDuration.WithLabelValues(method, endpoint).Observe(duration)
-	if responseSize > 0 {
-		gc.HTTPResponseSize.WithLabelValues(method, endpoint).Observe(responseSize)
-	}
+func (c *Collector) RecordAuthFailure(reason string) {
+	c.AuthFailuresTotal.WithLabelValues(reason).Inc()
 }
 
-func (gc *Collector) RecordBackendRequest(backend, method, status string, duration float64) {
-	gc.BackendRequestsTotal.WithLabelValues(backend, method, status).Inc()
-	gc.BackendRequestDuration.WithLabelValues(backend, method).Observe(duration)
+func (c *Collector) IncInflight() {
+	c.HTTPInflightRequests.Inc()
 }
 
-func (gc *Collector) RecordBackendError(backend, errorType string) {
-	gc.BackendConnectionErrors.WithLabelValues(backend, errorType).Inc()
-}
-
-func (gc *Collector) RecordAPIRequest(api, operation string) {
-	gc.APIRequestsTotal.WithLabelValues(api, operation).Inc()
-}
-
-func (gc *Collector) RecordAPIError(api, errorType string) {
-	gc.APIErrorsTotal.WithLabelValues(api, errorType).Inc()
-}
-
-func (gc *Collector) IncHTTPInflight() {
-	gc.HTTPInflightRequests.Inc()
-}
-
-func (gc *Collector) DecHTTPInflight() {
-	gc.HTTPInflightRequests.Dec()
-}
-
-func (gc *Collector) IncBackendInflight(backend string) {
-	gc.BackendInflightRequests.WithLabelValues(backend).Inc()
-}
-
-func (gc *Collector) DecBackendInflight(backend string) {
-	gc.BackendInflightRequests.WithLabelValues(backend).Dec()
+func (c *Collector) DecInflight() {
+	c.HTTPInflightRequests.Dec()
 }
