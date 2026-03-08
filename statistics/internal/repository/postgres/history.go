@@ -22,9 +22,9 @@ func NewHistoryRepository(pool *pgxpool.Pool) repository.HistoryRepository {
 
 func (r *historyRepo) Create(ctx context.Context, history *models.GameHistory) (*models.GameHistory, error) {
 	sql := `
-	INSERT INTO game_history (history_id, user_id, session_id, game_mode, game_date, target_word, guesses, result, attempts_used, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	RETURNING history_id
+	insert into game_history (history_id, user_id, session_id, game_mode, game_date, target_word, guesses, result, attempts_used, created_at)
+	values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	returning history_id
 	`
 
 	history.ID = uuid.New()
@@ -49,12 +49,21 @@ func (r *historyRepo) Create(ctx context.Context, history *models.GameHistory) (
 
 func (r *historyRepo) Query(ctx context.Context, query models.GameHistoryQuery) ([]*models.GameHistory, error) {
 	sql := `
-	SELECT history_id, user_id, session_id, game_mode, game_date, target_word, guesses, result, attempts_used, created_at
-	FROM game_history
-	WHERE user_id = $1
-	  AND ($2::uuid IS NULL OR history_id < $2)
-	ORDER BY created_at DESC
-	LIMIT $3
+	select history_id,
+	       user_id,
+	       session_id,
+	       game_mode,
+	       game_date,
+	       target_word,
+	       guesses,
+	       result,
+	       attempts_used,
+	       created_at
+	from game_history
+	where user_id = $1
+	  and ($2::uuid is null or history_id < $2)
+	order by created_at desc
+	limit $3
 	`
 
 	pageSize := query.PageSize

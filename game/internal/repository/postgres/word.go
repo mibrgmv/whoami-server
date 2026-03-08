@@ -21,9 +21,13 @@ func NewWordRepository(pool *pgxpool.Pool) repository.WordRepository {
 
 func (r *wordRepo) GetByWord(ctx context.Context, word, language string) (*models.Word, error) {
 	sql := `
-	SELECT word_id, word, language, is_solution
-	FROM words
-	WHERE word = $1 AND language = $2
+	select w.word_id,
+	       w.word,
+	       w.language, 
+	       w.is_solution
+	from words w
+	where w.word = $1
+	  and w.language = $2
 	`
 
 	row := r.pool.QueryRow(ctx, sql, word, language)
@@ -40,11 +44,15 @@ func (r *wordRepo) GetByWord(ctx context.Context, word, language string) (*model
 
 func (r *wordRepo) GetRandomSolution(ctx context.Context, language string) (*models.Word, error) {
 	sql := `
-	SELECT word_id, word, language, is_solution
-	FROM words
-	WHERE language = $1 AND is_solution = true
-	ORDER BY RANDOM()
-	LIMIT 1
+	select w.word_id,
+	       w.word, 
+	       w.language,
+	       w.is_solution
+	from words w
+	where w.language = $1
+	  and w.is_solution = true
+	order by random()
+	limit 1
 	`
 
 	row := r.pool.QueryRow(ctx, sql, language)
@@ -61,10 +69,16 @@ func (r *wordRepo) GetRandomSolution(ctx context.Context, language string) (*mod
 
 func (r *wordRepo) GetDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
 	sql := `
-	SELECT dw.daily_word_id, dw.word_id, dw.language, dw.game_date, w.word
-	FROM daily_words dw
-	JOIN words w ON dw.word_id = w.word_id
-	WHERE dw.game_date = $1 AND dw.language = $2
+	select dw.daily_word_id,
+	       dw.word_id,
+	       dw.language,
+	       dw.game_date,
+	       w.word
+	from daily_words dw
+	join words w
+	    on dw.word_id = w.word_id
+	where dw.game_date = $1
+	  and dw.language = $2
 	`
 
 	row := r.pool.QueryRow(ctx, sql, date, language)
@@ -81,7 +95,7 @@ func (r *wordRepo) GetDailyWord(ctx context.Context, date, language string) (*mo
 
 func (r *wordRepo) WordExists(ctx context.Context, word, language string) (bool, error) {
 	sql := `
-	SELECT EXISTS(SELECT 1 FROM words WHERE word = $1 AND language = $2)
+	select exists(select 1 from words w where w.word = $1 and w.language = $2)
 	`
 
 	var exists bool

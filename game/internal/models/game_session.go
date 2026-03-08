@@ -43,7 +43,7 @@ func (g *GameSession) ToProto() *gamev1.GameSession {
 		SessionId:    g.ID.String(),
 		Language:     g.Language,
 		GameMode:     gameModeToProto(g.GameMode),
-		Status:       gameStatusToProto(g.Status),
+		Status:       g.Status.ToProto(),
 		AttemptsUsed: int32(g.AttemptsUsed),
 		MaxAttempts:  MaxAttempts,
 		StartedAt:    g.StartedAt.Format(time.RFC3339),
@@ -87,8 +87,8 @@ func gameModeToProto(mode GameMode) gamev1.GameMode {
 	}
 }
 
-func gameStatusToProto(status GameStatus) gamev1.GameStatus {
-	switch status {
+func (s GameStatus) ToProto() gamev1.GameStatus {
+	switch s {
 	case GameStatusInProgress:
 		return gamev1.GameStatus_GAME_STATUS_IN_PROGRESS
 	case GameStatusWon:

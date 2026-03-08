@@ -92,7 +92,7 @@ func (s *gameServer) SubmitGuess(ctx context.Context, req *gamev1.SubmitGuessReq
 
 	result := &gamev1.GuessResult{
 		Guess:      guess.ToProto(),
-		GameStatus: gameStatusToProto(session.Status),
+		GameStatus: session.Status.ToProto(),
 	}
 
 	if session.Status == models.GameStatusWon || session.Status == models.GameStatusLost {
@@ -149,7 +149,7 @@ func (s *gameServer) GetDailyStatus(ctx context.Context, req *gamev1.GetDailySta
 
 	if session != nil {
 		result.SessionId = session.ID.String()
-		result.Status = gameStatusToProto(session.Status)
+		result.Status = session.Status.ToProto()
 	}
 
 	return result, nil
@@ -167,17 +167,4 @@ func (s *gameServer) ValidateWord(ctx context.Context, req *gamev1.ValidateWordR
 	}
 
 	return &gamev1.ValidateWordResponse{IsValid: valid}, nil
-}
-
-func gameStatusToProto(status models.GameStatus) gamev1.GameStatus {
-	switch status {
-	case models.GameStatusInProgress:
-		return gamev1.GameStatus_GAME_STATUS_IN_PROGRESS
-	case models.GameStatusWon:
-		return gamev1.GameStatus_GAME_STATUS_WON
-	case models.GameStatusLost:
-		return gamev1.GameStatus_GAME_STATUS_LOST
-	default:
-		return gamev1.GameStatus_GAME_STATUS_UNSPECIFIED
-	}
 }

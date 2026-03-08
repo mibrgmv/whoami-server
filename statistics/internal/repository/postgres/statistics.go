@@ -23,10 +23,16 @@ func NewStatisticsRepository(pool *pgxpool.Pool) repository.StatisticsRepository
 
 func (r *statisticsRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*models.UserStatistics, error) {
 	sql := `
-	SELECT user_id, games_played, games_won, current_streak, max_streak,
-		   guess_distribution, last_played_date, last_won_date
-	FROM user_statistics
-	WHERE user_id = $1
+	select user_id,
+	       games_played,
+	       games_won,
+	       current_streak,
+	       max_streak,
+	       guess_distribution,
+	       last_played_date,
+	       last_won_date
+	from user_statistics
+	where user_id = $1
 	`
 
 	row := r.pool.QueryRow(ctx, sql, userID)
@@ -66,16 +72,16 @@ func (r *statisticsRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*mo
 
 func (r *statisticsRepo) Upsert(ctx context.Context, stats *models.UserStatistics) error {
 	sql := `
-	INSERT INTO user_statistics (user_id, games_played, games_won, current_streak, max_streak, guess_distribution, last_played_date, last_won_date)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	ON CONFLICT (user_id) DO UPDATE SET
-		games_played = EXCLUDED.games_played,
-		games_won = EXCLUDED.games_won,
-		current_streak = EXCLUDED.current_streak,
-		max_streak = EXCLUDED.max_streak,
-		guess_distribution = EXCLUDED.guess_distribution,
-		last_played_date = EXCLUDED.last_played_date,
-		last_won_date = EXCLUDED.last_won_date
+	insert into user_statistics (user_id, games_played, games_won, current_streak, max_streak, guess_distribution, last_played_date, last_won_date)
+	values ($1, $2, $3, $4, $5, $6, $7, $8)
+	on conflict (user_id) do update set
+		games_played = excluded.games_played,
+		games_won = excluded.games_won,
+		current_streak = excluded.current_streak,
+		max_streak = excluded.max_streak,
+		guess_distribution = excluded.guess_distribution,
+		last_played_date = excluded.last_played_date,
+		last_won_date = excluded.last_won_date
 	`
 
 	guessDistJSON := formatGuessDistribution(&stats.GuessDistribution)
@@ -103,15 +109,17 @@ func (r *statisticsRepo) GetDailyLeaderboard(ctx context.Context, date, language
 	}
 
 	sql := `
-	SELECT gh.user_id, gh.attempts_used, gh.result
-	FROM game_history gh
-	WHERE gh.game_date = $1
-	  AND gh.game_mode = 'daily'
-	ORDER BY
-		CASE WHEN gh.result = 'won' THEN 0 ELSE 1 END,
-		gh.attempts_used ASC,
-		gh.created_at ASC
-	LIMIT $2
+	select gh.user_id,
+	       gh.attempts_used,
+	       gh.result
+	from game_history gh
+	where gh.game_date = $1
+	  and gh.game_mode = 'daily'
+	order by
+		case when gh.result = 'won' then 0 else 1 end,
+		gh.attempts_used asc,
+		gh.created_at asc
+	limit $2
 	`
 
 	rows, err := r.pool.Query(ctx, sql, date, limit)
