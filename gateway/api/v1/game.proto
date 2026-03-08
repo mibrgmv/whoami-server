@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package game.v1;
+
+option go_package = "whoami-server/gateway/pkg/protogen/game/v1;gamev1";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service GameService {
+  // StartGame starts a new game session (daily or random mode)
+  rpc StartGame(StartGameRequest) returns (GameSession) {
+    option (google.api.http) = {
+      post: "/api/v1/games"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // SubmitGuess submits a guess for the current game
+  rpc SubmitGuess(SubmitGuessRequest) returns (GuessResult) {
+    option (google.api.http) = {
+      post: "/api/v1/games/{session_id}/guesses"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetGame returns the current state of a game session
+  rpc GetGame(GetGameRequest) returns (GameSession) {
+    option (google.api.http) = {
+      get: "/api/v1/games/{session_id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetDailyStatus checks if the user has played today's daily game
+  rpc GetDailyStatus(GetDailyStatusRequest) returns (DailyStatus) {
+    option (google.api.http) = {
+      get: "/api/v1/games/daily/status"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // ValidateWord checks if a word exists in the dictionary
+  rpc ValidateWord(ValidateWordRequest) returns (ValidateWordResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/games/validate/{word}"
+    };
+  }
+}
+
+// GameMode represents the type of game
+enum GameMode {
+  GAME_MODE_UNSPECIFIED = 0;
+  GAME_MODE_DAILY = 1;
+  GAME_MODE_RANDOM = 2;
+}
+
+// GameStatus represents the current status of a game
+enum GameStatus {
+  GAME_STATUS_UNSPECIFIED = 0;
+  GAME_STATUS_IN_PROGRESS = 1;
+  GAME_STATUS_WON = 2;
+  GAME_STATUS_LOST = 3;
+}
+
+// LetterResult represents the result of a letter in a guess
+enum LetterResult {
+  LETTER_RESULT_UNSPECIFIED = 0;
+  LETTER_RESULT_CORRECT = 1;   // Green - correct position
+  LETTER_RESULT_PRESENT = 2;   // Yellow - wrong position
+  LETTER_RESULT_ABSENT = 3;    // Gray - not in word
+}
+
+// GameSession represents an active or completed game
+message GameSession {
+  string session_id = 1;
+  string user_id = 2;
+  string language = 3;
+  GameMode game_mode = 4;
+  string game_date = 5;  // YYYY-MM-DD for daily games
+  GameStatus status = 6;
+  int32 attempts_used = 7;
+  int32 max_attempts = 8;
+  repeated Guess guesses = 9;
+  string target_word = 10;  // Only revealed when game is over
+  string started_at = 11;
+  string completed_at = 12;
+}
+
+// Guess represents a single guess in a game
+message Guess {
+  string word = 1;
+  repeated LetterResult results = 2;
+  int32 attempt_number = 3;
+}
+
+// StartGameRequest is the request to start a new game
+message StartGameRequest {
+  GameMode mode = 1;
+  string language = 2;  // 'en' or 'ru', defaults to 'en'
+}
+
+// SubmitGuessRequest is the request to submit a guess
+message SubmitGuessRequest {
+  string session_id = 1;
+  string word = 2;
+}
+
+// GuessResult is the result of a guess submission
+message GuessResult {
+  Guess guess = 1;
+  GameStatus game_status = 2;
+  string target_word = 3;  // Only set if game is over
+}
+
+// GetGameRequest is the request to get a game session
+message GetGameRequest {
+  string session_id = 1;
+}
+
+// GetDailyStatusRequest is the request to check daily game status
+message GetDailyStatusRequest {
+  string language = 1;  // 'en' or 'ru', defaults to 'en'
+}
+
+// DailyStatus is the response for daily game status check
+message DailyStatus {
+  bool has_played_today = 1;
+  string session_id = 2;  // If played, the session ID
+  GameStatus status = 3;   // If played, the game status
+}
+
+// ValidateWordRequest is the request to validate a word
+message ValidateWordRequest {
+  string word = 1;
+  string language = 2;  // 'en' or 'ru', defaults to 'en'
+}
+
+// ValidateWordResponse is the response for word validation
+message ValidateWordResponse {
+  bool is_valid = 1;
+}

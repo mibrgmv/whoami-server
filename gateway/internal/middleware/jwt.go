@@ -64,6 +64,20 @@ func JWT(cfg JWTConfig) gin.HandlerFunc {
 	return validator.handler
 }
 
+// JWTOptional creates a middleware that extracts JWT claims if present but doesn't fail if not.
+// Use this for routes that work for both authenticated and unauthenticated users.
+func JWTOptional(cfg JWTConfig) gin.HandlerFunc {
+	validator := &jwtValidator{
+		config:     cfg,
+		publicKeys: make(map[string]*rsa.PublicKey),
+		httpClient: &http.Client{
+			Timeout: cfg.HTTPTimeout,
+		},
+	}
+
+	return validator.optionalHandler
+}
+
 type jwtValidator struct {
 	config      JWTConfig
 	publicKeys  map[string]*rsa.PublicKey
@@ -103,6 +117,38 @@ func (v *jwtValidator) handler(c *gin.Context) {
 		return
 	}
 
+	v.setClaimsInContext(c, claims)
+	c.Next()
+}
+
+// optionalHandler extracts JWT claims if present but continues even if not authenticated
+func (v *jwtValidator) optionalHandler(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		// No token provided - continue as guest
+		c.Next()
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		// Invalid format - continue as guest
+		c.Next()
+		return
+	}
+
+	claims, err := v.validateToken(tokenString)
+	if err != nil {
+		// Invalid token - continue as guest
+		c.Next()
+		return
+	}
+
+	v.setClaimsInContext(c, claims)
+	c.Next()
+}
+
+func (v *jwtValidator) setClaimsInContext(c *gin.Context, claims *keycloak.Claims) {
 	c.Set("user_id", claims.Subject)
 	c.Set("username", claims.PreferredUsername)
 	c.Set("email", claims.Email)
@@ -120,7 +166,6 @@ func (v *jwtValidator) handler(c *gin.Context) {
 	ctx = context.WithValue(ctx, RolesKey, rolesStr)
 
 	c.Request = c.Request.WithContext(ctx)
-	c.Next()
 }
 
 func extractRoles(claims *keycloak.Claims) []string {

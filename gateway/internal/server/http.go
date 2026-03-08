@@ -20,9 +20,8 @@ import (
 	"whoami-server/gateway/internal/metrics"
 	"whoami-server/gateway/internal/middleware"
 	authv1 "whoami-server/gateway/pkg/protogen/auth/v1"
-	historyv1 "whoami-server/gateway/pkg/protogen/history/v1"
-	questionv1 "whoami-server/gateway/pkg/protogen/question/v1"
-	quizv1 "whoami-server/gateway/pkg/protogen/quiz/v1"
+	gamev1 "whoami-server/gateway/pkg/protogen/game/v1"
+	statisticsv1 "whoami-server/gateway/pkg/protogen/statistics/v1"
 	userv1 "whoami-server/gateway/pkg/protogen/user/v1"
 )
 
@@ -67,11 +66,10 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		register func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error
 		addr     string
 	}{
-		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.AuthService.GetAddr()},
-		{"quiz", quizv1.RegisterQuizServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
-		{"question", questionv1.RegisterQuestionServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
-		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.UserService.GetAddr()},
-		{"history", historyv1.RegisterHistoryServiceHandlerFromEndpoint, cfg.HistoryService.GetAddr()},
+		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
+		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
+		{"game", gamev1.RegisterGameServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
+		{"statistics", statisticsv1.RegisterStatisticsServiceHandlerFromEndpoint, cfg.StatisticsService.GetAddr()},
 	}
 
 	for _, svc := range services {
@@ -80,13 +78,15 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		}
 	}
 
-	jwtMiddleware := middleware.JWT(middleware.JWTConfig{
+	jwtConfig := middleware.JWTConfig{
 		KeycloakBaseURL: cfg.Keycloak.BaseURL,
 		Realm:           cfg.Keycloak.Realm,
 		KeyRefreshTTL:   1 * time.Hour,
 		HTTPTimeout:     10 * time.Second,
 		Metrics:         collector,
-	})
+	}
+	jwtMiddleware := middleware.JWT(jwtConfig)
+	jwtOptionalMiddleware := middleware.JWTOptional(jwtConfig)
 
 	switch cfg.HTTP.Mode {
 	case "debug":
@@ -128,22 +128,26 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/api/v1/swagger.json")))
 
+	// Public routes (no auth required)
 	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
 
-	gwmuxGroup := router.Group("/api/v1")
-	gwmuxGroup.Use(jwtMiddleware)
+	// Game routes (auth optional - guests can play)
+	gamesGroup := router.Group("/api/v1")
+	gamesGroup.Use(jwtOptionalMiddleware)
 	{
-		gwmuxGroup.Any("/quizzes", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/quizzes/*path", gin.WrapH(gwmux))
+		gamesGroup.Any("/games", gin.WrapH(gwmux))
+		gamesGroup.Any("/games/*path", gin.WrapH(gwmux))
+	}
 
-		gwmuxGroup.Any("/questions", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/questions/*path", gin.WrapH(gwmux))
+	// Protected routes (auth required)
+	protectedGroup := router.Group("/api/v1")
+	protectedGroup.Use(jwtMiddleware)
+	{
+		protectedGroup.Any("/users", gin.WrapH(gwmux))
+		protectedGroup.Any("/users/*path", gin.WrapH(gwmux))
 
-		gwmuxGroup.Any("/users", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/users/*path", gin.WrapH(gwmux))
-
-		gwmuxGroup.Any("/history", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/history/*path", gin.WrapH(gwmux))
+		protectedGroup.Any("/statistics", gin.WrapH(gwmux))
+		protectedGroup.Any("/statistics/*path", gin.WrapH(gwmux))
 	}
 
 	router.NoRoute(func(c *gin.Context) {

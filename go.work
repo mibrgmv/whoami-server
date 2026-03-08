@@ -1,10 +1,9 @@
 go 1.25.0
 
 use (
-	./auth
+	./game
 	./gateway
-	./history
+	./identity
 	./libs
-	./quiz
-	./user
+	./statistics
 )

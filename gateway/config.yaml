@@ -15,19 +15,15 @@ metrics:
   host: 0.0.0.0
   port: 9090
 
-auth_service:
-  host: localhost
-  port: 50055
-
-quiz_service:
-  host: localhost
-  port: 50051
-
-user_service:
+identity_service:
   host: localhost
   port: 50052
 
-history_service:
+game_service:
+  host: localhost
+  port: 50051
+
+statistics_service:
   host: localhost
   port: 50053
 

@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Whoami API",
-    "description": "Whoami Backend API",
+    "title": "Wordle API",
+    "description": "Wordle Game Platform API",
     "version": "1.0"
   },
   "tags": [
@@ -10,13 +10,10 @@
       "name": "AuthService"
     },
     {
-      "name": "HistoryService"
+      "name": "GameService"
     },
     {
-      "name": "QuestionService"
-    },
-    {
-      "name": "QuizService"
+      "name": "StatisticsService"
     },
     {
       "name": "UserService"
@@ -162,168 +159,15 @@
         ]
       }
     },
-    "/api/v1/history": {
-      "get": {
-        "operationId": "HistoryService_BatchGetItems",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1BatchGetItemsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "quizIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "HistoryService"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/history/me": {
-      "get": {
-        "operationId": "HistoryService_BatchGetMyItems",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1BatchGetItemsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "quizIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "HistoryService"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/v1/quizzes": {
-      "get": {
-        "operationId": "QuizService_BatchGetQuizzes",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1BatchGetQuizzesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "QuizService"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      },
+    "/api/v1/games": {
       "post": {
-        "operationId": "QuizService_CreateQuiz",
+        "summary": "StartGame starts a new game session (daily or random mode)",
+        "operationId": "GameService_StartGame",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Quiz"
+              "$ref": "#/definitions/v1GameSession"
             }
           },
           "default": {
@@ -339,12 +183,12 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateQuizRequest"
+              "$ref": "#/definitions/v1StartGameRequest"
             }
           }
         ],
         "tags": [
-          "QuizService"
+          "GameService"
         ],
         "security": [
           {
@@ -353,14 +197,15 @@
         ]
       }
     },
-    "/api/v1/quizzes/{id}": {
+    "/api/v1/games/daily/status": {
       "get": {
-        "operationId": "QuizService_GetQuiz",
+        "summary": "GetDailyStatus checks if the user has played today's daily game",
+        "operationId": "GameService_GetDailyStatus",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Quiz"
+              "$ref": "#/definitions/v1DailyStatus"
             }
           },
           "default": {
@@ -372,47 +217,15 @@
         },
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "QuizService"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "QuizService_DeleteQuiz",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DeleteQuizResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "QuizService"
+          "GameService"
         ],
         "security": [
           {
@@ -421,14 +234,15 @@
         ]
       }
     },
-    "/api/v1/quizzes/{quizId}/evaluate": {
-      "post": {
-        "operationId": "QuestionService_EvaluateAnswers",
+    "/api/v1/games/validate/{word}": {
+      "get": {
+        "summary": "ValidateWord checks if a word exists in the dictionary",
+        "operationId": "GameService_ValidateWord",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1EvaluateAnswersResponse"
+              "$ref": "#/definitions/v1ValidateWordResponse"
             }
           },
           "default": {
@@ -440,7 +254,81 @@
         },
         "parameters": [
           {
-            "name": "quizId",
+            "name": "word",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GameService"
+        ]
+      }
+    },
+    "/api/v1/games/{sessionId}": {
+      "get": {
+        "summary": "GetGame returns the current state of a game session",
+        "operationId": "GameService_GetGame",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GameSession"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GameService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games/{sessionId}/guesses": {
+      "post": {
+        "summary": "SubmitGuess submits a guess for the current game",
+        "operationId": "GameService_SubmitGuess",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GuessResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
             "in": "path",
             "required": true,
             "type": "string"
@@ -450,12 +338,12 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/QuestionServiceEvaluateAnswersBody"
+              "$ref": "#/definitions/GameServiceSubmitGuessBody"
             }
           }
         ],
         "tags": [
-          "QuestionService"
+          "GameService"
         ],
         "security": [
           {
@@ -464,14 +352,15 @@
         ]
       }
     },
-    "/api/v1/quizzes/{quizId}/questions": {
+    "/api/v1/statistics/leaderboard/daily": {
       "get": {
-        "operationId": "QuestionService_BatchGetQuestions",
+        "summary": "GetDailyLeaderboard returns the leaderboard for today's daily game",
+        "operationId": "StatisticsService_GetDailyLeaderboard",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1BatchGetQuestionsResponse"
+              "$ref": "#/definitions/v1GetDailyLeaderboardResponse"
             }
           },
           "default": {
@@ -483,28 +372,68 @@
         },
         "parameters": [
           {
-            "name": "quizId",
-            "in": "path",
-            "required": true,
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
             "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Max entries to return, defaults to 10",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
-          "QuestionService"
+          "StatisticsService"
         ],
         "security": [
           {
             "BearerAuth": []
           }
         ]
-      },
-      "post": {
-        "operationId": "QuestionService_BatchCreateQuestions",
+      }
+    },
+    "/api/v1/statistics/me": {
+      "get": {
+        "summary": "GetMyStatistics returns the current user's statistics",
+        "operationId": "StatisticsService_GetMyStatistics",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1BatchCreateQuestionsResponse"
+              "$ref": "#/definitions/v1UserStatistics"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statistics/me/history": {
+      "get": {
+        "summary": "GetMyHistory returns the current user's game history",
+        "operationId": "StatisticsService_GetMyHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMyHistoryResponse"
             }
           },
           "default": {
@@ -516,22 +445,57 @@
         },
         "parameters": [
           {
-            "name": "quizId",
-            "in": "path",
-            "required": true,
-            "type": "string"
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           },
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/QuestionServiceBatchCreateQuestionsBody"
-            }
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
-          "QuestionService"
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statistics/users/{userId}": {
+      "get": {
+        "summary": "GetUserStatistics returns statistics for a specific user (must be a friend)",
+        "operationId": "StatisticsService_GetUserStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserStatistics"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatisticsService"
         ],
         "security": [
           {
@@ -731,29 +695,14 @@
     }
   },
   "definitions": {
-    "QuestionServiceBatchCreateQuestionsBody": {
+    "GameServiceSubmitGuessBody": {
       "type": "object",
       "properties": {
-        "requests": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1CreateQuestionRequest"
-          }
+        "word": {
+          "type": "string"
         }
-      }
-    },
-    "QuestionServiceEvaluateAnswersBody": {
-      "type": "object",
-      "properties": {
-        "answers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Answer"
-          }
-        }
-      }
+      },
+      "title": "SubmitGuessRequest is the request to submit a guess"
     },
     "UserServiceChangePasswordBody": {
       "type": "object",
@@ -814,74 +763,6 @@
         }
       }
     },
-    "v1Answer": {
-      "type": "object",
-      "properties": {
-        "quizId": {
-          "type": "string"
-        },
-        "questionId": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        }
-      }
-    },
-    "v1BatchCreateQuestionsResponse": {
-      "type": "object",
-      "properties": {
-        "questions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Question"
-          }
-        }
-      }
-    },
-    "v1BatchGetItemsResponse": {
-      "type": "object",
-      "properties": {
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1QuizCompletionHistoryItem"
-          }
-        },
-        "nextPageToken": {
-          "type": "string"
-        }
-      }
-    },
-    "v1BatchGetQuestionsResponse": {
-      "type": "object",
-      "properties": {
-        "questions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1QuestionResponse"
-          }
-        }
-      }
-    },
-    "v1BatchGetQuizzesResponse": {
-      "type": "object",
-      "properties": {
-        "quizzes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Quiz"
-          }
-        },
-        "nextPageToken": {
-          "type": "string"
-        }
-      }
-    },
     "v1BatchGetUsersResponse": {
       "type": "object",
       "properties": {
@@ -906,47 +787,22 @@
         }
       }
     },
-    "v1CreateQuestionRequest": {
+    "v1DailyStatus": {
       "type": "object",
       "properties": {
-        "quizId": {
-          "type": "string"
+        "hasPlayedToday": {
+          "type": "boolean"
         },
-        "body": {
-          "type": "string"
+        "sessionId": {
+          "type": "string",
+          "title": "If played, the session ID"
         },
-        "optionsWeights": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/v1OptionWeights"
-          }
+        "status": {
+          "$ref": "#/definitions/v1GameStatus",
+          "title": "If played, the game status"
         }
-      }
-    },
-    "v1CreateQuizRequest": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "v1DeleteQuizResponse": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
+      },
+      "title": "DailyStatus is the response for daily game status check"
     },
     "v1DeleteUserResponse": {
       "type": "object",
@@ -959,13 +815,243 @@
         }
       }
     },
-    "v1EvaluateAnswersResponse": {
+    "v1GameHistoryItem": {
       "type": "object",
       "properties": {
+        "historyId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "gameMode": {
+          "type": "string"
+        },
+        "gameDate": {
+          "type": "string"
+        },
+        "targetWord": {
+          "type": "string"
+        },
+        "guesses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "result": {
+          "type": "string"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "title": "GameHistoryItem represents a single game in history"
+    },
+    "v1GameMode": {
+      "type": "string",
+      "enum": [
+        "GAME_MODE_UNSPECIFIED",
+        "GAME_MODE_DAILY",
+        "GAME_MODE_RANDOM"
+      ],
+      "default": "GAME_MODE_UNSPECIFIED",
+      "title": "GameMode represents the type of game"
+    },
+    "v1GameSession": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "gameMode": {
+          "$ref": "#/definitions/v1GameMode"
+        },
+        "gameDate": {
+          "type": "string",
+          "title": "YYYY-MM-DD for daily games"
+        },
+        "status": {
+          "$ref": "#/definitions/v1GameStatus"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "guesses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Guess"
+          }
+        },
+        "targetWord": {
+          "type": "string",
+          "title": "Only revealed when game is over"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "completedAt": {
+          "type": "string"
+        }
+      },
+      "title": "GameSession represents an active or completed game"
+    },
+    "v1GameStatus": {
+      "type": "string",
+      "enum": [
+        "GAME_STATUS_UNSPECIFIED",
+        "GAME_STATUS_IN_PROGRESS",
+        "GAME_STATUS_WON",
+        "GAME_STATUS_LOST"
+      ],
+      "default": "GAME_STATUS_UNSPECIFIED",
+      "title": "GameStatus represents the current status of a game"
+    },
+    "v1GetDailyLeaderboardResponse": {
+      "type": "object",
+      "properties": {
+        "gameDate": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1LeaderboardEntry"
+          }
+        }
+      }
+    },
+    "v1GetMyHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameHistoryItem"
+          }
+        },
+        "nextPageToken": {
           "type": "string"
         }
       }
+    },
+    "v1Guess": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1LetterResult"
+          }
+        },
+        "attemptNumber": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Guess represents a single guess in a game"
+    },
+    "v1GuessDistribution": {
+      "type": "object",
+      "properties": {
+        "one": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "two": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "three": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "four": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "five": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "six": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "GuessDistribution shows how many games were won in N guesses"
+    },
+    "v1GuessResult": {
+      "type": "object",
+      "properties": {
+        "guess": {
+          "$ref": "#/definitions/v1Guess"
+        },
+        "gameStatus": {
+          "$ref": "#/definitions/v1GameStatus"
+        },
+        "targetWord": {
+          "type": "string",
+          "title": "Only set if game is over"
+        }
+      },
+      "title": "GuessResult is the result of a guess submission"
+    },
+    "v1LeaderboardEntry": {
+      "type": "object",
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isWon": {
+          "type": "boolean"
+        }
+      },
+      "title": "LeaderboardEntry represents a user's position in the leaderboard"
+    },
+    "v1LetterResult": {
+      "type": "string",
+      "enum": [
+        "LETTER_RESULT_UNSPECIFIED",
+        "LETTER_RESULT_CORRECT",
+        "LETTER_RESULT_PRESENT",
+        "LETTER_RESULT_ABSENT"
+      ],
+      "default": "LETTER_RESULT_UNSPECIFIED",
+      "description": "- LETTER_RESULT_CORRECT: Green - correct position\n - LETTER_RESULT_PRESENT: Yellow - wrong position\n - LETTER_RESULT_ABSENT: Gray - not in word",
+      "title": "LetterResult represents the result of a letter in a guess"
     },
     "v1LoginRequest": {
       "type": "object",
@@ -990,95 +1076,6 @@
       "type": "object",
       "properties": {
         "message": {
-          "type": "string"
-        }
-      }
-    },
-    "v1OptionWeights": {
-      "type": "object",
-      "properties": {
-        "weights": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          }
-        }
-      }
-    },
-    "v1Question": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "quizId": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        },
-        "optionsWeights": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/v1OptionWeights"
-          }
-        }
-      }
-    },
-    "v1QuestionResponse": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "quizId": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        },
-        "options": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "v1Quiz": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "ownerId": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "v1QuizCompletionHistoryItem": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "userId": {
-          "type": "string"
-        },
-        "quizId": {
-          "type": "string"
-        },
-        "quizResult": {
           "type": "string"
         }
       }
@@ -1128,6 +1125,19 @@
         }
       }
     },
+    "v1StartGameRequest": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/v1GameMode"
+        },
+        "language": {
+          "type": "string",
+          "title": "'en' or 'ru', defaults to 'en'"
+        }
+      },
+      "title": "StartGameRequest is the request to start a new game"
+    },
     "v1TokenResponse": {
       "type": "object",
       "properties": {
@@ -1174,6 +1184,50 @@
           "type": "string"
         }
       }
+    },
+    "v1UserStatistics": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "gamesPlayed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gamesWon": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "winPercentage": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentStreak": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxStreak": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "guessDistribution": {
+          "$ref": "#/definitions/v1GuessDistribution"
+        },
+        "lastPlayedDate": {
+          "type": "string"
+        }
+      },
+      "title": "UserStatistics represents aggregated statistics for a user"
+    },
+    "v1ValidateWordResponse": {
+      "type": "object",
+      "properties": {
+        "isValid": {
+          "type": "boolean"
+        }
+      },
+      "title": "ValidateWordResponse is the response for word validation"
     }
   },
   "securityDefinitions": {

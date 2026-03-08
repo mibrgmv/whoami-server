@@ -72,3 +72,8 @@ func (c *Client) DeleteByPattern(ctx context.Context, pattern string) error {
 
 	return nil
 }
+
+// Raw returns the underlying redis.Client for advanced operations
+func (c *Client) Raw() *redis.Client {
+	return c.client
+}

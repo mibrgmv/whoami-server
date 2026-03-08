@@ -1,7 +1,7 @@
 COMPOSE := docker compose --profile monitoring
 
-SERVICES := libs gateway quiz auth user history
-BUILD_SERVICES := gateway quiz auth user history
+SERVICES := libs gateway game identity statistics
+BUILD_SERVICES := gateway game identity statistics
 
 .PHONY: up down down-v logs build lint test tidy gen help
 
@@ -42,7 +42,7 @@ tidy:
 	done
 
 gen:
-	@for svc in gateway auth quiz user history; do \
+	@for svc in gateway identity game statistics; do \
 		echo "==> Generating proto for $$svc"; \
 		cd $$svc && make gen && cd ..; \
 	done

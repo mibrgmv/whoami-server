@@ -5,8 +5,8 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-quiz-data:
-  postgres-history-data:
+  postgres-game-data:
+  postgres-statistics-data:
   postgres-keycloak-data:
   prometheus-data:
   kafka-data:
@@ -19,65 +19,23 @@ services:
       - "8080:8080"
       - "9090:9090"
     depends_on:
-      - auth-service
-      - quiz-service
-      - user-service
-      - history-service
+      - identity-service
+      - game-service
+      - statistics-service
     networks:
       - app-network
     environment:
       - HTTP_MODE=${HTTP_MODE}
-      - AUTH_SERVICE_HOST=auth-service
-      - QUIZ_SERVICE_HOST=quiz-service
-      - USER_SERVICE_HOST=user-service
-      - HISTORY_SERVICE_HOST=history-service
+      - IDENTITY_SERVICE_HOST=identity-service
+      - GAME_SERVICE_HOST=game-service
+      - STATISTICS_SERVICE_HOST=statistics-service
       - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
     restart: unless-stopped
 
-  auth-service:
-    image: ghcr.io/${GITHUB_OWNER}/auth:${IMAGE_TAG}
-    container_name: auth-service
-    ports:
-      - "50055:50055"
-    networks:
-      - app-network
-    environment:
-      - GRPC_HOST=0.0.0.0
-      - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
-      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
-      - KEYCLOAK_PUBLIC_CLIENT_ID=${KEYCLOAK_PUBLIC_CLIENT_ID}
-      - KEYCLOAK_PUBLIC_CLIENT_SECRET=${KEYCLOAK_PUBLIC_CLIENT_SECRET}
-      - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=${KEYCLOAK_ADMIN_CLIENT_SECRET}
-    restart: unless-stopped
-
-  quiz-service:
-    image: ghcr.io/${GITHUB_OWNER}/quiz:${IMAGE_TAG}
-    container_name: quiz-service
-    ports:
-      - "50051:50051"
-    depends_on:
-      - postgres-quiz
-      - redis
-      - kafka
-    networks:
-      - app-network
-    environment:
-      - POSTGRES_HOST=postgres-quiz
-      - POSTGRES_PORT=5432
-      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
-      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - GRPC_HOST=0.0.0.0
-      - REDIS_ADDRESS=redis:6379
-      - KAFKA_BROKERS=kafka:9092
-      - KAFKA_TOPIC_QUIZ_COMPLETED=quiz-completed
-    restart: unless-stopped
-
-  user-service:
-    image: ghcr.io/${GITHUB_OWNER}/user:${IMAGE_TAG}
-    container_name: user-service
+  identity-service:
+    image: ghcr.io/${GITHUB_OWNER}/identity:${IMAGE_TAG}
+    container_name: identity-service
     ports:
       - "50052:50052"
     networks:
@@ -92,31 +50,54 @@ services:
       - KEYCLOAK_ADMIN_CLIENT_SECRET=${KEYCLOAK_ADMIN_CLIENT_SECRET}
     restart: unless-stopped
 
-  history-service:
-    image: ghcr.io/${GITHUB_OWNER}/history:${IMAGE_TAG}
-    container_name: history-service
+  game-service:
+    image: ghcr.io/${GITHUB_OWNER}/game:${IMAGE_TAG}
+    container_name: game-service
     ports:
-      - "50053:50053"
+      - "50051:50051"
     depends_on:
-      - postgres-history
+      - postgres-game
+      - redis
       - kafka
     networks:
       - app-network
     environment:
-      - POSTGRES_HOST=postgres-history
+      - POSTGRES_HOST=postgres-game
+      - POSTGRES_PORT=5432
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - GRPC_HOST=0.0.0.0
+      - REDIS_ADDRESS=redis:6379
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_TOPIC_GAME_COMPLETED=game-completed
+    restart: unless-stopped
+
+  statistics-service:
+    image: ghcr.io/${GITHUB_OWNER}/statistics:${IMAGE_TAG}
+    container_name: statistics-service
+    ports:
+      - "50053:50053"
+    depends_on:
+      - postgres-statistics
+      - kafka
+    networks:
+      - app-network
+    environment:
+      - POSTGRES_HOST=postgres-statistics
       - POSTGRES_PORT=5432
       - POSTGRES_DATABASE=${POSTGRES_DATABASE}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - GRPC_HOST=0.0.0.0
       - KAFKA_BROKERS=kafka:9092
-      - KAFKA_GROUP_ID=history-service
-      - KAFKA_TOPIC_QUIZ_COMPLETED=quiz-completed
+      - KAFKA_GROUP_ID=statistics-service
+      - KAFKA_TOPIC_GAME_COMPLETED=game-completed
     restart: unless-stopped
 
-  postgres-quiz:
+  postgres-game:
     image: postgres:18-alpine
-    container_name: postgres-quiz
+    container_name: postgres-game
     ports:
       - "5432:5432"
     networks:
@@ -126,12 +107,12 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
     volumes:
-      - postgres-quiz-data:/var/lib/postgresql/data
+      - postgres-game-data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  postgres-history:
+  postgres-statistics:
     image: postgres:18-alpine
-    container_name: postgres-history
+    container_name: postgres-statistics
     ports:
       - "5433:5432"
     networks:
@@ -141,7 +122,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
     volumes:
-      - postgres-history-data:/var/lib/postgresql/data
+      - postgres-statistics-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   redis:

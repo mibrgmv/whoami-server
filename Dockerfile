@@ -5,11 +5,11 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 
 
-FROM runtime AS quiz
+FROM runtime AS game
 
-COPY quiz/bin/app ./app
-COPY quiz/config.yaml ./config.yaml
-COPY quiz/migrations ./migrations
+COPY game/bin/app ./app
+COPY game/config.yaml ./config.yaml
+COPY game/migrations ./migrations
 
 EXPOSE 50051
 
@@ -27,31 +27,21 @@ EXPOSE 8080
 CMD ["./app"]
 
 
-FROM runtime AS auth
+FROM runtime AS identity
 
-COPY auth/bin/app ./app
-COPY auth/config.yaml ./config.yaml
-
-EXPOSE 50055
-
-CMD ["./app"]
-
-
-FROM runtime AS user
-
-COPY user/bin/app ./app
-COPY user/config.yaml ./config.yaml
+COPY identity/bin/app ./app
+COPY identity/config.yaml ./config.yaml
 
 EXPOSE 50052
 
 CMD ["./app"]
 
 
-FROM runtime AS history
+FROM runtime AS statistics
 
-COPY history/bin/app ./app
-COPY history/config.yaml ./config.yaml
-COPY history/migrations ./migrations
+COPY statistics/bin/app ./app
+COPY statistics/config.yaml ./config.yaml
+COPY statistics/migrations ./migrations
 
 EXPOSE 50053
 
