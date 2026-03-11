@@ -757,7 +757,7 @@ const file_statistics_proto_rawDesc = "" +
 	"\x13GetDailyLeaderboard\x12).statistics.v1.GetDailyLeaderboardRequest\x1a*.statistics.v1.GetDailyLeaderboardResponse\"A\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02&\x12$/api/v1/statistics/leaderboard/dailyBBZ@whoami-server/statistics/pkg/protogen/statistics/v1;statisticsv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02&\x12$/api/v1/statistics/leaderboard/dailyB;Z9gordle/statistics/pkg/protogen/statistics/v1;statisticsv1b\x06proto3"
 
 var (
 	file_statistics_proto_rawDescOnce sync.Once

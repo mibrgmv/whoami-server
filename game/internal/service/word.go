@@ -7,8 +7,8 @@ import (
 	"time"
 
 	goredis "github.com/redis/go-redis/v9"
-	"whoami-server/game/internal/models"
-	"whoami-server/game/internal/repository"
+	"gordle/game/internal/models"
+	"gordle/game/internal/repository"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 type WordService interface {
 	ValidateWord(ctx context.Context, word, language string) (bool, error)
 	GetRandomSolution(ctx context.Context, language string) (*models.Word, error)
-	GetDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error)
+	GetOrCreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error)
 }
 
 type wordService struct {
@@ -62,6 +62,13 @@ func (s *wordService) GetRandomSolution(ctx context.Context, language string) (*
 	return s.wordRepo.GetRandomSolution(ctx, language)
 }
 
-func (s *wordService) GetDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
-	return s.wordRepo.GetDailyWord(ctx, date, language)
+func (s *wordService) GetOrCreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
+	word, err := s.wordRepo.GetDailyWord(ctx, date, language)
+	if err != nil {
+		return nil, err
+	}
+	if word != nil {
+		return word, nil
+	}
+	return s.wordRepo.CreateDailyWord(ctx, date, language)
 }

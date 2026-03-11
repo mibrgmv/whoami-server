@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	appcfg "whoami-server/gateway/internal/config"
-	"whoami-server/gateway/internal/metrics"
+	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/metrics"
 )
 
 type MetricsServer struct {

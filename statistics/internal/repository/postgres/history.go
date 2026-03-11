@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/statistics/internal/models"
-	"whoami-server/statistics/internal/repository"
+	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/repository"
 )
 
 const defaultPageSize int32 = 50

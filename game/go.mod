@@ -1,4 +1,4 @@
-module whoami-server/game
+module gordle/game
 
 go 1.25.0
 

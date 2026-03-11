@@ -1050,7 +1050,6 @@
         "LETTER_RESULT_ABSENT"
       ],
       "default": "LETTER_RESULT_UNSPECIFIED",
-      "description": "- LETTER_RESULT_CORRECT: Green - correct position\n - LETTER_RESULT_PRESENT: Yellow - wrong position\n - LETTER_RESULT_ABSENT: Gray - not in word",
       "title": "LetterResult represents the result of a letter in a guess"
     },
     "v1LoginRequest": {

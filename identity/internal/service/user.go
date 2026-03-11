@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"whoami-server/identity/internal/service/models"
-	"whoami-server/libs/keycloak"
+	"gordle/identity/internal/service/models"
+	"gordle/libs/keycloak"
 )
 
 const defaultPageSize int32 = 10

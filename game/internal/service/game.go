@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"whoami-server/game/internal/models"
-	"whoami-server/game/internal/repository"
-	"whoami-server/libs/kafka"
+	"gordle/game/internal/models"
+	"gordle/game/internal/repository"
+	"gordle/libs/kafka"
 )
 
 var (
@@ -20,7 +20,6 @@ var (
 	ErrInvalidWord          = errors.New("word is not valid")
 	ErrInvalidWordLength    = errors.New("word must be 5 characters")
 	ErrNotYourGame          = errors.New("this game belongs to another user")
-	ErrNoDailyWord          = errors.New("no daily word available")
 	ErrNoWordsAvailable     = errors.New("no words available")
 	ErrMaxAttemptsReached   = errors.New("maximum attempts reached")
 	ErrGuestDailyNotAllowed = errors.New("guests cannot play daily mode")
@@ -83,12 +82,9 @@ func (s *gameService) StartGame(ctx context.Context, userID *uuid.UUID, mode mod
 	var targetWord string
 
 	if mode == models.GameModeDaily {
-		dailyWord, err := s.wordService.GetDailyWord(ctx, today, language)
+		dailyWord, err := s.wordService.GetOrCreateDailyWord(ctx, today, language)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get daily word: %w", err)
-		}
-		if dailyWord == nil {
-			return nil, ErrNoDailyWord
 		}
 		targetWord = dailyWord.Word
 	} else {

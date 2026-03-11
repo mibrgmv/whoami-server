@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"whoami-server/libs/keycloak"
+	"gordle/libs/keycloak"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/game/internal/models"
-	"whoami-server/game/internal/repository"
+	"gordle/game/internal/models"
+	"gordle/game/internal/repository"
 )
 
 type wordRepo struct {
@@ -104,4 +104,38 @@ func (r *wordRepo) WordExists(ctx context.Context, word, language string) (bool,
 		return false, fmt.Errorf("failed to check word existence: %w", err)
 	}
 	return exists, nil
+}
+
+func (r *wordRepo) CreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
+	sql := `
+	with random_word as (
+		select word_id, word, $2 as language
+		from words
+		where is_solution = true and language = $2
+		order by random()
+		limit 1
+	),
+	inserted as (
+		insert into daily_words (daily_word_id, word_id, language, game_date)
+		select gen_random_uuid(), word_id, language, $1
+		from random_word
+		on conflict (language, game_date) do nothing
+		returning daily_word_id, word_id, language, game_date
+	)
+	select daily_word_id, word_id, language, game_date,
+	       (select word from random_word)
+	from inserted
+	`
+
+	row := r.pool.QueryRow(ctx, sql, date, language)
+	dw := &models.DailyWord{}
+	err := row.Scan(&dw.ID, &dw.WordID, &dw.Language, &dw.GameDate, &dw.Word)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Insert returned nothing due to conflict, fetch existing
+			return r.GetDailyWord(ctx, date, language)
+		}
+		return nil, fmt.Errorf("failed to create daily word: %w", err)
+	}
+	return dw, nil
 }

@@ -7,8 +7,8 @@ import (
 	"log"
 
 	"github.com/segmentio/kafka-go"
-	libskafka "whoami-server/libs/kafka"
-	"whoami-server/statistics/internal/service"
+	libskafka "gordle/libs/kafka"
+	"gordle/statistics/internal/service"
 )
 
 type GameCompletedHandler struct {

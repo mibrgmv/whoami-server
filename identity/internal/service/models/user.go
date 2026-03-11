@@ -1,6 +1,6 @@
 package models
 
-import userv1 "whoami-server/identity/pkg/protogen/user/v1"
+import userv1 "gordle/identity/pkg/protogen/user/v1"
 
 type User struct {
 	ID            string

@@ -9,14 +9,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	libsgrpc "whoami-server/libs/grpc"
-	"whoami-server/libs/kafka"
-	"whoami-server/libs/logging"
-	"whoami-server/statistics/internal/consumer"
-	statisticsgrpc "whoami-server/statistics/internal/grpc"
-	"whoami-server/statistics/internal/repository/postgres"
-	"whoami-server/statistics/internal/service"
-	statisticsv1 "whoami-server/statistics/pkg/protogen/statistics/v1"
+	libsgrpc "gordle/libs/grpc"
+	"gordle/libs/kafka"
+	"gordle/libs/logging"
+	"gordle/statistics/internal/consumer"
+	statisticsgrpc "gordle/statistics/internal/grpc"
+	"gordle/statistics/internal/repository/postgres"
+	"gordle/statistics/internal/service"
+	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 type Server struct {

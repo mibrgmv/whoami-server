@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"whoami-server/statistics/internal/models"
+	"gordle/statistics/internal/models"
 )
 
 type StatisticsRepository interface {

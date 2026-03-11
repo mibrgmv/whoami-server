@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/statistics/internal/models"
-	"whoami-server/statistics/internal/repository"
+	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/repository"
 )
 
 type statisticsRepo struct {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"whoami-server/libs/keycloak"
+	"gordle/libs/keycloak"
 )
 
 func RequireRole(role string) gin.HandlerFunc {

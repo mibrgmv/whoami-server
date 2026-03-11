@@ -16,13 +16,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	appcfg "whoami-server/gateway/internal/config"
-	"whoami-server/gateway/internal/metrics"
-	"whoami-server/gateway/internal/middleware"
-	authv1 "whoami-server/gateway/pkg/protogen/auth/v1"
-	gamev1 "whoami-server/gateway/pkg/protogen/game/v1"
-	statisticsv1 "whoami-server/gateway/pkg/protogen/statistics/v1"
-	userv1 "whoami-server/gateway/pkg/protogen/user/v1"
+	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/metrics"
+	"gordle/gateway/internal/middleware"
+	authv1 "gordle/gateway/pkg/protogen/auth/v1"
+	gamev1 "gordle/gateway/pkg/protogen/game/v1"
+	statisticsv1 "gordle/gateway/pkg/protogen/statistics/v1"
+	userv1 "gordle/gateway/pkg/protogen/user/v1"
 )
 
 func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger) (*http.Server, error) {

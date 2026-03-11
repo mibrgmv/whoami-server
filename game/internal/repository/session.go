@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"whoami-server/game/internal/models"
+	"gordle/game/internal/models"
 )
 
 // SessionRepository handles game session operations (Redis)

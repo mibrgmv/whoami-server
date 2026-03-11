@@ -8,15 +8,15 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	libsgrpc "whoami-server/libs/grpc"
-	"whoami-server/libs/kafka"
-	"whoami-server/libs/logging"
+	libsgrpc "gordle/libs/grpc"
+	"gordle/libs/kafka"
+	"gordle/libs/logging"
 
-	gamegrpc "whoami-server/game/internal/grpc"
-	"whoami-server/game/internal/repository/postgres"
-	"whoami-server/game/internal/repository/redis"
-	"whoami-server/game/internal/service"
-	gamev1 "whoami-server/game/pkg/protogen/game/v1"
+	gamegrpc "gordle/game/internal/grpc"
+	"gordle/game/internal/repository/postgres"
+	"gordle/game/internal/repository/redis"
+	"gordle/game/internal/service"
+	gamev1 "gordle/game/pkg/protogen/game/v1"
 )
 
 type GrpcServer struct {

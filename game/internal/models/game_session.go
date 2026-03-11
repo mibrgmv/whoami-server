@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gamev1 "whoami-server/game/pkg/protogen/game/v1"
+	gamev1 "gordle/game/pkg/protogen/game/v1"
 )
 
 type GameStatus string

@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	libsgrpc "whoami-server/libs/grpc"
+	libsgrpc "gordle/libs/grpc"
 
-	"whoami-server/game/internal/models"
-	"whoami-server/game/internal/service"
-	gamev1 "whoami-server/game/pkg/protogen/game/v1"
+	"gordle/game/internal/models"
+	"gordle/game/internal/service"
+	gamev1 "gordle/game/pkg/protogen/game/v1"
 )
 
 type gameServer struct {
@@ -47,7 +47,7 @@ func (s *gameServer) StartGame(ctx context.Context, req *gamev1.StartGameRequest
 		if errors.Is(err, service.ErrGuestDailyNotAllowed) {
 			return nil, status.Error(codes.PermissionDenied, "guests cannot play daily mode, please register")
 		}
-		if errors.Is(err, service.ErrNoDailyWord) || errors.Is(err, service.ErrNoWordsAvailable) {
+		if errors.Is(err, service.ErrNoWordsAvailable) {
 			return nil, status.Errorf(codes.FailedPrecondition, "no words available: %v", err)
 		}
 		return nil, status.Errorf(codes.Internal, "failed to start game: %v", err)

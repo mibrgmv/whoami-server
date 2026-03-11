@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"whoami-server/identity/internal/service"
-	authv1 "whoami-server/identity/pkg/protogen/auth/v1"
+	"gordle/identity/internal/service"
+	authv1 "gordle/identity/pkg/protogen/auth/v1"
 )
 
 type authServiceServer struct {

@@ -15,7 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"whoami-server/libs/keycloak"
+	"gordle/libs/keycloak"
 )
 
 type contextKey string

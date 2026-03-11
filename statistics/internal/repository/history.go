@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"whoami-server/statistics/internal/models"
+	"gordle/statistics/internal/models"
 )
 
 type HistoryRepository interface {

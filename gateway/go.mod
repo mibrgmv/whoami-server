@@ -1,4 +1,4 @@
-module whoami-server/gateway
+module gordle/gateway
 
 go 1.25.0
 

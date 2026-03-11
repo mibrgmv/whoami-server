@@ -6,10 +6,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"whoami-server/identity/internal/service"
-	"whoami-server/identity/internal/service/models"
-	userv1 "whoami-server/identity/pkg/protogen/user/v1"
-	libsgrpc "whoami-server/libs/grpc"
+	"gordle/identity/internal/service"
+	"gordle/identity/internal/service/models"
+	userv1 "gordle/identity/pkg/protogen/user/v1"
+	libsgrpc "gordle/libs/grpc"
 )
 
 type userServiceServer struct {

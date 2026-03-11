@@ -1,8 +1,8 @@
 package config
 
 import (
-	"whoami-server/libs/keycloak"
-	"whoami-server/libs/server"
+	"gordle/libs/keycloak"
+	"gordle/libs/server"
 )
 
 type Config struct {

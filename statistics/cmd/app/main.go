@@ -8,10 +8,10 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/libs/config"
-	"whoami-server/libs/tools"
-	appcfg "whoami-server/statistics/internal/config"
-	"whoami-server/statistics/internal/server"
+	"gordle/libs/config"
+	"gordle/libs/tools"
+	appcfg "gordle/statistics/internal/config"
+	"gordle/statistics/internal/server"
 )
 
 func main() {

@@ -8,12 +8,13 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"whoami-server/libs/config"
-	"whoami-server/libs/storage/redis"
-	"whoami-server/libs/tools"
+	"gordle/libs/config"
+	"gordle/libs/storage/redis"
+	"gordle/libs/tools"
 
-	appcfg "whoami-server/game/internal/config"
-	"whoami-server/game/internal/server"
+	appcfg "gordle/game/internal/config"
+	"gordle/game/internal/seed"
+	"gordle/game/internal/server"
 )
 
 func main() {
@@ -44,6 +45,10 @@ func main() {
 
 	if err := tools.MigrateUp("migrations", "game_service_schema_migrations", pool); err != nil {
 		log.Fatalf("failed to migrate up: %v", err)
+	}
+
+	if err := seed.Words(ctx, pool); err != nil {
+		log.Fatalf("failed to seed words: %v", err)
 	}
 
 	redisClient, err := redis.NewClient(ctx, *cfg.Redis)

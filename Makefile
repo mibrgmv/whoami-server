@@ -1,4 +1,4 @@
-COMPOSE := docker compose --profile monitoring
+COMPOSE := docker compose
 
 SERVICES := libs gateway game identity statistics
 BUILD_SERVICES := gateway game identity statistics

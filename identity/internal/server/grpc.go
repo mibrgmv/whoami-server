@@ -3,14 +3,14 @@ package server
 import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"whoami-server/identity/internal/config"
-	identitygrpc "whoami-server/identity/internal/grpc"
-	"whoami-server/identity/internal/service"
-	authv1 "whoami-server/identity/pkg/protogen/auth/v1"
-	userv1 "whoami-server/identity/pkg/protogen/user/v1"
-	libsgrpc "whoami-server/libs/grpc"
-	"whoami-server/libs/keycloak"
-	"whoami-server/libs/logging"
+	"gordle/identity/internal/config"
+	identitygrpc "gordle/identity/internal/grpc"
+	"gordle/identity/internal/service"
+	authv1 "gordle/identity/pkg/protogen/auth/v1"
+	userv1 "gordle/identity/pkg/protogen/user/v1"
+	libsgrpc "gordle/libs/grpc"
+	"gordle/libs/keycloak"
+	"gordle/libs/logging"
 )
 
 func NewGrpcServer(cfg *config.Config) *grpc.Server {

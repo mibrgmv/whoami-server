@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	appcfg "whoami-server/identity/internal/config"
-	"whoami-server/identity/internal/server"
-	"whoami-server/libs/config"
+	appcfg "gordle/identity/internal/config"
+	"gordle/identity/internal/server"
+	"gordle/libs/config"
 )
 
 func main() {

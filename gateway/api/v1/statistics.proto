@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package statistics.v1;
 
-option go_package = "whoami-server/gateway/pkg/protogen/statistics/v1;statisticsv1";
+option go_package = "gordle/gateway/pkg/protogen/statistics/v1;statisticsv1";
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";

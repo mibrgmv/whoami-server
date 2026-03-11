@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"whoami-server/libs/tools"
-	"whoami-server/statistics/internal/models"
-	"whoami-server/statistics/internal/repository"
+	"gordle/libs/tools"
+	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/repository"
 )
 
 type HistoryService interface {

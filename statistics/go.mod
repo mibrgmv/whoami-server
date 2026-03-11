@@ -1,4 +1,4 @@
-module whoami-server/statistics
+module gordle/statistics
 
 go 1.25.0
 

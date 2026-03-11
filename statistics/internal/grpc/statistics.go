@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	libsgrpc "whoami-server/libs/grpc"
-	"whoami-server/statistics/internal/service"
-	statisticsv1 "whoami-server/statistics/pkg/protogen/statistics/v1"
+	libsgrpc "gordle/libs/grpc"
+	"gordle/statistics/internal/service"
+	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 type statisticsServer struct {

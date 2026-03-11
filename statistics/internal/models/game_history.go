@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	statisticsv1 "whoami-server/statistics/pkg/protogen/statistics/v1"
+	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 type GameHistory struct {

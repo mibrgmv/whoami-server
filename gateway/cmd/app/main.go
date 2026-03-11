@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	appcfg "whoami-server/gateway/internal/config"
-	"whoami-server/gateway/internal/metrics"
-	"whoami-server/gateway/internal/server"
-	"whoami-server/libs/config"
-	"whoami-server/libs/logging"
+	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/metrics"
+	"gordle/gateway/internal/server"
+	"gordle/libs/config"
+	"gordle/libs/logging"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module whoami-server/identity
+module gordle/identity
 
 go 1.25.0
 

@@ -1,5 +1,5 @@
 {
-  "realm": "myrealm",
+  "realm": "gordle-realm",
   "enabled": true,
   "displayName": "My Realm",
   "registrationAllowed": true,
@@ -20,7 +20,7 @@
   "defaultRoles": ["user"],
   "clients": [
     {
-      "clientId": "whoami-public",
+      "clientId": "gordle-public",
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": true,
@@ -32,7 +32,7 @@
       "protocol": "openid-connect"
     },
     {
-      "clientId": "whoami-admin",
+      "clientId": "gordle-admin",
       "enabled": true,
       "publicClient": false,
       "serviceAccountsEnabled": true,
@@ -44,9 +44,9 @@
   ],
   "users": [
     {
-      "username": "service-account-whoami-admin",
+      "username": "service-account-gordle-admin",
       "enabled": true,
-      "serviceAccountClientId": "whoami-admin",
+      "serviceAccountClientId": "gordle-admin",
       "clientRoles": {
         "realm-management": [
           "manage-users",

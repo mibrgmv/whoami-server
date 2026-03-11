@@ -131,9 +131,9 @@ type LetterResult int32
 
 const (
 	LetterResult_LETTER_RESULT_UNSPECIFIED LetterResult = 0
-	LetterResult_LETTER_RESULT_CORRECT     LetterResult = 1 // Green - correct position
-	LetterResult_LETTER_RESULT_PRESENT     LetterResult = 2 // Yellow - wrong position
-	LetterResult_LETTER_RESULT_ABSENT      LetterResult = 3 // Gray - not in word
+	LetterResult_LETTER_RESULT_CORRECT     LetterResult = 1
+	LetterResult_LETTER_RESULT_PRESENT     LetterResult = 2
+	LetterResult_LETTER_RESULT_ABSENT      LetterResult = 3
 )
 
 // Enum value maps for LetterResult.
@@ -876,7 +876,7 @@ const file_game_proto_rawDesc = "" +
 	"\x0e\n" +
 	"\n" +
 	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x1c\x12\x1a/api/v1/games/daily/status\x12r\n" +
-	"\fValidateWord\x12\x1c.game.v1.ValidateWordRequest\x1a\x1d.game.v1.ValidateWordResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/api/v1/games/validate/{word}B3Z1whoami-server/gateway/pkg/protogen/game/v1;gamev1b\x06proto3"
+	"\fValidateWord\x12\x1c.game.v1.ValidateWordRequest\x1a\x1d.game.v1.ValidateWordResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/api/v1/games/validate/{word}B,Z*gordle/gateway/pkg/protogen/game/v1;gamev1b\x06proto3"
 
 var (
 	file_game_proto_rawDescOnce sync.Once

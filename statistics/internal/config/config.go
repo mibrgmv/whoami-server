@@ -1,9 +1,9 @@
 package config
 
 import (
-	"whoami-server/libs/kafka"
-	"whoami-server/libs/server"
-	"whoami-server/libs/storage/postgres"
+	"gordle/libs/kafka"
+	"gordle/libs/server"
+	"gordle/libs/storage/postgres"
 )
 
 type Config struct {

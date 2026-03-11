@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 	goredis "github.com/redis/go-redis/v9"
-	"whoami-server/game/internal/models"
-	"whoami-server/game/internal/repository"
+	"gordle/game/internal/models"
+	"gordle/game/internal/repository"
 )
 
 const (

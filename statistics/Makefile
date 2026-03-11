@@ -9,7 +9,7 @@ lint:
 gen:
 	protoc -I=api/v1 -I=../libs/third_party \
 		--go_out=. \
-		--go_opt=module=whoami-server/statistics \
+		--go_opt=module=gordle/statistics \
 		--go-grpc_out=. \
-		--go-grpc_opt=module=whoami-server/statistics \
+		--go-grpc_opt=module=gordle/statistics \
 		api/v1/*.proto

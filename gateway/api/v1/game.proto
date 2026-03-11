@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package game.v1;
 
-option go_package = "whoami-server/gateway/pkg/protogen/game/v1;gamev1";
+option go_package = "gordle/gateway/pkg/protogen/game/v1;gamev1";
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
@@ -96,9 +96,9 @@ enum GameStatus {
 // LetterResult represents the result of a letter in a guess
 enum LetterResult {
   LETTER_RESULT_UNSPECIFIED = 0;
-  LETTER_RESULT_CORRECT = 1;   // Green - correct position
-  LETTER_RESULT_PRESENT = 2;   // Yellow - wrong position
-  LETTER_RESULT_ABSENT = 3;    // Gray - not in word
+  LETTER_RESULT_CORRECT = 1;
+  LETTER_RESULT_PRESENT = 2;
+  LETTER_RESULT_ABSENT = 3;
 }
 
 // GameSession represents an active or completed game

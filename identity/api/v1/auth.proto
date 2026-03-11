@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth.v1;
 
-option go_package = "whoami-server/identity/pkg/protogen/auth/v1;authv1";
+option go_package = "gordle/identity/pkg/protogen/auth/v1;authv1";
 
 import "google/api/annotations.proto";
 

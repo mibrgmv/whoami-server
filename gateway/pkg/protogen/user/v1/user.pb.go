@@ -578,7 +578,7 @@ const file_user_proto_rawDesc = "" +
 	"DeleteUser\x12\x1a.user.v1.DeleteUserRequest\x1a\x1b.user.v1.DeleteUserResponse\"/\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x14*\x12/api/v1/users/{id}B3Z1whoami-server/gateway/pkg/protogen/user/v1;userv1b\x06proto3"
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x14*\x12/api/v1/users/{id}B,Z*gordle/gateway/pkg/protogen/user/v1;userv1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once

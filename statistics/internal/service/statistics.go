@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"whoami-server/statistics/internal/models"
-	"whoami-server/statistics/internal/repository"
+	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/repository"
 )
 
 type StatisticsService interface {
