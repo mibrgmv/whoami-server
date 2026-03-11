@@ -170,7 +170,6 @@ services:
     restart: unless-stopped
 
   prometheus:
-    profiles: [ "monitoring" ]
     image: prom/prometheus:v3.8.0
     container_name: prometheus
     ports:
