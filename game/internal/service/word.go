@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"time"
 
 	goredis "github.com/redis/go-redis/v9"
@@ -19,7 +20,7 @@ const (
 type WordService interface {
 	ValidateWord(ctx context.Context, word, language string) (bool, error)
 	GetRandomSolution(ctx context.Context, language string) (*models.Word, error)
-	GetOrCreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error)
+	GetDailyWord(ctx context.Context, date, language string) (*models.Word, error)
 }
 
 type wordService struct {
@@ -62,13 +63,13 @@ func (s *wordService) GetRandomSolution(ctx context.Context, language string) (*
 	return s.wordRepo.GetRandomSolution(ctx, language)
 }
 
-func (s *wordService) GetOrCreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
-	word, err := s.wordRepo.GetDailyWord(ctx, date, language)
-	if err != nil {
-		return nil, err
-	}
-	if word != nil {
-		return word, nil
-	}
-	return s.wordRepo.CreateDailyWord(ctx, date, language)
+func (s *wordService) GetDailyWord(ctx context.Context, date, language string) (*models.Word, error) {
+	offset := hashDateLanguage(date, language)
+	return s.wordRepo.GetSolutionByOffset(ctx, language, offset)
+}
+
+func hashDateLanguage(date, language string) int {
+	h := fnv.New32a()
+	h.Write([]byte(date + language))
+	return int(h.Sum32())
 }

@@ -82,7 +82,7 @@ func (s *gameService) StartGame(ctx context.Context, userID *uuid.UUID, mode mod
 	var targetWord string
 
 	if mode == models.GameModeDaily {
-		dailyWord, err := s.wordService.GetOrCreateDailyWord(ctx, today, language)
+		dailyWord, err := s.wordService.GetDailyWord(ctx, today, language)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get daily word: %w", err)
 		}

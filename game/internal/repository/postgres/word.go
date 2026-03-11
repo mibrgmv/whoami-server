@@ -67,30 +67,32 @@ func (r *wordRepo) GetRandomSolution(ctx context.Context, language string) (*mod
 	return w, nil
 }
 
-func (r *wordRepo) GetDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
+func (r *wordRepo) GetSolutionByOffset(ctx context.Context, language string, offset int) (*models.Word, error) {
 	sql := `
-	select dw.daily_word_id,
-	       dw.word_id,
-	       dw.language,
-	       dw.game_date,
-	       w.word
-	from daily_words dw
-	join words w
-	    on dw.word_id = w.word_id
-	where dw.game_date = $1
-	  and dw.language = $2
+	with solution_words as (
+		select word_id, word, language, is_solution,
+		       row_number() over (order by word_id) - 1 as idx
+		from words
+		where is_solution = true and language = $1
+	),
+	word_count as (
+		select count(*) as cnt from solution_words
+	)
+	select word_id, word, language, is_solution
+	from solution_words, word_count
+	where idx = $2 % cnt
 	`
 
-	row := r.pool.QueryRow(ctx, sql, date, language)
-	dw := &models.DailyWord{}
-	err := row.Scan(&dw.ID, &dw.WordID, &dw.Language, &dw.GameDate, &dw.Word)
+	row := r.pool.QueryRow(ctx, sql, language, offset)
+	w := &models.Word{}
+	err := row.Scan(&w.ID, &w.Word, &w.Language, &w.IsSolution)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, fmt.Errorf("no solution words available for language %s", language)
 		}
-		return nil, fmt.Errorf("failed to get daily word: %w", err)
+		return nil, fmt.Errorf("failed to get solution by offset: %w", err)
 	}
-	return dw, nil
+	return w, nil
 }
 
 func (r *wordRepo) WordExists(ctx context.Context, word, language string) (bool, error) {
@@ -104,38 +106,4 @@ func (r *wordRepo) WordExists(ctx context.Context, word, language string) (bool,
 		return false, fmt.Errorf("failed to check word existence: %w", err)
 	}
 	return exists, nil
-}
-
-func (r *wordRepo) CreateDailyWord(ctx context.Context, date, language string) (*models.DailyWord, error) {
-	sql := `
-	with random_word as (
-		select word_id, word, $2 as language
-		from words
-		where is_solution = true and language = $2
-		order by random()
-		limit 1
-	),
-	inserted as (
-		insert into daily_words (daily_word_id, word_id, language, game_date)
-		select gen_random_uuid(), word_id, language, $1
-		from random_word
-		on conflict (language, game_date) do nothing
-		returning daily_word_id, word_id, language, game_date
-	)
-	select daily_word_id, word_id, language, game_date,
-	       (select word from random_word)
-	from inserted
-	`
-
-	row := r.pool.QueryRow(ctx, sql, date, language)
-	dw := &models.DailyWord{}
-	err := row.Scan(&dw.ID, &dw.WordID, &dw.Language, &dw.GameDate, &dw.Word)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			// Insert returned nothing due to conflict, fetch existing
-			return r.GetDailyWord(ctx, date, language)
-		}
-		return nil, fmt.Errorf("failed to create daily word: %w", err)
-	}
-	return dw, nil
 }
