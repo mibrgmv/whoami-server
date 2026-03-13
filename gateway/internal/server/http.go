@@ -69,8 +69,8 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		register func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error
 		addr     string
 	}{
-		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
-		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
+		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.IamService.GetAddr()},
+		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.IamService.GetAddr()},
 		{"game", gamev1.RegisterGameServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
 		{"room", roomv1.RegisterRoomServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
 		{"statistics", statisticsv1.RegisterStatisticsServiceHandlerFromEndpoint, cfg.StatisticsService.GetAddr()},
@@ -88,6 +88,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		KeyRefreshTTL:   1 * time.Hour,
 		HTTPTimeout:     10 * time.Second,
 		Metrics:         collector,
+		GuestSecret:     cfg.GuestSecret,
 	}
 	jwtMiddleware := middleware.JWT(jwtConfig)
 	jwtOptionalMiddleware := middleware.JWTOptional(jwtConfig)
@@ -143,23 +144,14 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		gamesGroup.Any("/games/*path", gin.WrapH(gwmux))
 	}
 
-	// Room routes (auth optional for most, required for create)
 	roomsGroup := router.Group("/api/v1/rooms")
 	{
-		// Create room requires auth
 		roomsGroup.POST("", jwtMiddleware, gin.WrapH(gwmux))
 
-		// Other room operations allow guests
 		roomsGroup.Use(jwtOptionalMiddleware)
 		roomsGroup.GET("/:code", gin.WrapH(gwmux))
 		roomsGroup.POST("/:code/join", gin.WrapH(gwmux))
-		roomsGroup.DELETE("/:code/leave", gin.WrapH(gwmux))
-		roomsGroup.POST("/:code/ready", gin.WrapH(gwmux))
-		roomsGroup.POST("/:code/start", gin.WrapH(gwmux))
-		roomsGroup.POST("/:code/guess", gin.WrapH(gwmux))
-		roomsGroup.POST("/:code/next", gin.WrapH(gwmux))
 
-		// WebSocket proxy for rooms
 		if cfg.GameWebSocket.Port > 0 {
 			wsProxy, err := websocket.NewProxy(cfg.GameWebSocket.GetAddr(), logger)
 			if err != nil {

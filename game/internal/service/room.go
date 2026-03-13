@@ -41,7 +41,7 @@ type WSBroadcaster interface {
 type RoomService interface {
 	CreateRoom(ctx context.Context, hostID, language string, settings models.RoomSettings) (*models.Room, error)
 	GetRoom(ctx context.Context, code string) (*models.Room, []models.RoomPlayer, error)
-	JoinRoom(ctx context.Context, code string, userID *uuid.UUID, guestID *string, displayName string) (*models.Room, *models.RoomPlayer, error)
+	JoinRoom(ctx context.Context, code string, userID uuid.UUID, isGuest bool, displayName string) (*models.Room, *models.RoomPlayer, error)
 	LeaveRoom(ctx context.Context, code string, playerID string) error
 	SetReady(ctx context.Context, code string, playerID string, ready bool) error
 	StartGame(ctx context.Context, code string, hostID string) (*models.Room, error)
@@ -147,7 +147,7 @@ func (s *roomService) GetRoom(ctx context.Context, code string) (*models.Room, [
 	return room, players, nil
 }
 
-func (s *roomService) JoinRoom(ctx context.Context, code string, userID *uuid.UUID, guestID *string, displayName string) (*models.Room, *models.RoomPlayer, error) {
+func (s *roomService) JoinRoom(ctx context.Context, code string, userID uuid.UUID, isGuest bool, displayName string) (*models.Room, *models.RoomPlayer, error) {
 	room, err := s.roomRepo.GetByCode(ctx, code)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get room: %w", err)
@@ -169,7 +169,7 @@ func (s *roomService) JoinRoom(ctx context.Context, code string, userID *uuid.UU
 		return nil, nil, ErrRoomFull
 	}
 
-	player := models.NewRoomPlayer(room.ID, userID, guestID, displayName)
+	player := models.NewRoomPlayerSimple(room.ID, userID, isGuest, displayName)
 
 	existingPlayer, err := s.roomRepo.GetPlayer(ctx, room.ID, player.PlayerID())
 	if err != nil {

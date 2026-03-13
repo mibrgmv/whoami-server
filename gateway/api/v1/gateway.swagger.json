@@ -186,7 +186,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/gamev1StartGameRequest"
+              "$ref": "#/definitions/v1StartGameRequest"
             }
           }
         ],
@@ -341,7 +341,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1GameServiceSubmitGuessBody"
+              "$ref": "#/definitions/GameServiceSubmitGuessBody"
             }
           }
         ],
@@ -424,45 +424,6 @@
         ]
       }
     },
-    "/api/v1/rooms/{code}/guess": {
-      "post": {
-        "summary": "SubmitGuess submits a guess in a room game",
-        "operationId": "RoomService_SubmitGuess",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1SubmitGuessResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1RoomServiceSubmitGuessBody"
-            }
-          }
-        ],
-        "tags": [
-          "RoomService"
-        ]
-      }
-    },
     "/api/v1/rooms/{code}/join": {
       "post": {
         "summary": "JoinRoom joins an existing room",
@@ -494,154 +455,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/RoomServiceJoinRoomBody"
-            }
-          }
-        ],
-        "tags": [
-          "RoomService"
-        ]
-      }
-    },
-    "/api/v1/rooms/{code}/leave": {
-      "delete": {
-        "summary": "LeaveRoom leaves a room",
-        "operationId": "RoomService_LeaveRoom",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1LeaveRoomResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "RoomService"
-        ]
-      }
-    },
-    "/api/v1/rooms/{code}/next": {
-      "post": {
-        "summary": "NextRound starts the next round in a room (host only)",
-        "operationId": "RoomService_NextRound",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1NextRoundResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/RoomServiceNextRoundBody"
-            }
-          }
-        ],
-        "tags": [
-          "RoomService"
-        ]
-      }
-    },
-    "/api/v1/rooms/{code}/ready": {
-      "post": {
-        "summary": "SetReady sets the player's ready status",
-        "operationId": "RoomService_SetReady",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1SetReadyResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/RoomServiceSetReadyBody"
-            }
-          }
-        ],
-        "tags": [
-          "RoomService"
-        ]
-      }
-    },
-    "/api/v1/rooms/{code}/start": {
-      "post": {
-        "summary": "StartGame starts the game in a room (host only)",
-        "operationId": "RoomService_StartGame",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1StartGameResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1RoomServiceStartGameBody"
             }
           }
         ],
@@ -993,31 +806,23 @@
     }
   },
   "definitions": {
+    "GameServiceSubmitGuessBody": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string"
+        }
+      },
+      "title": "SubmitGuessRequest is the request to submit a guess"
+    },
     "RoomServiceJoinRoomBody": {
       "type": "object",
       "properties": {
-        "guestId": {
-          "type": "string",
-          "title": "Required for guests"
-        },
         "displayName": {
           "type": "string"
         }
       },
       "title": "JoinRoomRequest is the request to join a room"
-    },
-    "RoomServiceNextRoundBody": {
-      "type": "object",
-      "title": "NextRoundRequest is the request to start the next round"
-    },
-    "RoomServiceSetReadyBody": {
-      "type": "object",
-      "properties": {
-        "ready": {
-          "type": "boolean"
-        }
-      },
-      "title": "SetReadyRequest is the request to set ready status"
     },
     "UserServiceChangePasswordBody": {
       "type": "object",
@@ -1079,19 +884,6 @@
       ],
       "default": "LETTER_RESULT_UNSPECIFIED",
       "title": "LetterResult represents the result of a letter in a guess"
-    },
-    "gamev1StartGameRequest": {
-      "type": "object",
-      "properties": {
-        "mode": {
-          "$ref": "#/definitions/v1GameMode"
-        },
-        "language": {
-          "type": "string",
-          "title": "'en' or 'ru', defaults to 'en'"
-        }
-      },
-      "title": "StartGameRequest is the request to start a new game"
     },
     "protobufAny": {
       "type": "object",
@@ -1270,15 +1062,6 @@
       ],
       "default": "GAME_MODE_UNSPECIFIED",
       "title": "GameMode represents the type of game"
-    },
-    "v1GameServiceSubmitGuessBody": {
-      "type": "object",
-      "properties": {
-        "word": {
-          "type": "string"
-        }
-      },
-      "title": "SubmitGuessRequest is the request to submit a guess"
     },
     "v1GameSession": {
       "type": "object",
@@ -1468,15 +1251,6 @@
       },
       "title": "LeaderboardEntry represents a user's position in the leaderboard"
     },
-    "v1LeaveRoomResponse": {
-      "type": "object",
-      "properties": {
-        "success": {
-          "type": "boolean"
-        }
-      },
-      "title": "LeaveRoomResponse is the response for leaving a room"
-    },
     "v1LoginRequest": {
       "type": "object",
       "properties": {
@@ -1503,15 +1277,6 @@
           "type": "string"
         }
       }
-    },
-    "v1NextRoundResponse": {
-      "type": "object",
-      "properties": {
-        "room": {
-          "$ref": "#/definitions/v1Room"
-        }
-      },
-      "title": "NextRoundResponse is the response for starting the next round"
     },
     "v1PlayerResult": {
       "type": "string",
@@ -1666,19 +1431,6 @@
       },
       "title": "RoomPlayer represents a player in a room"
     },
-    "v1RoomServiceStartGameBody": {
-      "type": "object",
-      "title": "StartGameRequest is the request to start a room game"
-    },
-    "v1RoomServiceSubmitGuessBody": {
-      "type": "object",
-      "properties": {
-        "word": {
-          "type": "string"
-        }
-      },
-      "title": "SubmitGuessRequest is the request to submit a guess in a room"
-    },
     "v1RoomSettings": {
       "type": "object",
       "properties": {
@@ -1711,38 +1463,18 @@
       "default": "ROOM_STATUS_UNSPECIFIED",
       "title": "RoomStatus represents the current status of a room"
     },
-    "v1SetReadyResponse": {
+    "v1StartGameRequest": {
       "type": "object",
       "properties": {
-        "success": {
-          "type": "boolean"
-        }
-      },
-      "title": "SetReadyResponse is the response for setting ready status"
-    },
-    "v1StartGameResponse": {
-      "type": "object",
-      "properties": {
-        "room": {
-          "$ref": "#/definitions/v1Room"
-        }
-      },
-      "title": "StartGameResponse is the response for starting a room game"
-    },
-    "v1SubmitGuessResponse": {
-      "type": "object",
-      "properties": {
-        "guess": {
-          "$ref": "#/definitions/roomv1Guess"
+        "mode": {
+          "$ref": "#/definitions/v1GameMode"
         },
-        "player": {
-          "$ref": "#/definitions/v1RoomPlayer"
-        },
-        "room": {
-          "$ref": "#/definitions/v1Room"
+        "language": {
+          "type": "string",
+          "title": "'en' or 'ru', defaults to 'en'"
         }
       },
-      "title": "SubmitGuessResponse is the response for a room guess"
+      "title": "StartGameRequest is the request to start a new game"
     },
     "v1TokenResponse": {
       "type": "object",

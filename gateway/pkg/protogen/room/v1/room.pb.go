@@ -841,8 +841,7 @@ func (x *GetRoomResponse) GetPlayers() []*RoomPlayer {
 type JoinRoomRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	GuestId       string                 `protobuf:"bytes,2,opt,name=guest_id,json=guestId,proto3" json:"guest_id,omitempty"` // Required for guests
-	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -880,13 +879,6 @@ func (*JoinRoomRequest) Descriptor() ([]byte, []int) {
 func (x *JoinRoomRequest) GetCode() string {
 	if x != nil {
 		return x.Code
-	}
-	return ""
-}
-
-func (x *JoinRoomRequest) GetGuestId() string {
-	if x != nil {
-		return x.GuestId
 	}
 	return ""
 }
@@ -951,488 +943,6 @@ func (x *JoinRoomResponse) GetPlayer() *RoomPlayer {
 	return nil
 }
 
-// LeaveRoomRequest is the request to leave a room
-type LeaveRoomRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LeaveRoomRequest) Reset() {
-	*x = LeaveRoomRequest{}
-	mi := &file_room_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LeaveRoomRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LeaveRoomRequest) ProtoMessage() {}
-
-func (x *LeaveRoomRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LeaveRoomRequest.ProtoReflect.Descriptor instead.
-func (*LeaveRoomRequest) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *LeaveRoomRequest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-// LeaveRoomResponse is the response for leaving a room
-type LeaveRoomResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LeaveRoomResponse) Reset() {
-	*x = LeaveRoomResponse{}
-	mi := &file_room_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LeaveRoomResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LeaveRoomResponse) ProtoMessage() {}
-
-func (x *LeaveRoomResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LeaveRoomResponse.ProtoReflect.Descriptor instead.
-func (*LeaveRoomResponse) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *LeaveRoomResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-// SetReadyRequest is the request to set ready status
-type SetReadyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	Ready         bool                   `protobuf:"varint,2,opt,name=ready,proto3" json:"ready,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SetReadyRequest) Reset() {
-	*x = SetReadyRequest{}
-	mi := &file_room_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SetReadyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetReadyRequest) ProtoMessage() {}
-
-func (x *SetReadyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetReadyRequest.ProtoReflect.Descriptor instead.
-func (*SetReadyRequest) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *SetReadyRequest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-func (x *SetReadyRequest) GetReady() bool {
-	if x != nil {
-		return x.Ready
-	}
-	return false
-}
-
-// SetReadyResponse is the response for setting ready status
-type SetReadyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SetReadyResponse) Reset() {
-	*x = SetReadyResponse{}
-	mi := &file_room_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SetReadyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetReadyResponse) ProtoMessage() {}
-
-func (x *SetReadyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetReadyResponse.ProtoReflect.Descriptor instead.
-func (*SetReadyResponse) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *SetReadyResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-// StartGameRequest is the request to start a room game
-type StartGameRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *StartGameRequest) Reset() {
-	*x = StartGameRequest{}
-	mi := &file_room_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StartGameRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StartGameRequest) ProtoMessage() {}
-
-func (x *StartGameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StartGameRequest.ProtoReflect.Descriptor instead.
-func (*StartGameRequest) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *StartGameRequest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-// StartGameResponse is the response for starting a room game
-type StartGameResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Room          *Room                  `protobuf:"bytes,1,opt,name=room,proto3" json:"room,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *StartGameResponse) Reset() {
-	*x = StartGameResponse{}
-	mi := &file_room_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StartGameResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StartGameResponse) ProtoMessage() {}
-
-func (x *StartGameResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StartGameResponse.ProtoReflect.Descriptor instead.
-func (*StartGameResponse) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *StartGameResponse) GetRoom() *Room {
-	if x != nil {
-		return x.Room
-	}
-	return nil
-}
-
-// SubmitGuessRequest is the request to submit a guess in a room
-type SubmitGuessRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	Word          string                 `protobuf:"bytes,2,opt,name=word,proto3" json:"word,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SubmitGuessRequest) Reset() {
-	*x = SubmitGuessRequest{}
-	mi := &file_room_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SubmitGuessRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SubmitGuessRequest) ProtoMessage() {}
-
-func (x *SubmitGuessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SubmitGuessRequest.ProtoReflect.Descriptor instead.
-func (*SubmitGuessRequest) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *SubmitGuessRequest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-func (x *SubmitGuessRequest) GetWord() string {
-	if x != nil {
-		return x.Word
-	}
-	return ""
-}
-
-// SubmitGuessResponse is the response for a room guess
-type SubmitGuessResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Guess         *Guess                 `protobuf:"bytes,1,opt,name=guess,proto3" json:"guess,omitempty"`
-	Player        *RoomPlayer            `protobuf:"bytes,2,opt,name=player,proto3" json:"player,omitempty"`
-	Room          *Room                  `protobuf:"bytes,3,opt,name=room,proto3" json:"room,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SubmitGuessResponse) Reset() {
-	*x = SubmitGuessResponse{}
-	mi := &file_room_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SubmitGuessResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SubmitGuessResponse) ProtoMessage() {}
-
-func (x *SubmitGuessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SubmitGuessResponse.ProtoReflect.Descriptor instead.
-func (*SubmitGuessResponse) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *SubmitGuessResponse) GetGuess() *Guess {
-	if x != nil {
-		return x.Guess
-	}
-	return nil
-}
-
-func (x *SubmitGuessResponse) GetPlayer() *RoomPlayer {
-	if x != nil {
-		return x.Player
-	}
-	return nil
-}
-
-func (x *SubmitGuessResponse) GetRoom() *Room {
-	if x != nil {
-		return x.Room
-	}
-	return nil
-}
-
-// NextRoundRequest is the request to start the next round
-type NextRoundRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NextRoundRequest) Reset() {
-	*x = NextRoundRequest{}
-	mi := &file_room_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NextRoundRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NextRoundRequest) ProtoMessage() {}
-
-func (x *NextRoundRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[18]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NextRoundRequest.ProtoReflect.Descriptor instead.
-func (*NextRoundRequest) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *NextRoundRequest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-// NextRoundResponse is the response for starting the next round
-type NextRoundResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Room          *Room                  `protobuf:"bytes,1,opt,name=room,proto3" json:"room,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NextRoundResponse) Reset() {
-	*x = NextRoundResponse{}
-	mi := &file_room_proto_msgTypes[19]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NextRoundResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NextRoundResponse) ProtoMessage() {}
-
-func (x *NextRoundResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_room_proto_msgTypes[19]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NextRoundResponse.ProtoReflect.Descriptor instead.
-func (*NextRoundResponse) Descriptor() ([]byte, []int) {
-	return file_room_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *NextRoundResponse) GetRoom() *Room {
-	if x != nil {
-		return x.Room
-	}
-	return nil
-}
-
 var File_room_proto protoreflect.FileDescriptor
 
 const file_room_proto_rawDesc = "" +
@@ -1485,38 +995,13 @@ const file_room_proto_rawDesc = "" +
 	"\x04code\x18\x01 \x01(\tR\x04code\"c\n" +
 	"\x0fGetRoomResponse\x12!\n" +
 	"\x04room\x18\x01 \x01(\v2\r.room.v1.RoomR\x04room\x12-\n" +
-	"\aplayers\x18\x02 \x03(\v2\x13.room.v1.RoomPlayerR\aplayers\"c\n" +
+	"\aplayers\x18\x02 \x03(\v2\x13.room.v1.RoomPlayerR\aplayers\"H\n" +
 	"\x0fJoinRoomRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x19\n" +
-	"\bguest_id\x18\x02 \x01(\tR\aguestId\x12!\n" +
-	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\"b\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12!\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"b\n" +
 	"\x10JoinRoomResponse\x12!\n" +
 	"\x04room\x18\x01 \x01(\v2\r.room.v1.RoomR\x04room\x12+\n" +
-	"\x06player\x18\x02 \x01(\v2\x13.room.v1.RoomPlayerR\x06player\"&\n" +
-	"\x10LeaveRoomRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"-\n" +
-	"\x11LeaveRoomResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\";\n" +
-	"\x0fSetReadyRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x14\n" +
-	"\x05ready\x18\x02 \x01(\bR\x05ready\",\n" +
-	"\x10SetReadyResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"&\n" +
-	"\x10StartGameRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"6\n" +
-	"\x11StartGameResponse\x12!\n" +
-	"\x04room\x18\x01 \x01(\v2\r.room.v1.RoomR\x04room\"<\n" +
-	"\x12SubmitGuessRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
-	"\x04word\x18\x02 \x01(\tR\x04word\"\x8b\x01\n" +
-	"\x13SubmitGuessResponse\x12$\n" +
-	"\x05guess\x18\x01 \x01(\v2\x0e.room.v1.GuessR\x05guess\x12+\n" +
-	"\x06player\x18\x02 \x01(\v2\x13.room.v1.RoomPlayerR\x06player\x12!\n" +
-	"\x04room\x18\x03 \x01(\v2\r.room.v1.RoomR\x04room\"&\n" +
-	"\x10NextRoundRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"6\n" +
-	"\x11NextRoundResponse\x12!\n" +
-	"\x04room\x18\x01 \x01(\v2\r.room.v1.RoomR\x04room*Y\n" +
+	"\x06player\x18\x02 \x01(\v2\x13.room.v1.RoomPlayerR\x06player*Y\n" +
 	"\bRoomMode\x12\x19\n" +
 	"\x15ROOM_MODE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16ROOM_MODE_SINGLE_ROUND\x10\x01\x12\x16\n" +
@@ -1541,7 +1026,7 @@ const file_room_proto_rawDesc = "" +
 	"\x19LETTER_RESULT_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15LETTER_RESULT_CORRECT\x10\x01\x12\x19\n" +
 	"\x15LETTER_RESULT_PRESENT\x10\x02\x12\x18\n" +
-	"\x14LETTER_RESULT_ABSENT\x10\x032\xdc\x06\n" +
+	"\x14LETTER_RESULT_ABSENT\x10\x032\xc6\x02\n" +
 	"\vRoomService\x12t\n" +
 	"\n" +
 	"CreateRoom\x12\x1a.room.v1.CreateRoomRequest\x1a\x1b.room.v1.CreateRoomResponse\"-\x92A\x12b\x10\n" +
@@ -1549,12 +1034,7 @@ const file_room_proto_rawDesc = "" +
 	"\n" +
 	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/api/v1/rooms\x12Z\n" +
 	"\aGetRoom\x12\x17.room.v1.GetRoomRequest\x1a\x18.room.v1.GetRoomResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/api/v1/rooms/{code}\x12e\n" +
-	"\bJoinRoom\x12\x18.room.v1.JoinRoomRequest\x1a\x19.room.v1.JoinRoomResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/rooms/{code}/join\x12f\n" +
-	"\tLeaveRoom\x12\x19.room.v1.LeaveRoomRequest\x1a\x1a.room.v1.LeaveRoomResponse\"\"\x82\xd3\xe4\x93\x02\x1c*\x1a/api/v1/rooms/{code}/leave\x12f\n" +
-	"\bSetReady\x12\x18.room.v1.SetReadyRequest\x1a\x19.room.v1.SetReadyResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/api/v1/rooms/{code}/ready\x12i\n" +
-	"\tStartGame\x12\x19.room.v1.StartGameRequest\x1a\x1a.room.v1.StartGameResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/api/v1/rooms/{code}/start\x12o\n" +
-	"\vSubmitGuess\x12\x1b.room.v1.SubmitGuessRequest\x1a\x1c.room.v1.SubmitGuessResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/api/v1/rooms/{code}/guess\x12h\n" +
-	"\tNextRound\x12\x19.room.v1.NextRoundRequest\x1a\x1a.room.v1.NextRoundResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/rooms/{code}/nextB,Z*gordle/gateway/pkg/protogen/room/v1;roomv1b\x06proto3"
+	"\bJoinRoom\x12\x18.room.v1.JoinRoomRequest\x1a\x19.room.v1.JoinRoomResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/rooms/{code}/joinB,Z*gordle/gateway/pkg/protogen/room/v1;roomv1b\x06proto3"
 
 var (
 	file_room_proto_rawDescOnce sync.Once
@@ -1569,33 +1049,23 @@ func file_room_proto_rawDescGZIP() []byte {
 }
 
 var file_room_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_room_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_room_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_room_proto_goTypes = []any{
-	(RoomMode)(0),               // 0: room.v1.RoomMode
-	(RoomStatus)(0),             // 1: room.v1.RoomStatus
-	(PlayerStatus)(0),           // 2: room.v1.PlayerStatus
-	(PlayerResult)(0),           // 3: room.v1.PlayerResult
-	(LetterResult)(0),           // 4: room.v1.LetterResult
-	(*RoomSettings)(nil),        // 5: room.v1.RoomSettings
-	(*Room)(nil),                // 6: room.v1.Room
-	(*Guess)(nil),               // 7: room.v1.Guess
-	(*RoomPlayer)(nil),          // 8: room.v1.RoomPlayer
-	(*CreateRoomRequest)(nil),   // 9: room.v1.CreateRoomRequest
-	(*CreateRoomResponse)(nil),  // 10: room.v1.CreateRoomResponse
-	(*GetRoomRequest)(nil),      // 11: room.v1.GetRoomRequest
-	(*GetRoomResponse)(nil),     // 12: room.v1.GetRoomResponse
-	(*JoinRoomRequest)(nil),     // 13: room.v1.JoinRoomRequest
-	(*JoinRoomResponse)(nil),    // 14: room.v1.JoinRoomResponse
-	(*LeaveRoomRequest)(nil),    // 15: room.v1.LeaveRoomRequest
-	(*LeaveRoomResponse)(nil),   // 16: room.v1.LeaveRoomResponse
-	(*SetReadyRequest)(nil),     // 17: room.v1.SetReadyRequest
-	(*SetReadyResponse)(nil),    // 18: room.v1.SetReadyResponse
-	(*StartGameRequest)(nil),    // 19: room.v1.StartGameRequest
-	(*StartGameResponse)(nil),   // 20: room.v1.StartGameResponse
-	(*SubmitGuessRequest)(nil),  // 21: room.v1.SubmitGuessRequest
-	(*SubmitGuessResponse)(nil), // 22: room.v1.SubmitGuessResponse
-	(*NextRoundRequest)(nil),    // 23: room.v1.NextRoundRequest
-	(*NextRoundResponse)(nil),   // 24: room.v1.NextRoundResponse
+	(RoomMode)(0),              // 0: room.v1.RoomMode
+	(RoomStatus)(0),            // 1: room.v1.RoomStatus
+	(PlayerStatus)(0),          // 2: room.v1.PlayerStatus
+	(PlayerResult)(0),          // 3: room.v1.PlayerResult
+	(LetterResult)(0),          // 4: room.v1.LetterResult
+	(*RoomSettings)(nil),       // 5: room.v1.RoomSettings
+	(*Room)(nil),               // 6: room.v1.Room
+	(*Guess)(nil),              // 7: room.v1.Guess
+	(*RoomPlayer)(nil),         // 8: room.v1.RoomPlayer
+	(*CreateRoomRequest)(nil),  // 9: room.v1.CreateRoomRequest
+	(*CreateRoomResponse)(nil), // 10: room.v1.CreateRoomResponse
+	(*GetRoomRequest)(nil),     // 11: room.v1.GetRoomRequest
+	(*GetRoomResponse)(nil),    // 12: room.v1.GetRoomResponse
+	(*JoinRoomRequest)(nil),    // 13: room.v1.JoinRoomRequest
+	(*JoinRoomResponse)(nil),   // 14: room.v1.JoinRoomResponse
 }
 var file_room_proto_depIdxs = []int32{
 	0,  // 0: room.v1.RoomSettings.mode:type_name -> room.v1.RoomMode
@@ -1611,32 +1081,17 @@ var file_room_proto_depIdxs = []int32{
 	8,  // 10: room.v1.GetRoomResponse.players:type_name -> room.v1.RoomPlayer
 	6,  // 11: room.v1.JoinRoomResponse.room:type_name -> room.v1.Room
 	8,  // 12: room.v1.JoinRoomResponse.player:type_name -> room.v1.RoomPlayer
-	6,  // 13: room.v1.StartGameResponse.room:type_name -> room.v1.Room
-	7,  // 14: room.v1.SubmitGuessResponse.guess:type_name -> room.v1.Guess
-	8,  // 15: room.v1.SubmitGuessResponse.player:type_name -> room.v1.RoomPlayer
-	6,  // 16: room.v1.SubmitGuessResponse.room:type_name -> room.v1.Room
-	6,  // 17: room.v1.NextRoundResponse.room:type_name -> room.v1.Room
-	9,  // 18: room.v1.RoomService.CreateRoom:input_type -> room.v1.CreateRoomRequest
-	11, // 19: room.v1.RoomService.GetRoom:input_type -> room.v1.GetRoomRequest
-	13, // 20: room.v1.RoomService.JoinRoom:input_type -> room.v1.JoinRoomRequest
-	15, // 21: room.v1.RoomService.LeaveRoom:input_type -> room.v1.LeaveRoomRequest
-	17, // 22: room.v1.RoomService.SetReady:input_type -> room.v1.SetReadyRequest
-	19, // 23: room.v1.RoomService.StartGame:input_type -> room.v1.StartGameRequest
-	21, // 24: room.v1.RoomService.SubmitGuess:input_type -> room.v1.SubmitGuessRequest
-	23, // 25: room.v1.RoomService.NextRound:input_type -> room.v1.NextRoundRequest
-	10, // 26: room.v1.RoomService.CreateRoom:output_type -> room.v1.CreateRoomResponse
-	12, // 27: room.v1.RoomService.GetRoom:output_type -> room.v1.GetRoomResponse
-	14, // 28: room.v1.RoomService.JoinRoom:output_type -> room.v1.JoinRoomResponse
-	16, // 29: room.v1.RoomService.LeaveRoom:output_type -> room.v1.LeaveRoomResponse
-	18, // 30: room.v1.RoomService.SetReady:output_type -> room.v1.SetReadyResponse
-	20, // 31: room.v1.RoomService.StartGame:output_type -> room.v1.StartGameResponse
-	22, // 32: room.v1.RoomService.SubmitGuess:output_type -> room.v1.SubmitGuessResponse
-	24, // 33: room.v1.RoomService.NextRound:output_type -> room.v1.NextRoundResponse
-	26, // [26:34] is the sub-list for method output_type
-	18, // [18:26] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	9,  // 13: room.v1.RoomService.CreateRoom:input_type -> room.v1.CreateRoomRequest
+	11, // 14: room.v1.RoomService.GetRoom:input_type -> room.v1.GetRoomRequest
+	13, // 15: room.v1.RoomService.JoinRoom:input_type -> room.v1.JoinRoomRequest
+	10, // 16: room.v1.RoomService.CreateRoom:output_type -> room.v1.CreateRoomResponse
+	12, // 17: room.v1.RoomService.GetRoom:output_type -> room.v1.GetRoomResponse
+	14, // 18: room.v1.RoomService.JoinRoom:output_type -> room.v1.JoinRoomResponse
+	16, // [16:19] is the sub-list for method output_type
+	13, // [13:16] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_room_proto_init() }
@@ -1650,7 +1105,7 @@ func file_room_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_room_proto_rawDesc), len(file_room_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   20,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

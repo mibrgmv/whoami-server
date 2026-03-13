@@ -62,6 +62,26 @@ func NewRoomPlayer(roomID uuid.UUID, userID *uuid.UUID, guestID *string, display
 	}
 }
 
+// NewRoomPlayerSimple creates a room player with a UUID (works for both users and guests)
+func NewRoomPlayerSimple(roomID uuid.UUID, userID uuid.UUID, isGuest bool, displayName string) *RoomPlayer {
+	player := &RoomPlayer{
+		RoomID:          roomID,
+		DisplayName:     displayName,
+		Status:          PlayerStatusWaiting,
+		Result:          PlayerResultNone,
+		CurrentAttempts: 0,
+		TotalScore:      0,
+		Guesses:         []Guess{},
+	}
+	if isGuest {
+		guestID := userID.String()
+		player.GuestID = &guestID
+	} else {
+		player.UserID = &userID
+	}
+	return player
+}
+
 func (p *RoomPlayer) ToProto() *roomv1.RoomPlayer {
 	player := &roomv1.RoomPlayer{
 		PlayerId:        p.PlayerID(),

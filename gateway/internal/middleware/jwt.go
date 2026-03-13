@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"gordle/libs/auth"
 	"gordle/libs/keycloak"
 )
 
@@ -50,15 +51,20 @@ type JWTConfig struct {
 	KeyRefreshTTL   time.Duration
 	HTTPTimeout     time.Duration
 	Metrics         AuthFailureRecorder
+	GuestSecret     string
 }
 
 func JWT(cfg JWTConfig) gin.HandlerFunc {
+	var guestValidator *auth.GuestTokenValidator
+	if cfg.GuestSecret != "" {
+		guestValidator = auth.NewGuestTokenValidator(cfg.GuestSecret)
+	}
+
 	validator := &jwtValidator{
-		config:     cfg,
-		publicKeys: make(map[string]*rsa.PublicKey),
-		httpClient: &http.Client{
-			Timeout: cfg.HTTPTimeout,
-		},
+		config:         cfg,
+		publicKeys:     make(map[string]*rsa.PublicKey),
+		httpClient:     &http.Client{Timeout: cfg.HTTPTimeout},
+		guestValidator: guestValidator,
 	}
 
 	return validator.handler
@@ -67,23 +73,28 @@ func JWT(cfg JWTConfig) gin.HandlerFunc {
 // JWTOptional creates a middleware that extracts JWT claims if present but doesn't fail if not.
 // Use this for routes that work for both authenticated and unauthenticated users.
 func JWTOptional(cfg JWTConfig) gin.HandlerFunc {
+	var guestValidator *auth.GuestTokenValidator
+	if cfg.GuestSecret != "" {
+		guestValidator = auth.NewGuestTokenValidator(cfg.GuestSecret)
+	}
+
 	validator := &jwtValidator{
-		config:     cfg,
-		publicKeys: make(map[string]*rsa.PublicKey),
-		httpClient: &http.Client{
-			Timeout: cfg.HTTPTimeout,
-		},
+		config:         cfg,
+		publicKeys:     make(map[string]*rsa.PublicKey),
+		httpClient:     &http.Client{Timeout: cfg.HTTPTimeout},
+		guestValidator: guestValidator,
 	}
 
 	return validator.optionalHandler
 }
 
 type jwtValidator struct {
-	config      JWTConfig
-	publicKeys  map[string]*rsa.PublicKey
-	keysMutex   sync.RWMutex
-	lastRefresh time.Time
-	httpClient  *http.Client
+	config         JWTConfig
+	publicKeys     map[string]*rsa.PublicKey
+	keysMutex      sync.RWMutex
+	lastRefresh    time.Time
+	httpClient     *http.Client
+	guestValidator *auth.GuestTokenValidator
 }
 
 func (v *jwtValidator) recordAuthFailure(reason string) {
@@ -109,6 +120,19 @@ func (v *jwtValidator) handler(c *gin.Context) {
 		return
 	}
 
+	if v.guestValidator != nil && auth.IsGuestToken(tokenString) {
+		guestClaims, err := v.guestValidator.ValidateToken(tokenString)
+		if err != nil {
+			v.recordAuthFailure("invalid_guest_token")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid token: %v", err)})
+			c.Abort()
+			return
+		}
+		v.setGuestClaimsInContext(c, guestClaims)
+		c.Next()
+		return
+	}
+
 	claims, err := v.validateToken(tokenString)
 	if err != nil {
 		v.recordAuthFailure("invalid_token")
@@ -125,21 +149,30 @@ func (v *jwtValidator) handler(c *gin.Context) {
 func (v *jwtValidator) optionalHandler(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		// No token provided - continue as guest
 		c.Next()
 		return
 	}
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	if tokenString == authHeader {
-		// Invalid format - continue as guest
+		c.Next()
+		return
+	}
+
+	// Check if it's a guest token
+	if v.guestValidator != nil && auth.IsGuestToken(tokenString) {
+		guestClaims, err := v.guestValidator.ValidateToken(tokenString)
+		if err != nil {
+			c.Next()
+			return
+		}
+		v.setGuestClaimsInContext(c, guestClaims)
 		c.Next()
 		return
 	}
 
 	claims, err := v.validateToken(tokenString)
 	if err != nil {
-		// Invalid token - continue as guest
 		c.Next()
 		return
 	}
@@ -156,6 +189,16 @@ func (v *jwtValidator) setClaimsInContext(c *gin.Context, claims *keycloak.Claim
 	c.Set("claims", claims)
 
 	roles := extractRoles(claims)
+	hasUserRole := false
+	for _, r := range roles {
+		if r == auth.UserRole {
+			hasUserRole = true
+			break
+		}
+	}
+	if !hasUserRole {
+		roles = append(roles, auth.UserRole)
+	}
 	rolesStr := strings.Join(roles, ",")
 
 	ctx := c.Request.Context()
@@ -164,6 +207,22 @@ func (v *jwtValidator) setClaimsInContext(c *gin.Context, claims *keycloak.Claim
 	ctx = context.WithValue(ctx, EmailKey, claims.Email)
 	ctx = context.WithValue(ctx, EmailVerifiedKey, claims.EmailVerified)
 	ctx = context.WithValue(ctx, RolesKey, rolesStr)
+
+	c.Request = c.Request.WithContext(ctx)
+}
+
+func (v *jwtValidator) setGuestClaimsInContext(c *gin.Context, claims *auth.GuestClaims) {
+	c.Set("user_id", claims.Subject)
+	c.Set("username", "")
+	c.Set("email", "")
+	c.Set("email_verified", false)
+
+	ctx := c.Request.Context()
+	ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
+	ctx = context.WithValue(ctx, UsernameKey, "")
+	ctx = context.WithValue(ctx, EmailKey, "")
+	ctx = context.WithValue(ctx, EmailVerifiedKey, false)
+	ctx = context.WithValue(ctx, RolesKey, claims.Role)
 
 	c.Request = c.Request.WithContext(ctx)
 }

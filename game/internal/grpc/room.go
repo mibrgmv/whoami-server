@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -26,6 +25,10 @@ func NewRoomServer(roomService service.RoomService) roomv1.RoomServiceServer {
 }
 
 func (s *roomServer) CreateRoom(ctx context.Context, req *roomv1.CreateRoomRequest) (*roomv1.CreateRoomResponse, error) {
+	if libsgrpc.HasRole(ctx, "guest") {
+		return nil, status.Error(codes.PermissionDenied, "guests cannot create rooms")
+	}
+
 	userID, err := libsgrpc.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "authentication required to create a room")
@@ -66,23 +69,17 @@ func (s *roomServer) GetRoom(ctx context.Context, req *roomv1.GetRoomRequest) (*
 }
 
 func (s *roomServer) JoinRoom(ctx context.Context, req *roomv1.JoinRoomRequest) (*roomv1.JoinRoomResponse, error) {
-	var userID *uuid.UUID
-	var guestID *string
-
-	if id, err := libsgrpc.GetUserIDFromContext(ctx); err == nil {
-		userID = &id
-	} else {
-		if req.GuestId == "" {
-			return nil, status.Error(codes.InvalidArgument, "guest_id required for unauthenticated users")
-		}
-		guestID = &req.GuestId
+	userID, err := libsgrpc.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "authentication required to join a room")
 	}
 
 	if req.DisplayName == "" {
 		return nil, status.Error(codes.InvalidArgument, "display_name is required")
 	}
 
-	room, player, err := s.roomService.JoinRoom(ctx, req.Code, userID, guestID, req.DisplayName)
+	isGuest := libsgrpc.HasRole(ctx, "guest")
+	room, player, err := s.roomService.JoinRoom(ctx, req.Code, userID, isGuest, req.DisplayName)
 	if err != nil {
 		if errors.Is(err, service.ErrRoomNotFound) {
 			return nil, status.Error(codes.NotFound, "room not found")

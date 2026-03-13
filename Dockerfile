@@ -27,10 +27,10 @@ EXPOSE 8080
 CMD ["./app"]
 
 
-FROM runtime AS identity
+FROM runtime AS iam
 
-COPY identity/bin/app ./app
-COPY identity/config.yaml ./config.yaml
+COPY iam/bin/app ./app
+COPY iam/config.yaml ./config.yaml
 
 EXPOSE 50052
 

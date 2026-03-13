@@ -17,13 +17,13 @@ services:
       args:
         SERVICE: game
 
-  identity-service:
+  iam-service:
     build:
       context: .
       dockerfile: Dockerfile
-      target: identity
+      target: iam
       args:
-        SERVICE: identity
+        SERVICE: iam
     environment:
       - KEYCLOAK_BASE_URL=http://keycloak:8080
 

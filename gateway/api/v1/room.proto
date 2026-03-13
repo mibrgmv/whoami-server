@@ -149,8 +149,7 @@ message GetRoomResponse {
 // JoinRoomRequest is the request to join a room
 message JoinRoomRequest {
   string code = 1;
-  string guest_id = 2;      // Required for guests
-  string display_name = 3;
+  string display_name = 2;
 }
 
 // JoinRoomResponse is the response for joining a room

@@ -3,7 +3,7 @@ go 1.25.0
 use (
 	./game
 	./gateway
-	./identity
+	./iam
 	./libs
 	./statistics
 )

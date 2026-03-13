@@ -19,23 +19,23 @@ services:
       - "8080:8080"
       - "9090:9090"
     depends_on:
-      - identity-service
+      - iam-service
       - game-service
       - statistics-service
     networks:
       - app-network
     environment:
       - HTTP_MODE=${HTTP_MODE}
-      - IDENTITY_SERVICE_HOST=identity-service
+      - iam_SERVICE_HOST=iam-service
       - GAME_SERVICE_HOST=game-service
       - STATISTICS_SERVICE_HOST=statistics-service
       - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
     restart: unless-stopped
 
-  identity-service:
-    image: ghcr.io/${GITHUB_OWNER}/identity:${IMAGE_TAG}
-    container_name: identity-service
+  iam-service:
+    image: ghcr.io/${GITHUB_OWNER}/iam:${IMAGE_TAG}
+    container_name: iam-service
     ports:
       - "50052:50052"
     networks:
