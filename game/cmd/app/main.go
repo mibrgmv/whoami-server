@@ -57,13 +57,21 @@ func main() {
 	}
 	log.Println("Connected to Redis successfully")
 
-	s := server.NewGrpcServer(pool, redisClient.Raw(), cfg.Kafka)
+	s := server.NewServer(pool, redisClient.Raw(), cfg.Kafka)
 
 	go func() {
 		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
 	}()
+
+	if cfg.Websocket != nil {
+		go func() {
+			if err := s.StartWebSocket(cfg.Websocket.GetAddr()); err != nil {
+				log.Fatalf("Failed to start WebSocket server: %v", err)
+			}
+		}()
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

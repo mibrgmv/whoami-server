@@ -2,6 +2,10 @@ grpc:
   host: localhost
   port: 50051
 
+websocket:
+  host: localhost
+  port: 8081
+
 postgres:
   host: localhost
   port: 5432

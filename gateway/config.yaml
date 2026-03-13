@@ -23,6 +23,10 @@ game_service:
   host: localhost
   port: 50051
 
+game_websocket:
+  host: localhost
+  port: 8081
+
 statistics_service:
   host: localhost
   port: 50053

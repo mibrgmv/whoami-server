@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+package room.v1;
+
+option go_package = "gordle/game/pkg/protogen/room/v1;roomv1";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service RoomService {
+  // CreateRoom creates a new multiplayer room
+  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/rooms"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetRoom returns the current state of a room
+  rpc GetRoom(GetRoomRequest) returns (GetRoomResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/rooms/{code}"
+    };
+  }
+
+  // JoinRoom joins an existing room
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/rooms/{code}/join"
+      body: "*"
+    };
+  }
+}
+
+// RoomMode represents the type of multiplayer game
+enum RoomMode {
+  ROOM_MODE_UNSPECIFIED = 0;
+  ROOM_MODE_SINGLE_ROUND = 1;
+  ROOM_MODE_MARATHON = 2;
+}
+
+// RoomStatus represents the current status of a room
+enum RoomStatus {
+  ROOM_STATUS_UNSPECIFIED = 0;
+  ROOM_STATUS_WAITING = 1;
+  ROOM_STATUS_PLAYING = 2;
+  ROOM_STATUS_FINISHED = 3;
+}
+
+// PlayerStatus represents the current status of a player in a room
+enum PlayerStatus {
+  PLAYER_STATUS_UNSPECIFIED = 0;
+  PLAYER_STATUS_WAITING = 1;
+  PLAYER_STATUS_READY = 2;
+  PLAYER_STATUS_PLAYING = 3;
+  PLAYER_STATUS_FINISHED = 4;
+}
+
+// PlayerResult represents the result of a player in a round
+enum PlayerResult {
+  PLAYER_RESULT_UNSPECIFIED = 0;
+  PLAYER_RESULT_WON = 1;
+  PLAYER_RESULT_LOST = 2;
+}
+
+// LetterResult represents the result of a letter in a guess
+enum LetterResult {
+  LETTER_RESULT_UNSPECIFIED = 0;
+  LETTER_RESULT_CORRECT = 1;
+  LETTER_RESULT_PRESENT = 2;
+  LETTER_RESULT_ABSENT = 3;
+}
+
+// RoomSettings contains the settings for a room
+message RoomSettings {
+  RoomMode mode = 1;
+  int32 max_players = 2;
+  int32 time_limit_secs = 3;  // For marathon mode
+  bool show_guesses = 4;
+}
+
+// Room represents a multiplayer room
+message Room {
+  string id = 1;
+  string code = 2;
+  string host_id = 3;
+  RoomStatus status = 4;
+  RoomSettings settings = 5;
+  int32 round_number = 6;
+  string language = 7;
+  string created_at = 8;
+  string expires_at = 9;
+}
+
+// Guess represents a single guess
+message Guess {
+  string word = 1;
+  repeated LetterResult results = 2;
+  int32 attempt_number = 3;
+}
+
+// RoomPlayer represents a player in a room
+message RoomPlayer {
+  string player_id = 1;
+  string user_id = 2;
+  string guest_id = 3;
+  string display_name = 4;
+  PlayerStatus status = 5;
+  PlayerResult result = 6;
+  int32 current_attempts = 7;
+  int32 total_score = 8;
+  repeated Guess guesses = 9;
+  string finished_at = 10;
+}
+
+// CreateRoomRequest is the request to create a new room
+message CreateRoomRequest {
+  RoomSettings settings = 1;
+  string language = 2;
+}
+
+// CreateRoomResponse is the response for room creation
+message CreateRoomResponse {
+  Room room = 1;
+}
+
+// GetRoomRequest is the request to get a room
+message GetRoomRequest {
+  string code = 1;
+}
+
+// GetRoomResponse is the response for getting a room
+message GetRoomResponse {
+  Room room = 1;
+  repeated RoomPlayer players = 2;
+}
+
+// JoinRoomRequest is the request to join a room
+message JoinRoomRequest {
+  string code = 1;
+  string guest_id = 2;      // Required for guests
+  string display_name = 3;
+}
+
+// JoinRoomResponse is the response for joining a room
+message JoinRoomResponse {
+  Room room = 1;
+  RoomPlayer player = 2;
+}
+

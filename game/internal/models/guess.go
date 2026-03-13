@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	gamev1 "gordle/game/pkg/protogen/game/v1"
+	roomv1 "gordle/game/pkg/protogen/room/v1"
 )
 
 type LetterResult rune
@@ -31,6 +32,14 @@ func (g *Guess) ToProto() *gamev1.Guess {
 	}
 }
 
+func (g *Guess) ToRoomProto() *roomv1.Guess {
+	return &roomv1.Guess{
+		Word:          g.GuessWord,
+		Results:       parseRoomResults(g.Result),
+		AttemptNumber: int32(g.AttemptNumber),
+	}
+}
+
 func parseResults(result string) []gamev1.LetterResult {
 	results := make([]gamev1.LetterResult, len(result))
 	for i, r := range result {
@@ -43,6 +52,23 @@ func parseResults(result string) []gamev1.LetterResult {
 			results[i] = gamev1.LetterResult_LETTER_RESULT_ABSENT
 		default:
 			results[i] = gamev1.LetterResult_LETTER_RESULT_UNSPECIFIED
+		}
+	}
+	return results
+}
+
+func parseRoomResults(result string) []roomv1.LetterResult {
+	results := make([]roomv1.LetterResult, len(result))
+	for i, r := range result {
+		switch r {
+		case 'G':
+			results[i] = roomv1.LetterResult_LETTER_RESULT_CORRECT
+		case 'Y':
+			results[i] = roomv1.LetterResult_LETTER_RESULT_PRESENT
+		case 'B':
+			results[i] = roomv1.LetterResult_LETTER_RESULT_ABSENT
+		default:
+			results[i] = roomv1.LetterResult_LETTER_RESULT_UNSPECIFIED
 		}
 	}
 	return results

@@ -16,11 +16,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+
 	appcfg "gordle/gateway/internal/config"
 	"gordle/gateway/internal/metrics"
 	"gordle/gateway/internal/middleware"
+	"gordle/gateway/internal/websocket"
 	authv1 "gordle/gateway/pkg/protogen/auth/v1"
 	gamev1 "gordle/gateway/pkg/protogen/game/v1"
+	roomv1 "gordle/gateway/pkg/protogen/room/v1"
 	statisticsv1 "gordle/gateway/pkg/protogen/statistics/v1"
 	userv1 "gordle/gateway/pkg/protogen/user/v1"
 )
@@ -69,6 +72,7 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
 		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.IdentityService.GetAddr()},
 		{"game", gamev1.RegisterGameServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
+		{"room", roomv1.RegisterRoomServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
 		{"statistics", statisticsv1.RegisterStatisticsServiceHandlerFromEndpoint, cfg.StatisticsService.GetAddr()},
 	}
 
@@ -137,6 +141,33 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	{
 		gamesGroup.Any("/games", gin.WrapH(gwmux))
 		gamesGroup.Any("/games/*path", gin.WrapH(gwmux))
+	}
+
+	// Room routes (auth optional for most, required for create)
+	roomsGroup := router.Group("/api/v1/rooms")
+	{
+		// Create room requires auth
+		roomsGroup.POST("", jwtMiddleware, gin.WrapH(gwmux))
+
+		// Other room operations allow guests
+		roomsGroup.Use(jwtOptionalMiddleware)
+		roomsGroup.GET("/:code", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/join", gin.WrapH(gwmux))
+		roomsGroup.DELETE("/:code/leave", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/ready", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/start", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/guess", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/next", gin.WrapH(gwmux))
+
+		// WebSocket proxy for rooms
+		if cfg.GameWebSocket.Port > 0 {
+			wsProxy, err := websocket.NewProxy(cfg.GameWebSocket.GetAddr(), logger)
+			if err != nil {
+				logger.Error("failed to create WebSocket proxy", slog.String("error", err.Error()))
+			} else {
+				roomsGroup.GET("/:code/ws", gin.WrapH(wsProxy))
+			}
+		}
 	}
 
 	// Protected routes (auth required)

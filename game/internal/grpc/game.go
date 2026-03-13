@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	libsgrpc "gordle/libs/grpc"
 
 	"gordle/game/internal/models"
 	"gordle/game/internal/service"
 	gamev1 "gordle/game/pkg/protogen/game/v1"
+	libsgrpc "gordle/libs/grpc"
 )
 
 type gameServer struct {
