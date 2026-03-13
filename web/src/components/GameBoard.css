@@ -1,0 +1,12 @@
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+}
+
+.board-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}

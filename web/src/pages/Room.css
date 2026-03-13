@@ -1,0 +1,220 @@
+.room-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.room-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.room-code-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  margin: 0;
+}
+
+.join-form .input {
+  width: 100%;
+  text-align: center;
+}
+
+.lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 40px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.room-code-section {
+  text-align: center;
+}
+
+.room-code-section p {
+  margin: 0 0 8px;
+  color: var(--color-text-secondary);
+}
+
+.room-code-btn {
+  background: none;
+  border: 2px dashed var(--color-border);
+  padding: 16px 32px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  cursor: pointer;
+  color: var(--color-text);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.room-code-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.room-code-btn span {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.players-list {
+  width: 100%;
+}
+
+.players-list h3 {
+  margin: 0 0 12px;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--color-key);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.player-status {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.player-status.ready {
+  color: var(--color-correct);
+}
+
+.lobby-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.lobby-hint {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.game-area {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.main-board {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.players-sidebar {
+  width: 200px;
+}
+
+.players-sidebar h3 {
+  margin: 0 0 12px;
+}
+
+.player-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: var(--color-key);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.player-card.current {
+  border: 2px solid var(--color-primary);
+}
+
+.player-attempts {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.round-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background-color: var(--color-key);
+  border-radius: 12px;
+  margin: 20px;
+}
+
+.round-result h2 {
+  margin: 0;
+}
+
+.round-result p {
+  margin: 0;
+}
+
+.scores {
+  width: 100%;
+  max-width: 300px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .game-area {
+    flex-direction: column;
+  }
+
+  .players-sidebar {
+    width: 100%;
+    order: -1;
+  }
+
+  .players-sidebar h3 {
+    display: none;
+  }
+
+  .player-card {
+    display: inline-flex;
+    margin-right: 8px;
+    padding: 8px 12px;
+  }
+}

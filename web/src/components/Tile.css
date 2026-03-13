@@ -1,0 +1,61 @@
+.tile {
+  width: 58px;
+  height: 58px;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.tile--filled {
+  border-color: var(--color-border-filled);
+  animation: pop 0.1s ease;
+}
+
+.tile--active {
+  border-color: var(--color-primary);
+}
+
+.tile--correct {
+  background-color: var(--color-correct);
+  border-color: var(--color-correct);
+  color: white;
+  animation: flip 0.5s ease;
+}
+
+.tile--present {
+  background-color: var(--color-present);
+  border-color: var(--color-present);
+  color: white;
+  animation: flip 0.5s ease;
+}
+
+.tile--absent {
+  background-color: var(--color-absent);
+  border-color: var(--color-absent);
+  color: white;
+  animation: flip 0.5s ease;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0);
+  }
+}

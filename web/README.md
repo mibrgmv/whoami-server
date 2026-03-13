@@ -1,50 +1,73 @@
-# React + TypeScript + Vite
+# Gordle Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend for Gordle - multiplayer word game.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 18** + TypeScript
+- **Vite** - build tool
+- **Zustand** - state management
+- **React Router** - routing
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+src/
+├── api/
+│   └── client.ts         # API client (auth, game, room)
+├── components/
+│   ├── Tile.tsx          # Single letter tile
+│   ├── GameBoard.tsx     # 5x6 grid
+│   └── Keyboard.tsx      # Virtual keyboard
+├── pages/
+│   ├── Home.tsx          # Landing (solo/create/join)
+│   ├── Game.tsx          # Solo game
+│   └── Room.tsx          # Multiplayer (lobby + game)
+├── stores/
+│   ├── authStore.ts      # Auth state (tokens, guest)
+│   ├── gameStore.ts      # Solo game state
+│   └── roomStore.ts      # Multiplayer + WebSocket
+├── types/
+│   ├── api.ts            # API types (from proto)
+│   └── ws.ts             # WebSocket event types
+└── App.tsx               # Router setup
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Development
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+```bash
+# Install dependencies
+npm install
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+# Start dev server (port 3000)
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
+
+## Features
+
+- Solo game (random word)
+- Multiplayer rooms via WebSocket
+- Guest authentication (auto-login)
+- Physical + virtual keyboard support
+- Tile flip animations
+- Dark theme (Wordle-style)
+
+## API Proxy
+
+Dev server proxies `/api/*` to `http://localhost:8080` (gateway).
+
+## TODO
+
+- [ ] Login/Register pages (currently guest-only)
+- [ ] Daily challenge mode
+- [ ] Russian keyboard layout
+- [ ] Sound effects
+- [ ] More animations
+- [ ] Statistics page
+- [ ] Profile page

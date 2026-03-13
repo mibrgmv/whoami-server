@@ -1,0 +1,57 @@
+.game-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding-bottom: 20px;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 500px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.game-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+}
+
+.game-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.result-text {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.result-won {
+  color: var(--color-correct);
+}
+
+.result-lost {
+  color: var(--color-text-secondary);
+}
+
+.result-lost strong {
+  color: var(--color-text);
+}
