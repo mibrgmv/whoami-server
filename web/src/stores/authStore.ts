@@ -8,12 +8,14 @@ interface AuthState {
   refreshToken: string | null
   isGuest: boolean
   isAuthenticated: boolean
+  hasHydrated: boolean
 
   login: (data: LoginRequest) => Promise<void>
   register: (data: RegisterRequest) => Promise<void>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
   setTokens: (accessToken: string, refreshToken: string, isGuest?: boolean) => void
+  setHasHydrated: (state: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -23,6 +25,11 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isGuest: false,
       isAuthenticated: false,
+      hasHydrated: false,
+
+      setHasHydrated: (state) => {
+        set({ hasHydrated: state })
+      },
 
       setTokens: (accessToken, refreshToken, isGuest = false) => {
         localStorage.setItem('access_token', accessToken)
@@ -46,7 +53,7 @@ export const useAuthStore = create<AuthState>()(
 
       loginAsGuest: async () => {
         const response = await auth.guest()
-        get().setTokens(response.access_token, response.refresh_token, true)
+        get().setTokens(response.access_token, response.refresh_token || '', true)
       },
 
       logout: async () => {
@@ -75,6 +82,9 @@ export const useAuthStore = create<AuthState>()(
         isGuest: state.isGuest,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      },
     }
   )
 )

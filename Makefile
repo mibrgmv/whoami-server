@@ -3,9 +3,9 @@ COMPOSE := docker compose
 SERVICES := libs gateway game iam statistics
 BUILD_SERVICES := gateway game iam statistics
 
-.PHONY: up down down-v logs build lint test tidy gen help
+.PHONY: up down down-v logs build build-all lint test tidy gen web web-build web-install help
 
-up: build
+up: build-all
 	$(COMPOSE) up -d --build
 
 down:
@@ -22,6 +22,8 @@ build:
 		echo "==> Building $$svc"; \
 		cd $$svc && make build && cd ..; \
 	done
+
+build-all: build web-build
 
 lint:
 	@for svc in $(SERVICES); do \
@@ -47,6 +49,15 @@ gen:
 		cd $$svc && make gen && cd ..; \
 	done
 
+web-install:
+	cd web && npm install
+
+web:
+	cd web && npm run dev
+
+web-build:
+	cd web && npm run build
+
 help:
 	@echo "Docker:"
 	@echo "  up      - build binaries + docker images and start"
@@ -54,9 +65,15 @@ help:
 	@echo "  down-v  - stop all + remove volumes"
 	@echo "  logs    - follow logs"
 	@echo ""
+	@echo "Build:"
+	@echo "  build       - build backend service binaries"
+	@echo "  build-all   - build backend + frontend"
+	@echo "  web-build   - build frontend for production"
+	@echo ""
 	@echo "Dev:"
-	@echo "  build   - build all service binaries"
-	@echo "  lint    - run golangci-lint"
-	@echo "  test    - run tests"
-	@echo "  tidy    - go mod tidy all modules"
-	@echo "  gen     - generate proto files"
+	@echo "  lint        - run golangci-lint"
+	@echo "  test        - run tests"
+	@echo "  tidy        - go mod tidy all modules"
+	@echo "  gen         - generate proto files"
+	@echo "  web         - run frontend dev server (port 3000)"
+	@echo "  web-install - npm install for frontend"

@@ -54,7 +54,7 @@ export function Room() {
   // Connect WebSocket after joining
   useEffect(() => {
     if (hasJoined && currentPlayer && code) {
-      connectWebSocket(code, currentPlayer.player_id)
+      connectWebSocket(code, currentPlayer.playerId)
     }
   }, [hasJoined, currentPlayer, code, connectWebSocket])
 
@@ -103,7 +103,7 @@ export function Room() {
     }
   }
 
-  const isHost = currentPlayer?.user_id === room?.host_id
+  const isHost = currentPlayer?.userId === room?.hostId
   const isReady = currentPlayer?.status === 'ready'
   const allReady = players.length > 1 && players.every((p) => p.status === 'ready')
   const isPlaying = room?.status === 'playing'
@@ -176,12 +176,12 @@ export function Room() {
           </div>
 
           <div className="players-list">
-            <h3>Players ({players.length}/{room.settings.max_players})</h3>
+            <h3>Players ({players.length}/{room.settings.maxPlayers})</h3>
             {players.map((player) => (
-              <div key={player.player_id} className="player-item">
+              <div key={player.playerId} className="player-item">
                 <span className="player-name">
-                  {player.display_name}
-                  {player.user_id === room.host_id && ' (Host)'}
+                  {player.displayName}
+                  {player.userId === room.hostId && ' (Host)'}
                 </span>
                 <span className={`player-status ${player.status}`}>
                   {player.status === 'ready' ? '✓ Ready' : 'Waiting'}
@@ -229,7 +229,7 @@ export function Room() {
           ← Leave
         </button>
         <h1>
-          {code} - Round {room?.round_number || 1}
+          {code} - Round {room?.roundNumber || 1}
         </h1>
         <div style={{ width: 60 }} />
       </header>
@@ -254,12 +254,12 @@ export function Room() {
           <h3>Players</h3>
           {players.map((player) => (
             <div
-              key={player.player_id}
-              className={`player-card ${player.player_id === currentPlayer?.player_id ? 'current' : ''}`}
+              key={player.playerId}
+              className={`player-card ${player.playerId === currentPlayer?.playerId ? 'current' : ''}`}
             >
-              <span className="player-name">{player.display_name}</span>
+              <span className="player-name">{player.displayName}</span>
               <span className="player-attempts">
-                {player.current_attempts}/6
+                {player.currentAttempts}/6
               </span>
             </div>
           ))}
@@ -268,16 +268,16 @@ export function Room() {
 
       {gameResult && (
         <div className="round-result">
-          <h2>{'target_word' in gameResult ? 'Round Over!' : 'Game Over!'}</h2>
-          {'target_word' in gameResult && (
+          <h2>{'targetWord' in gameResult ? 'Round Over!' : 'Game Over!'}</h2>
+          {'targetWord' in gameResult && (
             <p>
-              The word was: <strong>{gameResult.target_word?.toUpperCase()}</strong>
+              The word was: <strong>{gameResult.targetWord?.toUpperCase()}</strong>
             </p>
           )}
           <div className="scores">
-            {(gameResult as { results?: Array<{ display_name: string; score: number }> }).results?.map((r, i) => (
+            {(gameResult as { results?: Array<{ displayName: string; score: number }> }).results?.map((r, i) => (
               <div key={i} className="score-row">
-                <span>{r.display_name}</span>
+                <span>{r.displayName}</span>
                 <span>{r.score} pts</span>
               </div>
             ))}

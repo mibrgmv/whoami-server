@@ -1,18 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { useRoomStore } from '../stores/roomStore'
+import { game } from '../api/client'
+import type { DailyStatus } from '../types/api'
+import { GameStatusValues } from '../types/api'
 import './Home.css'
 
 export function Home() {
   const navigate = useNavigate()
-  const { isAuthenticated, isGuest, loginAsGuest, logout } = useAuthStore()
+  const { isAuthenticated, isGuest, hasHydrated, loginAsGuest, logout } = useAuthStore()
   const { createRoom, isLoading, error, clearError } = useRoomStore()
 
   const [roomCode, setRoomCode] = useState('')
   const [showAuth, setShowAuth] = useState(false)
+  const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null)
 
-  const handlePlaySolo = () => {
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated) {
+      game.dailyStatus().then(setDailyStatus).catch(() => {})
+    }
+  }, [hasHydrated, isAuthenticated])
+
+  const handlePlayDaily = () => {
+    navigate('/game/daily')
+  }
+
+  const handlePlayRandom = () => {
     navigate('/game')
   }
 
@@ -50,6 +64,16 @@ export function Home() {
     }
   }
 
+  const getDailyButtonText = () => {
+    if (!dailyStatus) return 'Daily Challenge'
+    if (dailyStatus.hasPlayedToday) {
+      return dailyStatus.status === GameStatusValues.WON ? 'Daily ✓ Completed' : 'Daily ✗ Try Tomorrow'
+    }
+    return 'Daily Challenge'
+  }
+
+  const isDailyDisabled = dailyStatus?.hasPlayedToday ?? false
+
   return (
     <div className="home">
       <h1 className="home-title">GORDLE</h1>
@@ -62,12 +86,24 @@ export function Home() {
       )}
 
       <div className="home-actions">
-        <button className="btn btn-primary btn-large" onClick={handlePlaySolo}>
-          Play Solo
-        </button>
+        <div className="play-modes">
+          <button
+            className="btn btn-primary btn-large"
+            onClick={handlePlayDaily}
+            disabled={isDailyDisabled}
+          >
+            {getDailyButtonText()}
+          </button>
+          <button
+            className="btn btn-secondary btn-large"
+            onClick={handlePlayRandom}
+          >
+            Random Word
+          </button>
+        </div>
 
         <div className="divider">
-          <span>or</span>
+          <span>multiplayer</span>
         </div>
 
         <button

@@ -1,4 +1,16 @@
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    networks:
+      - app-network
+
   gateway:
     build:
       context: .

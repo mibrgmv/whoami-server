@@ -10,6 +10,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -418,12 +419,80 @@ func (x *LogoutResponse) GetMessage() string {
 	return ""
 }
 
+type GuestAuthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	GuestId       string                 `protobuf:"bytes,2,opt,name=guest_id,json=guestId,proto3" json:"guest_id,omitempty"`
+	TokenType     string                 `protobuf:"bytes,3,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`
+	ExpiresIn     int32                  `protobuf:"varint,4,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GuestAuthResponse) Reset() {
+	*x = GuestAuthResponse{}
+	mi := &file_auth_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GuestAuthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GuestAuthResponse) ProtoMessage() {}
+
+func (x *GuestAuthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GuestAuthResponse.ProtoReflect.Descriptor instead.
+func (*GuestAuthResponse) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GuestAuthResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *GuestAuthResponse) GetGuestId() string {
+	if x != nil {
+		return x.GuestId
+	}
+	return ""
+}
+
+func (x *GuestAuthResponse) GetTokenType() string {
+	if x != nil {
+		return x.TokenType
+	}
+	return ""
+}
+
+func (x *GuestAuthResponse) GetExpiresIn() int32 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"auth.proto\x12\aauth.v1\x1a\x1cgoogle/api/annotations.proto\"\x95\x01\n" +
+	"auth.proto\x12\aauth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x95\x01\n" +
 	"\rTokenResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
@@ -451,12 +520,20 @@ const file_auth_proto_rawDesc = "" +
 	"\rLogoutRequest\x12#\n" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"*\n" +
 	"\x0eLogoutResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\x89\x03\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\x8f\x01\n" +
+	"\x11GuestAuthResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12\x19\n" +
+	"\bguest_id\x18\x02 \x01(\tR\aguestId\x12\x1d\n" +
+	"\n" +
+	"token_type\x18\x03 \x01(\tR\ttokenType\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x04 \x01(\x05R\texpiresIn2\xe9\x03\n" +
 	"\vAuthService\x12U\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.TokenResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/login\x12a\n" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/auth/register\x12e\n" +
 	"\fRefreshToken\x12\x1c.auth.v1.RefreshTokenRequest\x1a\x16.auth.v1.TokenResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/auth/refresh\x12Y\n" +
-	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logoutB,Z*gordle/gateway/pkg/protogen/auth/v1;authv1b\x06proto3"
+	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logout\x12^\n" +
+	"\tGuestAuth\x12\x16.google.protobuf.Empty\x1a\x1a.auth.v1.GuestAuthResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/guestB,Z*gordle/gateway/pkg/protogen/auth/v1;authv1b\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -470,7 +547,7 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auth_proto_goTypes = []any{
 	(*TokenResponse)(nil),       // 0: auth.v1.TokenResponse
 	(*LoginRequest)(nil),        // 1: auth.v1.LoginRequest
@@ -479,18 +556,22 @@ var file_auth_proto_goTypes = []any{
 	(*RefreshTokenRequest)(nil), // 4: auth.v1.RefreshTokenRequest
 	(*LogoutRequest)(nil),       // 5: auth.v1.LogoutRequest
 	(*LogoutResponse)(nil),      // 6: auth.v1.LogoutResponse
+	(*GuestAuthResponse)(nil),   // 7: auth.v1.GuestAuthResponse
+	(*emptypb.Empty)(nil),       // 8: google.protobuf.Empty
 }
 var file_auth_proto_depIdxs = []int32{
 	1, // 0: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
 	2, // 1: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
 	4, // 2: auth.v1.AuthService.RefreshToken:input_type -> auth.v1.RefreshTokenRequest
 	5, // 3: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
-	0, // 4: auth.v1.AuthService.Login:output_type -> auth.v1.TokenResponse
-	3, // 5: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
-	0, // 6: auth.v1.AuthService.RefreshToken:output_type -> auth.v1.TokenResponse
-	6, // 7: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	8, // 4: auth.v1.AuthService.GuestAuth:input_type -> google.protobuf.Empty
+	0, // 5: auth.v1.AuthService.Login:output_type -> auth.v1.TokenResponse
+	3, // 6: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
+	0, // 7: auth.v1.AuthService.RefreshToken:output_type -> auth.v1.TokenResponse
+	6, // 8: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
+	7, // 9: auth.v1.AuthService.GuestAuth:output_type -> auth.v1.GuestAuthResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -507,7 +588,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -18,7 +18,7 @@
 }
 
 .tile--active {
-  border-color: var(--color-primary);
+  border-color: var(--color-border-filled);
 }
 
 .tile--correct {

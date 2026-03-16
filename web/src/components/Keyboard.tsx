@@ -1,4 +1,5 @@
 import type { LetterResult } from '../types/api'
+import { LetterResultValues } from '../types/api'
 import './Keyboard.css'
 
 interface KeyboardProps {
@@ -14,6 +15,20 @@ const ROWS = [
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
   ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE'],
 ]
+
+function getStateClass(state: LetterResult | undefined): string {
+  if (!state) return ''
+  switch (state) {
+    case LetterResultValues.CORRECT:
+      return 'key--correct'
+    case LetterResultValues.PRESENT:
+      return 'key--present'
+    case LetterResultValues.ABSENT:
+      return 'key--absent'
+    default:
+      return ''
+  }
+}
 
 export function Keyboard({
   onKey,
@@ -45,7 +60,7 @@ export function Keyboard({
             return (
               <button
                 key={key}
-                className={`key ${state ? `key--${state}` : ''} ${isWide ? 'key--wide' : ''}`}
+                className={`key ${getStateClass(state)} ${isWide ? 'key--wide' : ''}`}
                 onClick={() => handleClick(key)}
                 disabled={disabled}
               >

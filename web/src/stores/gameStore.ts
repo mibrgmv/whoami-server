@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { game } from '../api/client'
 import type { GameSession, Guess, LetterResult, GameStatus } from '../types/api'
+import { GameStatusValues, LetterResultValues } from '../types/api'
 
 interface GameState {
   session: GameSession | null
@@ -34,12 +35,12 @@ function updateLetterStates(
     const result = guess.results[i]
 
     // Only upgrade: absent -> present -> correct
-    if (result === 'correct') {
-      updated[letter] = 'correct'
-    } else if (result === 'present' && updated[letter] !== 'correct') {
-      updated[letter] = 'present'
-    } else if (result === 'absent' && !updated[letter]) {
-      updated[letter] = 'absent'
+    if (result === LetterResultValues.CORRECT) {
+      updated[letter] = LetterResultValues.CORRECT
+    } else if (result === LetterResultValues.PRESENT && updated[letter] !== LetterResultValues.CORRECT) {
+      updated[letter] = LetterResultValues.PRESENT
+    } else if (result === LetterResultValues.ABSENT && !updated[letter]) {
+      updated[letter] = LetterResultValues.ABSENT
     }
   }
 
@@ -93,7 +94,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   addLetter: (letter) => {
     const { currentGuess, session } = get()
-    if (session?.status !== 'in_progress') return
+    if (session?.status !== GameStatusValues.IN_PROGRESS) return
     if (currentGuess.length < 5) {
       set({ currentGuess: currentGuess + letter.toUpperCase() })
     }
@@ -112,7 +113,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ isLoading: true, error: null })
     try {
-      const result = await game.guess(session.session_id, currentGuess.toLowerCase())
+      const result = await game.guess(session.sessionId, currentGuess.toLowerCase())
 
       const newGuesses = [...session.guesses, result.guess]
       const newLetterStates = updateLetterStates(get().letterStates, result.guess)
@@ -121,9 +122,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         session: {
           ...session,
           guesses: newGuesses,
-          status: result.game_status as GameStatus,
-          target_word: result.target_word,
-          attempts_used: newGuesses.length,
+          status: result.gameStatus as GameStatus,
+          targetWord: result.targetWord,
+          attemptsUsed: newGuesses.length,
         },
         letterStates: newLetterStates,
         currentGuess: '',

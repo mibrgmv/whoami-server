@@ -24,48 +24,48 @@ export interface PlayerJoinedPayload {
 }
 
 export interface PlayerLeftPayload {
-  player_id: string
-  display_name: string
+  playerId: string
+  displayName: string
 }
 
 export interface PlayerReadyPayload {
-  player_id: string
-  display_name: string
+  playerId: string
+  displayName: string
   ready: boolean
 }
 
 export interface GameStartedPayload {
-  round_number: number
-  word_length: number
+  roundNumber: number
+  wordLength: number
 }
 
 export interface PlayerGuessPayload {
-  player_id: string
-  display_name: string
-  guess_word?: string
+  playerId: string
+  displayName: string
+  guessWord?: string
   result?: string
   attempts: number
   solved: boolean
 }
 
 export interface PlayerScore {
-  player_id: string
-  display_name: string
+  playerId: string
+  displayName: string
   result: string
   attempts: number
   score: number
 }
 
 export interface RoundEndedPayload {
-  round_number: number
-  target_word: string
+  roundNumber: number
+  targetWord: string
   results: PlayerScore[]
 }
 
 export interface GameEndedPayload {
   reason: string
-  final_scores: PlayerScore[]
-  target_word?: string
+  finalScores: PlayerScore[]
+  targetWord?: string
 }
 
 export interface RoomUpdatedPayload {

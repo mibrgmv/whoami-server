@@ -20,40 +20,53 @@ export interface RegisterRequest {
 }
 
 // Game types
-export type GameMode = 'daily' | 'random'
-export type GameStatus = 'in_progress' | 'won' | 'lost'
-export type LetterResult = 'correct' | 'present' | 'absent'
+export type GameMode = 'GAME_MODE_DAILY' | 'GAME_MODE_RANDOM'
+export type GameStatus = 'GAME_STATUS_UNSPECIFIED' | 'GAME_STATUS_IN_PROGRESS' | 'GAME_STATUS_WON' | 'GAME_STATUS_LOST'
+export type LetterResult = 'LETTER_RESULT_CORRECT' | 'LETTER_RESULT_PRESENT' | 'LETTER_RESULT_ABSENT'
+
+// Helper constants for easier comparison
+export const GameStatusValues = {
+  IN_PROGRESS: 'GAME_STATUS_IN_PROGRESS' as GameStatus,
+  WON: 'GAME_STATUS_WON' as GameStatus,
+  LOST: 'GAME_STATUS_LOST' as GameStatus,
+}
+
+export const LetterResultValues = {
+  CORRECT: 'LETTER_RESULT_CORRECT' as LetterResult,
+  PRESENT: 'LETTER_RESULT_PRESENT' as LetterResult,
+  ABSENT: 'LETTER_RESULT_ABSENT' as LetterResult,
+}
 
 export interface Guess {
   word: string
   results: LetterResult[]
-  attempt_number: number
+  attemptNumber: number
 }
 
 export interface GameSession {
-  session_id: string
-  user_id: string
+  sessionId: string
+  userId: string
   language: string
-  game_mode: GameMode
-  game_date: string
+  gameMode: GameMode
+  gameDate: string
   status: GameStatus
-  attempts_used: number
-  max_attempts: number
+  attemptsUsed: number
+  maxAttempts: number
   guesses: Guess[]
-  target_word?: string
-  started_at: string
-  completed_at?: string
+  targetWord?: string
+  startedAt: string
+  completedAt?: string
 }
 
 export interface GuessResult {
   guess: Guess
-  game_status: GameStatus
-  target_word?: string
+  gameStatus: GameStatus
+  targetWord?: string
 }
 
 export interface DailyStatus {
-  has_played_today: boolean
-  session_id?: string
+  hasPlayedToday: boolean
+  sessionId?: string
   status?: GameStatus
 }
 
@@ -65,34 +78,34 @@ export type PlayerResult = 'won' | 'lost'
 
 export interface RoomSettings {
   mode: RoomMode
-  max_players: number
-  time_limit_secs: number
-  show_guesses: boolean
+  maxPlayers: number
+  timeLimitSecs: number
+  showGuesses: boolean
 }
 
 export interface Room {
   id: string
   code: string
-  host_id: string
+  hostId: string
   status: RoomStatus
   settings: RoomSettings
-  round_number: number
+  roundNumber: number
   language: string
-  created_at: string
-  expires_at: string
+  createdAt: string
+  expiresAt: string
 }
 
 export interface RoomPlayer {
-  player_id: string
-  user_id: string
-  guest_id?: string
-  display_name: string
+  playerId: string
+  userId: string
+  guestId?: string
+  displayName: string
   status: PlayerStatus
   result?: PlayerResult
-  current_attempts: number
-  total_score: number
+  currentAttempts: number
+  totalScore: number
   guesses: Guess[]
-  finished_at?: string
+  finishedAt?: string
 }
 
 export interface CreateRoomRequest {

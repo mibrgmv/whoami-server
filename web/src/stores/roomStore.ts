@@ -148,7 +148,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
       case 'player_left': {
         const payload = event.payload as PlayerLeftPayload
-        set({ players: players.filter((p) => p.player_id !== payload.player_id) })
+        set({ players: players.filter((p) => p.playerId !== payload.playerId) })
         break
       }
 
@@ -156,7 +156,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         const payload = event.payload as PlayerReadyPayload
         set({
           players: players.map((p) =>
-            p.player_id === payload.player_id
+            p.playerId === payload.playerId
               ? { ...p, status: payload.ready ? 'ready' : 'waiting' }
               : p
           ),
@@ -167,12 +167,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       case 'game_started': {
         const payload = event.payload as GameStartedPayload
         set({
-          wordLength: payload.word_length,
+          wordLength: payload.wordLength,
           currentGuess: '',
           letterStates: {},
           gameResult: null,
           players: players.map((p) => ({ ...p, status: 'playing', guesses: [] })),
-          room: get().room ? { ...get().room!, status: 'playing', round_number: payload.round_number } : null,
+          room: get().room ? { ...get().room!, status: 'playing', roundNumber: payload.roundNumber } : null,
         })
         break
       }
@@ -181,14 +181,14 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         const payload = event.payload as PlayerGuessPayload
         set({
           players: players.map((p) =>
-            p.player_id === payload.player_id
-              ? { ...p, current_attempts: payload.attempts }
+            p.playerId === payload.playerId
+              ? { ...p, currentAttempts: payload.attempts }
               : p
           ),
         })
 
         // If it's our own guess, update letter states
-        if (currentPlayer && payload.player_id === currentPlayer.player_id && payload.result) {
+        if (currentPlayer && payload.playerId === currentPlayer.playerId && payload.result) {
           // Parse result to update letter states
           // Result format depends on backend implementation
         }

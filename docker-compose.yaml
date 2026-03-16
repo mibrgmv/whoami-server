@@ -12,6 +12,17 @@ volumes:
   kafka-data:
 
 services:
+  web:
+    image: ghcr.io/${GITHUB_OWNER}/web:${IMAGE_TAG}
+    container_name: web
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    networks:
+      - app-network
+    restart: unless-stopped
+
   gateway:
     image: ghcr.io/${GITHUB_OWNER}/gateway:${IMAGE_TAG}
     container_name: gateway
@@ -26,7 +37,7 @@ services:
       - app-network
     environment:
       - HTTP_MODE=${HTTP_MODE}
-      - iam_SERVICE_HOST=iam-service
+      - IAM_SERVICE_HOST=iam-service
       - GAME_SERVICE_HOST=game-service
       - STATISTICS_SERVICE_HOST=statistics-service
       - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}

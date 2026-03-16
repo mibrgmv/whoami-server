@@ -1,4 +1,5 @@
 import type { LetterResult } from '../types/api'
+import { LetterResultValues } from '../types/api'
 import './Tile.css'
 
 interface TileProps {
@@ -7,10 +8,24 @@ interface TileProps {
   isActive?: boolean
 }
 
+function getResultClass(result: LetterResult | undefined): string {
+  if (!result) return ''
+  switch (result) {
+    case LetterResultValues.CORRECT:
+      return 'tile--correct'
+    case LetterResultValues.PRESENT:
+      return 'tile--present'
+    case LetterResultValues.ABSENT:
+      return 'tile--absent'
+    default:
+      return ''
+  }
+}
+
 export function Tile({ letter, result, isActive }: TileProps) {
   const className = [
     'tile',
-    result && `tile--${result}`,
+    getResultClass(result),
     isActive && 'tile--active',
     letter && !result && 'tile--filled',
   ]

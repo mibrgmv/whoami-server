@@ -31,6 +31,12 @@
   color: var(--color-text-secondary);
 }
 
+.game-date {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin-top: 12px;
+}
+
 .game-result {
   display: flex;
   flex-direction: column;

@@ -5,6 +5,7 @@ package auth.v1;
 option go_package = "gordle/gateway/pkg/protogen/auth/v1;authv1";
 
 import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
 
 service AuthService {
   rpc Login(LoginRequest) returns (TokenResponse) {
@@ -31,6 +32,14 @@ service AuthService {
   rpc Logout(LogoutRequest) returns (LogoutResponse) {
     option (google.api.http) = {
       post: "/api/v1/auth/logout"
+      body: "*"
+    };
+  }
+
+  // GuestAuth generates a temporary guest token for playing without registration
+  rpc GuestAuth(google.protobuf.Empty) returns (GuestAuthResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/guest"
       body: "*"
     };
   }
@@ -73,4 +82,11 @@ message LogoutRequest {
 
 message LogoutResponse {
   string message = 1;
+}
+
+message GuestAuthResponse {
+  string access_token = 1;
+  string guest_id = 2;
+  string token_type = 3;
+  int32 expires_in = 4;
 }
