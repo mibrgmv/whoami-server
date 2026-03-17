@@ -1,11 +1,11 @@
 import type { Room, RoomPlayer } from './api'
 
-// WebSocket event types (match backend ws_events.go)
 export type WSEventType =
   | 'player_joined'
   | 'player_left'
   | 'player_ready'
   | 'game_started'
+  | 'player_attempt'
   | 'player_guess'
   | 'round_ended'
   | 'game_ended'
@@ -18,7 +18,6 @@ export interface WSEvent<T = unknown> {
   payload: T
 }
 
-// Payloads
 export interface PlayerJoinedPayload {
   player: RoomPlayer
 }
@@ -39,11 +38,18 @@ export interface GameStartedPayload {
   wordLength: number
 }
 
+export interface PlayerAttemptPayload {
+  playerId: string
+  displayName: string
+  attempts: number
+  solved: boolean
+}
+
 export interface PlayerGuessPayload {
   playerId: string
   displayName: string
-  guessWord?: string
-  result?: string
+  guessWord: string
+  result: string
   attempts: number
   solved: boolean
 }
@@ -77,7 +83,6 @@ export interface ErrorPayload {
   message: string
 }
 
-// Client -> Server messages
 export type WSMessageType = 'guess' | 'ready' | 'start_game' | 'next_round' | 'leave'
 
 export interface WSMessage {

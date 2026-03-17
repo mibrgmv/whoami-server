@@ -32,7 +32,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setTokens: (accessToken, refreshToken, isGuest = false) => {
-        localStorage.setItem('access_token', accessToken)
         set({
           accessToken,
           refreshToken,
@@ -43,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (data) => {
         const response = await auth.login(data)
-        get().setTokens(response.access_token, response.refresh_token, false)
+        get().setTokens(response.accessToken, response.refreshToken, false)
       },
 
       register: async (data) => {
@@ -53,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
 
       loginAsGuest: async () => {
         const response = await auth.guest()
-        get().setTokens(response.access_token, response.refresh_token || '', true)
+        get().setTokens(response.accessToken, '', true)
       },
 
       logout: async () => {
@@ -65,7 +64,6 @@ export const useAuthStore = create<AuthState>()(
             // Ignore logout errors
           }
         }
-        localStorage.removeItem('access_token')
         set({
           accessToken: null,
           refreshToken: null,
@@ -83,6 +81,12 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        if (state?.isAuthenticated && !state.isGuest && !state.refreshToken) {
+          state.accessToken = null
+          state.refreshToken = null
+          state.isGuest = false
+          state.isAuthenticated = false
+        }
         state?.setHasHydrated(true)
       },
     }

@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { game } from '../api/client'
-import type { GameSession, Guess, LetterResult, GameStatus } from '../types/api'
-import { GameStatusValues, LetterResultValues } from '../types/api'
+import type { GameSession, LetterResult, GameStatus } from '../types/api'
+import { GameStatusValues } from '../types/api'
+import { updateLetterStates } from '../utils/letterStates'
 
 interface GameState {
   session: GameSession | null
@@ -9,10 +10,8 @@ interface GameState {
   isLoading: boolean
   error: string | null
 
-  // Keyboard state: which letters are in which state
   letterStates: Record<string, LetterResult>
 
-  // Actions
   startGame: (mode: 'daily' | 'random', language?: string) => Promise<void>
   loadGame: (sessionId: string) => Promise<void>
   setCurrentGuess: (guess: string) => void
@@ -21,30 +20,6 @@ interface GameState {
   submitGuess: () => Promise<void>
   clearError: () => void
   reset: () => void
-}
-
-function updateLetterStates(
-  current: Record<string, LetterResult>,
-  guess: Guess
-): Record<string, LetterResult> {
-  const updated = { ...current }
-  const word = guess.word.toUpperCase()
-
-  for (let i = 0; i < word.length; i++) {
-    const letter = word[i]
-    const result = guess.results[i]
-
-    // Only upgrade: absent -> present -> correct
-    if (result === LetterResultValues.CORRECT) {
-      updated[letter] = LetterResultValues.CORRECT
-    } else if (result === LetterResultValues.PRESENT && updated[letter] !== LetterResultValues.CORRECT) {
-      updated[letter] = LetterResultValues.PRESENT
-    } else if (result === LetterResultValues.ABSENT && !updated[letter]) {
-      updated[letter] = LetterResultValues.ABSENT
-    }
-  }
-
-  return updated
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -74,7 +49,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const session = await game.get(sessionId)
 
-      // Rebuild letter states from existing guesses
       let letterStates: Record<string, LetterResult> = {}
       for (const guess of session.guesses) {
         letterStates = updateLetterStates(letterStates, guess)

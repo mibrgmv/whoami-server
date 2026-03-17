@@ -32,22 +32,22 @@ const (
 
 type RoomSettings struct {
 	Mode          RoomMode `json:"mode"`
-	MaxPlayers    int      `json:"max_players"`
-	TimeLimitSecs *int     `json:"time_limit_secs,omitempty"`
-	ShowGuesses   bool     `json:"show_guesses"`
+	MaxPlayers    int      `json:"maxPlayers"`
+	TimeLimitSecs *int     `json:"timeLimitSecs,omitempty"`
+	ShowGuesses   bool     `json:"showGuesses"`
 }
 
 type Room struct {
 	ID          uuid.UUID    `json:"id"`
 	Code        string       `json:"code"`
-	HostID      string       `json:"host_id"`
+	HostID      string       `json:"hostId"`
 	Status      RoomStatus   `json:"status"`
 	Settings    RoomSettings `json:"settings"`
-	CurrentWord string       `json:"current_word,omitempty"`
-	RoundNumber int          `json:"round_number"`
+	CurrentWord string       `json:"currentWord,omitempty"`
+	RoundNumber int          `json:"roundNumber"`
 	Language    string       `json:"language"`
-	CreatedAt   time.Time    `json:"created_at"`
-	ExpiresAt   time.Time    `json:"expires_at"`
+	CreatedAt   time.Time    `json:"createdAt"`
+	ExpiresAt   time.Time    `json:"expiresAt"`
 }
 
 func GenerateRoomCode() (string, error) {

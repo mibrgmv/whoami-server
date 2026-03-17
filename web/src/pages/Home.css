@@ -5,6 +5,32 @@
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
+  position: relative;
+}
+
+.home-header {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  left: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  background-color: var(--color-tile-default);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  cursor: default;
 }
 
 .home-title {
@@ -24,13 +50,65 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  max-width: 300px;
+  max-width: 350px;
 }
 
 .play-modes {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.button-with-hint {
+  display: flex;
+  flex-direction: column;
+}
+
+.button-with-hint .btn {
+  width: 100%;
+}
+
+.button-with-hint .btn:disabled {
+  pointer-events: none;
+}
+
+.button-with-hint:has(.btn:disabled) {
+  cursor: pointer;
+}
+
+.hint-container {
+  min-height: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.hint-text {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  animation: hintFadeIn 0.2s ease-out;
+}
+
+@keyframes hintFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.multiplayer-actions {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+}
+
+.btn-full {
+  width: 100%;
 }
 
 .divider {
@@ -51,6 +129,7 @@
 .join-room {
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 
 .join-room .input {
@@ -58,6 +137,12 @@
   text-align: center;
   font-size: 1.25rem;
   letter-spacing: 0.2em;
+  min-width: 0;
+}
+
+.join-room .btn {
+  flex-shrink: 0;
+  min-width: 80px;
 }
 
 .home-footer {
@@ -102,4 +187,41 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.auth-status {
+  text-align: center;
+  padding: 12px;
+  background-color: var(--color-tile-default);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.room-settings {
+  margin-bottom: 24px;
+}
+
+.toggle-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  background-color: var(--color-tile-default);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.toggle-setting input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-correct);
+}
+
+.setting-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 8px 0 0 0;
+  text-align: center;
 }

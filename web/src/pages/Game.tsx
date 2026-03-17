@@ -1,9 +1,11 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { GameBoard } from '../components/GameBoard'
 import { Keyboard } from '../components/Keyboard'
 import { useGameStore } from '../stores/gameStore'
 import { useAuthStore } from '../stores/authStore'
+import { useKeyboardInput } from '../hooks/useKeyboardInput'
+import { useErrorProgress } from '../hooks/useErrorProgress'
 import { GameStatusValues } from '../types/api'
 import './Game.css'
 
@@ -12,7 +14,7 @@ export function Game() {
   const location = useLocation()
   const isDaily = location.pathname === '/game/daily'
 
-  const { isAuthenticated, hasHydrated, loginAsGuest } = useAuthStore()
+  const { isAuthenticated, hasHydrated } = useAuthStore()
   const {
     session,
     currentGuess,
@@ -27,14 +29,22 @@ export function Game() {
     reset,
   } = useGameStore()
 
-  // Auto-login as guest if not authenticated (only after hydration)
+  const errorProgress = useErrorProgress(error, 1500, clearError)
+  const isGameOver = session?.status === GameStatusValues.WON || session?.status === GameStatusValues.LOST
+
+  useKeyboardInput({
+    onLetter: addLetter,
+    onEnter: submitGuess,
+    onBackspace: removeLetter,
+    disabled: session?.status !== GameStatusValues.IN_PROGRESS,
+  })
+
   useEffect(() => {
     if (hasHydrated && !isAuthenticated) {
-      loginAsGuest()
+      navigate('/')
     }
-  }, [hasHydrated, isAuthenticated, loginAsGuest])
+  }, [hasHydrated, isAuthenticated, navigate])
 
-  // Start game on mount (only after hydration and authentication)
   useEffect(() => {
     if (hasHydrated && isAuthenticated && !session) {
       startGame(isDaily ? 'daily' : 'random')
@@ -43,31 +53,7 @@ export function Game() {
     return () => {
       reset()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasHydrated, isAuthenticated, isDaily])
-
-  // Keyboard handler
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (session?.status !== GameStatusValues.IN_PROGRESS) return
-
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        submitGuess()
-      } else if (e.key === 'Backspace') {
-        e.preventDefault()
-        removeLetter()
-      } else if (/^[a-zA-Z]$/.test(e.key)) {
-        addLetter(e.key)
-      }
-    },
-    [session?.status, submitGuess, removeLetter, addLetter]
-  )
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
 
   const handlePlayAgain = () => {
     if (isDaily) {
@@ -77,8 +63,6 @@ export function Game() {
       startGame('random')
     }
   }
-
-  const isGameOver = session?.status === GameStatusValues.WON || session?.status === GameStatusValues.LOST
 
   return (
     <div className="game-page">
@@ -90,11 +74,17 @@ export function Game() {
         <div style={{ width: 60 }} />
       </header>
 
-      {error && (
-        <div className="error-banner" onClick={clearError}>
-          {error}
-        </div>
-      )}
+      <div className="error-container">
+        {error && (
+          <div className="error-banner-game" onClick={clearError}>
+            {error}
+            <div
+              className="error-progress"
+              style={{ width: `${errorProgress}%` }}
+            />
+          </div>
+        )}
+      </div>
 
       {isLoading && !session && <div className="loading">Loading...</div>}
 

@@ -115,20 +115,7 @@ func (c *Connection) WritePump() {
 				return
 			}
 
-			w, err := c.ws.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Write queued messages
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write([]byte{'\n'})
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
+			if err := c.ws.WriteMessage(websocket.TextMessage, message); err != nil {
 				return
 			}
 

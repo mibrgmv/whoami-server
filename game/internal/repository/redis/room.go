@@ -175,7 +175,7 @@ func (r *roomRepo) AddPlayer(ctx context.Context, player *models.RoomPlayer) err
 	}
 
 	key := r.playersKey(player.RoomID)
-	if err := r.client.HSet(ctx, key, player.PlayerID(), data).Err(); err != nil {
+	if err := r.client.HSet(ctx, key, player.PlayerID, data).Err(); err != nil {
 		return fmt.Errorf("failed to add player: %w", err)
 	}
 
@@ -197,6 +197,7 @@ func (r *roomRepo) GetPlayer(ctx context.Context, roomID uuid.UUID, playerID str
 		return nil, fmt.Errorf("failed to unmarshal player: %w", err)
 	}
 
+	player.RoomID = roomID
 	return &player, nil
 }
 
@@ -213,6 +214,7 @@ func (r *roomRepo) GetPlayers(ctx context.Context, roomID uuid.UUID) ([]models.R
 		if err := json.Unmarshal([]byte(playerData), &player); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal player: %w", err)
 		}
+		player.RoomID = roomID
 		players = append(players, player)
 	}
 

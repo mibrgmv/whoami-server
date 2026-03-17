@@ -3,7 +3,7 @@ COMPOSE := docker compose
 SERVICES := libs gateway game iam statistics
 BUILD_SERVICES := gateway game iam statistics
 
-.PHONY: up down down-v logs build build-all lint test tidy gen web web-build web-install help
+.PHONY: up down down-v rs logs build build-all lint test tidy gen web web-build web-install help
 
 up: build-all
 	$(COMPOSE) up -d --build
@@ -13,6 +13,8 @@ down:
 
 down-v:
 	$(COMPOSE) down -v
+
+rs: down up
 
 logs:
 	$(COMPOSE) logs -f
@@ -63,6 +65,7 @@ help:
 	@echo "  up      - build binaries + docker images and start"
 	@echo "  down    - stop all"
 	@echo "  down-v  - stop all + remove volumes"
+	@echo "  rs      - restart all (down + up with rebuild)"
 	@echo "  logs    - follow logs"
 	@echo ""
 	@echo "Build:"

@@ -71,7 +71,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	playerFound := false
 	for _, p := range players {
-		if p.PlayerID() == playerID {
+		if p.PlayerID == playerID {
 			playerFound = true
 			break
 		}

@@ -1,9 +1,16 @@
 // Auth types
 export interface TokenResponse {
-  access_token: string
-  refresh_token: string
-  token_type: string
-  expires_in: number
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresIn: number
+}
+
+export interface GuestAuthResponse {
+  accessToken: string
+  guestId: string
+  tokenType: string
+  expiresIn: number
 }
 
 export interface LoginRequest {
@@ -72,9 +79,22 @@ export interface DailyStatus {
 
 // Room types
 export type RoomMode = 'single_round' | 'marathon'
-export type RoomStatus = 'waiting' | 'playing' | 'finished'
-export type PlayerStatus = 'waiting' | 'ready' | 'playing' | 'finished'
-export type PlayerResult = 'won' | 'lost'
+export type RoomStatus = 'ROOM_STATUS_UNSPECIFIED' | 'ROOM_STATUS_WAITING' | 'ROOM_STATUS_PLAYING' | 'ROOM_STATUS_FINISHED'
+export type PlayerStatus = 'PLAYER_STATUS_UNSPECIFIED' | 'PLAYER_STATUS_WAITING' | 'PLAYER_STATUS_READY' | 'PLAYER_STATUS_PLAYING' | 'PLAYER_STATUS_FINISHED'
+export type PlayerResult = 'PLAYER_RESULT_WON' | 'PLAYER_RESULT_LOST'
+
+export const RoomStatusValues = {
+  WAITING: 'ROOM_STATUS_WAITING' as RoomStatus,
+  PLAYING: 'ROOM_STATUS_PLAYING' as RoomStatus,
+  FINISHED: 'ROOM_STATUS_FINISHED' as RoomStatus,
+}
+
+export const PlayerStatusValues = {
+  WAITING: 'PLAYER_STATUS_WAITING' as PlayerStatus,
+  READY: 'PLAYER_STATUS_READY' as PlayerStatus,
+  PLAYING: 'PLAYER_STATUS_PLAYING' as PlayerStatus,
+  FINISHED: 'PLAYER_STATUS_FINISHED' as PlayerStatus,
+}
 
 export interface RoomSettings {
   mode: RoomMode
@@ -97,8 +117,7 @@ export interface Room {
 
 export interface RoomPlayer {
   playerId: string
-  userId: string
-  guestId?: string
+  isGuest: boolean
   displayName: string
   status: PlayerStatus
   result?: PlayerResult
@@ -121,4 +140,25 @@ export interface JoinRoomRequest {
 export interface RoomResponse {
   room: Room
   players: RoomPlayer[]
+}
+
+// Statistics types
+export interface GuessDistribution {
+  one: number
+  two: number
+  three: number
+  four: number
+  five: number
+  six: number
+}
+
+export interface UserStatistics {
+  userId: string
+  gamesPlayed: number
+  gamesWon: number
+  winPercentage: number
+  currentStreak: number
+  maxStreak: number
+  guessDistribution: GuessDistribution
+  lastPlayedDate: string
 }

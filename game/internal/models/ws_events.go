@@ -8,15 +8,16 @@ import (
 type WSEventType string
 
 const (
-	WSEventPlayerJoined WSEventType = "player_joined"
-	WSEventPlayerLeft   WSEventType = "player_left"
-	WSEventPlayerReady  WSEventType = "player_ready"
-	WSEventGameStarted  WSEventType = "game_started"
-	WSEventPlayerGuess  WSEventType = "player_guess"
-	WSEventRoundEnded   WSEventType = "round_ended"
-	WSEventGameEnded    WSEventType = "game_ended"
-	WSEventRoomUpdated  WSEventType = "room_updated"
-	WSEventError        WSEventType = "error"
+	WSEventPlayerJoined  WSEventType = "player_joined"
+	WSEventPlayerLeft    WSEventType = "player_left"
+	WSEventPlayerReady   WSEventType = "player_ready"
+	WSEventGameStarted   WSEventType = "game_started"
+	WSEventPlayerAttempt WSEventType = "player_attempt"
+	WSEventPlayerGuess   WSEventType = "player_guess"
+	WSEventRoundEnded    WSEventType = "round_ended"
+	WSEventGameEnded     WSEventType = "game_ended"
+	WSEventRoomUpdated   WSEventType = "room_updated"
+	WSEventError         WSEventType = "error"
 )
 
 type WSEvent struct {
@@ -42,39 +43,46 @@ type PlayerJoinedPayload struct {
 }
 
 type PlayerLeftPayload struct {
-	PlayerID    string `json:"player_id"`
-	DisplayName string `json:"display_name"`
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
 }
 
 type PlayerReadyPayload struct {
-	PlayerID    string `json:"player_id"`
-	DisplayName string `json:"display_name"`
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
 	Ready       bool   `json:"ready"`
 }
 
 type GameStartedPayload struct {
-	RoundNumber int `json:"round_number"`
-	WordLength  int `json:"word_length"`
+	RoundNumber int `json:"roundNumber"`
+	WordLength  int `json:"wordLength"`
+}
+
+type PlayerAttemptPayload struct {
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
+	Attempts    int    `json:"attempts"`
+	Solved      bool   `json:"solved"`
 }
 
 type PlayerGuessPayload struct {
-	PlayerID    string `json:"player_id"`
-	DisplayName string `json:"display_name"`
-	GuessWord   string `json:"guess_word,omitempty"`
-	Result      string `json:"result,omitempty"`
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
+	GuessWord   string `json:"guessWord"`
+	Result      string `json:"result"`
 	Attempts    int    `json:"attempts"`
 	Solved      bool   `json:"solved"`
 }
 
 type RoundEndedPayload struct {
-	RoundNumber int           `json:"round_number"`
-	TargetWord  string        `json:"target_word"`
+	RoundNumber int           `json:"roundNumber"`
+	TargetWord  string        `json:"targetWord"`
 	Results     []PlayerScore `json:"results"`
 }
 
 type PlayerScore struct {
-	PlayerID    string `json:"player_id"`
-	DisplayName string `json:"display_name"`
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
 	Result      string `json:"result"`
 	Attempts    int    `json:"attempts"`
 	Score       int    `json:"score"`
@@ -82,8 +90,8 @@ type PlayerScore struct {
 
 type GameEndedPayload struct {
 	Reason      string        `json:"reason"`
-	FinalScores []PlayerScore `json:"final_scores"`
-	TargetWord  string        `json:"target_word,omitempty"`
+	FinalScores []PlayerScore `json:"finalScores"`
+	TargetWord  string        `json:"targetWord,omitempty"`
 }
 
 type RoomUpdatedPayload struct {

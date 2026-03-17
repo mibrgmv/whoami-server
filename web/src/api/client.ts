@@ -1,5 +1,6 @@
 import type {
   TokenResponse,
+  GuestAuthResponse,
   LoginRequest,
   RegisterRequest,
   GameSession,
@@ -9,6 +10,7 @@ import type {
   Room,
   RoomResponse,
   RoomPlayer,
+  UserStatistics,
 } from '../types/api'
 
 const API_BASE = '/api/v1'
@@ -23,11 +25,71 @@ class ApiError extends Error {
   }
 }
 
+let isRefreshing = false
+let refreshPromise: Promise<string> | null = null
+
+async function refreshAccessToken(): Promise<string> {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise
+  }
+
+  isRefreshing = true
+  refreshPromise = (async () => {
+    try {
+      const { useAuthStore } = await import('../stores/authStore')
+      const store = useAuthStore.getState()
+
+      const { refreshToken } = store
+      if (!refreshToken) {
+        throw new Error('No refresh token available')
+      }
+
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Refresh token failed')
+      }
+
+      const data: { accessToken: string; refreshToken: string } = await response.json()
+
+      store.setTokens(data.accessToken, data.refreshToken, store.isGuest)
+
+      return data.accessToken
+    } catch (error) {
+      const { useAuthStore } = await import('../stores/authStore')
+      const store = useAuthStore.getState()
+      await store.logout()
+      throw error
+    } finally {
+      isRefreshing = false
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
+}
+
+function getAccessToken(): string | null {
+  const stored = localStorage.getItem('auth-storage')
+  if (!stored) return null
+  try {
+    const parsed = JSON.parse(stored)
+    return parsed.state?.accessToken || null
+  } catch {
+    return null
+  }
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry = false
 ): Promise<T> {
-  const token = localStorage.getItem('access_token')
+  const token = getAccessToken()
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -42,6 +104,16 @@ async function request<T>(
     ...options,
     headers,
   })
+
+  if (response.status === 401 && !isRetry && !endpoint.includes('/auth/')) {
+    try {
+      await refreshAccessToken()
+      return request<T>(endpoint, options, true)
+    } catch (error) {
+      const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }))
+      throw new ApiError(response.status, errorData.error || errorData.message || 'Unauthorized')
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }))
@@ -69,21 +141,21 @@ export const auth = {
       body: JSON.stringify(data),
     }),
 
-  guest: (): Promise<TokenResponse> =>
+  guest: (): Promise<GuestAuthResponse> =>
     request('/auth/guest', {
       method: 'POST',
     }),
 
-  refresh: (refresh_token: string): Promise<TokenResponse> =>
+  refresh: (refreshToken: string): Promise<TokenResponse> =>
     request('/auth/refresh', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token }),
+      body: JSON.stringify({ refreshToken }),
     }),
 
-  logout: (refresh_token: string): Promise<void> =>
+  logout: (refreshToken: string): Promise<void> =>
     request('/auth/logout', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token }),
+      body: JSON.stringify({ refreshToken }),
     }),
 }
 
@@ -133,6 +205,12 @@ export const room = {
     const host = window.location.host
     return `${protocol}//${host}/api/v1/rooms/${code}/ws?player_id=${playerId}`
   },
+}
+
+// Statistics API
+export const statistics = {
+  getMyStats: (): Promise<UserStatistics> =>
+    request('/statistics/me'),
 }
 
 export { ApiError }

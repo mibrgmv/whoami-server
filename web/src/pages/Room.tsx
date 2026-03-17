@@ -1,15 +1,19 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { GameBoard } from '../components/GameBoard'
 import { Keyboard } from '../components/Keyboard'
 import { useRoomStore } from '../stores/roomStore'
 import { useAuthStore } from '../stores/authStore'
+import { useKeyboardInput } from '../hooks/useKeyboardInput'
+import { useErrorProgress } from '../hooks/useErrorProgress'
+import { room as roomApi } from '../api/client'
+import { RoomStatusValues, PlayerStatusValues } from '../types/api'
 import './Room.css'
 
 export function Room() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated, loginAsGuest } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
 
   const {
     room,
@@ -21,6 +25,7 @@ export function Room() {
     isLoading,
     error,
     gameResult,
+    isWsConnected,
     joinRoom,
     connectWebSocket,
     setReady,
@@ -36,50 +41,74 @@ export function Room() {
 
   const [displayName, setDisplayName] = useState('')
   const [hasJoined, setHasJoined] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
 
-  // Auto-login as guest if not authenticated
+  const isHost = currentPlayer?.playerId === room?.hostId
+  const isReady = currentPlayer?.status === PlayerStatusValues.READY
+  const allReady = players.length > 1 && players.every((p) => p.status === PlayerStatusValues.READY)
+  const isPlaying = room?.status === RoomStatusValues.PLAYING
+  const isFinished = room?.status === RoomStatusValues.FINISHED
+
+  const errorProgress = useErrorProgress(error, 3000, clearError)
+
+  const canPlay = isPlaying &&
+    !gameResult &&
+    currentPlayer?.status === PlayerStatusValues.PLAYING
+
+  useKeyboardInput({
+    onLetter: addLetter,
+    onEnter: submitGuess,
+    onBackspace: removeLetter,
+    disabled: !canPlay,
+  })
+
   useEffect(() => {
     if (!isAuthenticated) {
-      loginAsGuest()
+      navigate('/')
+      return
     }
-  }, [isAuthenticated, loginAsGuest])
 
-  // Cleanup on unmount
+    const restoreRoomState = async () => {
+      if (!code || room || isLoading) return
+
+      const savedPlayerId = localStorage.getItem(`room_${code}_player`)
+      if (!savedPlayerId) return
+
+      try {
+        const fullRoom = await roomApi.get(code)
+        const player = fullRoom.players.find(p => p.playerId === savedPlayerId)
+
+        if (player) {
+          useRoomStore.setState({
+            room: fullRoom.room,
+            players: fullRoom.players,
+            currentPlayer: player,
+          })
+        }
+      } catch {
+      }
+    }
+
+    restoreRoomState()
+  }, [isAuthenticated, navigate, code, room, isLoading])
+
   useEffect(() => {
     return () => {
       reset()
     }
   }, [reset])
 
-  // Connect WebSocket after joining
   useEffect(() => {
-    if (hasJoined && currentPlayer && code) {
+    if (currentPlayer && code && !hasJoined) {
+      setHasJoined(true)
+    }
+  }, [currentPlayer, code, hasJoined])
+
+  useEffect(() => {
+    if (hasJoined && currentPlayer && code && !isWsConnected) {
       connectWebSocket(code, currentPlayer.playerId)
     }
-  }, [hasJoined, currentPlayer, code, connectWebSocket])
-
-  // Keyboard handler
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (room?.status !== 'playing') return
-
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        submitGuess()
-      } else if (e.key === 'Backspace') {
-        e.preventDefault()
-        removeLetter()
-      } else if (/^[a-zA-Z]$/.test(e.key)) {
-        addLetter(e.key)
-      }
-    },
-    [room?.status, submitGuess, removeLetter, addLetter]
-  )
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+  }, [hasJoined, currentPlayer?.playerId, code, isWsConnected, connectWebSocket])
 
   const handleJoin = async () => {
     if (!code || !displayName.trim()) return
@@ -97,19 +126,18 @@ export function Room() {
     navigate('/')
   }
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (code) {
-      navigator.clipboard.writeText(code)
+      try {
+        await navigator.clipboard.writeText(code)
+        setCopiedCode(true)
+        setTimeout(() => setCopiedCode(false), 2000)
+      } catch {
+        setCopiedCode(false)
+      }
     }
   }
 
-  const isHost = currentPlayer?.userId === room?.hostId
-  const isReady = currentPlayer?.status === 'ready'
-  const allReady = players.length > 1 && players.every((p) => p.status === 'ready')
-  const isPlaying = room?.status === 'playing'
-  const isFinished = room?.status === 'finished'
-
-  // Join screen
   if (!hasJoined) {
     return (
       <div className="room-page">
@@ -121,11 +149,17 @@ export function Room() {
           <div style={{ width: 60 }} />
         </header>
 
-        {error && (
-          <div className="error-banner" onClick={clearError}>
-            {error}
-          </div>
-        )}
+        <div className="error-container">
+          {error && (
+            <div className="error-banner-room" onClick={clearError}>
+              {error}
+              <div
+                className="error-progress"
+                style={{ width: `${errorProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="join-form">
           <p className="room-code-display">{code}</p>
@@ -149,8 +183,7 @@ export function Room() {
     )
   }
 
-  // Lobby
-  if (room?.status === 'waiting') {
+  if (room?.status === RoomStatusValues.WAITING) {
     return (
       <div className="room-page">
         <header className="room-header">
@@ -161,17 +194,23 @@ export function Room() {
           <div style={{ width: 60 }} />
         </header>
 
-        {error && (
-          <div className="error-banner" onClick={clearError}>
-            {error}
-          </div>
-        )}
+        <div className="error-container">
+          {error && (
+            <div className="error-banner-room" onClick={clearError}>
+              {error}
+              <div
+                className="error-progress"
+                style={{ width: `${errorProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="lobby">
           <div className="room-code-section">
             <p>Room Code</p>
             <button className="room-code-btn" onClick={handleCopyCode}>
-              {code} <span>Copy</span>
+              {code} <span>{copiedCode ? '✓ Copied' : 'Copy'}</span>
             </button>
           </div>
 
@@ -181,10 +220,10 @@ export function Room() {
               <div key={player.playerId} className="player-item">
                 <span className="player-name">
                   {player.displayName}
-                  {player.userId === room.hostId && ' (Host)'}
+                  {player.playerId === room.hostId && ' (Host)'}
                 </span>
-                <span className={`player-status ${player.status}`}>
-                  {player.status === 'ready' ? '✓ Ready' : 'Waiting'}
+                <span className={`player-status ${player.status === PlayerStatusValues.READY ? 'ready' : ''}`}>
+                  {player.status === PlayerStatusValues.READY ? '✓ Ready' : 'Waiting'}
                 </span>
               </div>
             ))}
@@ -194,6 +233,7 @@ export function Room() {
             <button
               className={`btn ${isReady ? 'btn-secondary' : 'btn-primary'}`}
               onClick={() => setReady(!isReady)}
+              disabled={!isWsConnected}
             >
               {isReady ? 'Not Ready' : 'Ready'}
             </button>
@@ -202,7 +242,7 @@ export function Room() {
               <button
                 className="btn btn-primary"
                 onClick={startGame}
-                disabled={!allReady}
+                disabled={!allReady || !isWsConnected}
               >
                 Start Game
               </button>
@@ -216,12 +256,15 @@ export function Room() {
           {players.length === 1 && (
             <p className="lobby-hint">Waiting for more players to join...</p>
           )}
+
+          {!isWsConnected && (
+            <p className="lobby-hint">Connecting...</p>
+          )}
         </div>
       </div>
     )
   }
 
-  // Game / Results
   return (
     <div className="room-page">
       <header className="room-header">
@@ -282,9 +325,9 @@ export function Room() {
               </div>
             ))}
           </div>
-          {isHost && !isFinished && (
-            <button className="btn btn-primary" onClick={nextRound}>
-              Next Round
+          {isHost && isFinished && (
+            <button className="btn btn-primary" onClick={nextRound} disabled={!isWsConnected}>
+              Play Again
             </button>
           )}
           {isFinished && (
@@ -295,7 +338,7 @@ export function Room() {
         </div>
       )}
 
-      {isPlaying && !gameResult && (
+      {canPlay && (
         <Keyboard
           onKey={addLetter}
           onEnter={submitGuess}

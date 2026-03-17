@@ -39,7 +39,7 @@ type WSBroadcaster interface {
 }
 
 type RoomService interface {
-	CreateRoom(ctx context.Context, hostID, language string, settings models.RoomSettings) (*models.Room, error)
+	CreateRoom(ctx context.Context, hostID, language, displayName string, settings models.RoomSettings) (*models.Room, error)
 	GetRoom(ctx context.Context, code string) (*models.Room, []models.RoomPlayer, error)
 	JoinRoom(ctx context.Context, code string, userID uuid.UUID, isGuest bool, displayName string) (*models.Room, *models.RoomPlayer, error)
 	LeaveRoom(ctx context.Context, code string, playerID string) error
@@ -77,7 +77,7 @@ func NewRoomService(
 	}
 }
 
-func (s *roomService) CreateRoom(ctx context.Context, hostID, language string, settings models.RoomSettings) (*models.Room, error) {
+func (s *roomService) CreateRoom(ctx context.Context, hostID, language, displayName string, settings models.RoomSettings) (*models.Room, error) {
 	if language == "" {
 		language = DefaultLanguage
 	}
@@ -99,10 +99,11 @@ func (s *roomService) CreateRoom(ctx context.Context, hostID, language string, s
 		return nil, fmt.Errorf("failed to set room code: %w", err)
 	}
 
-	hostPlayer := models.NewRoomPlayer(created.ID, nil, nil, "Host")
-	userID, guestID, _ := models.ParsePlayerID(hostID)
-	hostPlayer.UserID = userID
-	hostPlayer.GuestID = guestID
+	userID, err := uuid.Parse(hostID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid host ID: %w", err)
+	}
+	hostPlayer := models.NewRoomPlayer(created.ID, userID, false, displayName)
 
 	if err := s.roomRepo.AddPlayer(ctx, hostPlayer); err != nil {
 		return nil, fmt.Errorf("failed to add host as player: %w", err)
@@ -169,9 +170,9 @@ func (s *roomService) JoinRoom(ctx context.Context, code string, userID uuid.UUI
 		return nil, nil, ErrRoomFull
 	}
 
-	player := models.NewRoomPlayerSimple(room.ID, userID, isGuest, displayName)
+	player := models.NewRoomPlayer(room.ID, userID, isGuest, displayName)
 
-	existingPlayer, err := s.roomRepo.GetPlayer(ctx, room.ID, player.PlayerID())
+	existingPlayer, err := s.roomRepo.GetPlayer(ctx, room.ID, player.PlayerID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to check existing player: %w", err)
 	}
@@ -227,7 +228,7 @@ func (s *roomService) LeaveRoom(ctx context.Context, code string, playerID strin
 				return fmt.Errorf("failed to delete empty room: %w", err)
 			}
 		} else {
-			room.HostID = players[0].PlayerID()
+			room.HostID = players[0].PlayerID
 			if err := s.roomRepo.Update(ctx, room); err != nil {
 				return fmt.Errorf("failed to update room host: %w", err)
 			}
@@ -308,7 +309,7 @@ func (s *roomService) StartGame(ctx context.Context, code string, hostID string)
 	}
 
 	for _, p := range players {
-		if p.Status != models.PlayerStatusReady && p.PlayerID() != room.HostID {
+		if p.Status != models.PlayerStatusReady && p.PlayerID != room.HostID {
 			return nil, ErrPlayersNotReady
 		}
 	}
@@ -425,19 +426,25 @@ func (s *roomService) SubmitGuess(ctx context.Context, code string, playerID str
 		return nil, nil, nil, fmt.Errorf("failed to update player: %w", err)
 	}
 
-	guessPayload := models.PlayerGuessPayload{
+	attemptPayload := models.PlayerAttemptPayload{
 		PlayerID:    playerID,
 		DisplayName: player.DisplayName,
 		Attempts:    player.CurrentAttempts,
 		Solved:      solved,
 	}
+	s.broadcastEvent(room.Code, models.WSEventPlayerAttempt, attemptPayload)
 
 	if room.Settings.ShowGuesses {
-		guessPayload.GuessWord = word
-		guessPayload.Result = result
+		guessPayload := models.PlayerGuessPayload{
+			PlayerID:    playerID,
+			DisplayName: player.DisplayName,
+			GuessWord:   word,
+			Result:      result,
+			Attempts:    player.CurrentAttempts,
+			Solved:      solved,
+		}
+		s.broadcastEvent(room.Code, models.WSEventPlayerGuess, guessPayload)
 	}
-
-	s.broadcastEvent(room.Code, models.WSEventPlayerGuess, guessPayload)
 
 	if room.Settings.Mode == models.RoomModeSingleRound {
 		if err := s.checkRoundEnd(ctx, room); err != nil {
@@ -486,7 +493,7 @@ func (s *roomService) endRound(ctx context.Context, room *models.Room, players [
 	results := make([]models.PlayerScore, len(players))
 	for i, p := range players {
 		results[i] = models.PlayerScore{
-			PlayerID:    p.PlayerID(),
+			PlayerID:    p.PlayerID,
 			DisplayName: p.DisplayName,
 			Result:      string(p.Result),
 			Attempts:    p.CurrentAttempts,
@@ -640,7 +647,7 @@ func (s *roomService) handleMarathonTimeout(roomCode string) {
 	results := make([]models.PlayerScore, len(players))
 	for i, p := range players {
 		results[i] = models.PlayerScore{
-			PlayerID:    p.PlayerID(),
+			PlayerID:    p.PlayerID,
 			DisplayName: p.DisplayName,
 			Result:      string(p.Result),
 			Attempts:    p.CurrentAttempts,

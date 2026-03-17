@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
@@ -21,8 +23,8 @@ type UserStatistics struct {
 	CurrentStreak     int               `json:"current_streak"`
 	MaxStreak         int               `json:"max_streak"`
 	GuessDistribution GuessDistribution `json:"guess_distribution"`
-	LastPlayedDate    *string           `json:"last_played_date"`
-	LastWonDate       *string           `json:"last_won_date"`
+	LastPlayedDate    *time.Time        `json:"last_played_date"`
+	LastWonDate       *time.Time        `json:"last_won_date"`
 }
 
 func (s *UserStatistics) WinPercentage() float64 {
@@ -51,7 +53,7 @@ func (s *UserStatistics) ToProto() *statisticsv1.UserStatistics {
 	}
 
 	if s.LastPlayedDate != nil {
-		stats.LastPlayedDate = *s.LastPlayedDate
+		stats.LastPlayedDate = s.LastPlayedDate.Format("2006-01-02")
 	}
 
 	return stats

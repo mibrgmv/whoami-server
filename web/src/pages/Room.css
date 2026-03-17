@@ -11,12 +11,57 @@
   width: 100%;
   padding: 16px;
   border-bottom: 1px solid var(--color-border);
+  position: relative;
+  z-index: 1;
 }
 
 .room-header h1 {
   margin: 0;
   font-size: 1.25rem;
   letter-spacing: 0.1em;
+}
+
+.error-container {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.error-banner-room {
+  width: 100%;
+  max-width: 500px;
+  background-color: var(--color-error);
+  color: white;
+  padding: 12px 24px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  transition: width 50ms linear;
 }
 
 .join-form {
@@ -85,6 +130,11 @@
   letter-spacing: normal;
   color: var(--color-text-secondary);
   margin-top: 4px;
+  transition: color 0.2s;
+}
+
+.room-code-btn:active span {
+  color: var(--color-correct);
 }
 
 .players-list {

@@ -34,13 +34,18 @@ func (s *roomServer) CreateRoom(ctx context.Context, req *roomv1.CreateRoomReque
 		return nil, status.Error(codes.Unauthenticated, "authentication required to create a room")
 	}
 
+	username, err := libsgrpc.GetUsernameFromContext(ctx)
+	if err != nil {
+		username = "Player"
+	}
+
 	settings := models.RoomSettingsFromProto(req.Settings)
 	language := req.Language
 	if language == "" {
 		language = service.DefaultLanguage
 	}
 
-	room, err := s.roomService.CreateRoom(ctx, userID.String(), language, settings)
+	room, err := s.roomService.CreateRoom(ctx, userID.String(), language, username, settings)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create room: %v", err)
 	}

@@ -38,12 +38,12 @@ func (s *statisticsService) UpdateFromGame(ctx context.Context, userID uuid.UUID
 
 	stats.GamesPlayed++
 
-	today := time.Now().Format("2006-01-02")
-	stats.LastPlayedDate = &today
+	now := time.Now()
+	stats.LastPlayedDate = &now
 
 	if result == "won" {
 		stats.GamesWon++
-		stats.LastWonDate = &today
+		stats.LastWonDate = &now
 
 		switch attemptsUsed {
 		case 1:

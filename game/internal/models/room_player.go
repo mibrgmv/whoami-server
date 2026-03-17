@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,33 +25,23 @@ const (
 )
 
 type RoomPlayer struct {
-	RoomID          uuid.UUID    `json:"room_id"`
-	UserID          *uuid.UUID   `json:"user_id,omitempty"`
-	GuestID         *string      `json:"guest_id,omitempty"`
-	DisplayName     string       `json:"display_name"`
+	RoomID          uuid.UUID    `json:"-"`
+	PlayerID        string       `json:"playerId"`
+	IsGuest         bool         `json:"isGuest"`
+	DisplayName     string       `json:"displayName"`
 	Status          PlayerStatus `json:"status"`
 	Result          PlayerResult `json:"result"`
-	CurrentAttempts int          `json:"current_attempts"`
-	TotalScore      int          `json:"total_score"`
+	CurrentAttempts int          `json:"currentAttempts"`
+	TotalScore      int          `json:"totalScore"`
 	Guesses         []Guess      `json:"guesses"`
-	FinishedAt      *time.Time   `json:"finished_at,omitempty"`
+	FinishedAt      *time.Time   `json:"finishedAt,omitempty"`
 }
 
-func (p *RoomPlayer) PlayerID() string {
-	if p.UserID != nil {
-		return p.UserID.String()
-	}
-	if p.GuestID != nil {
-		return "guest:" + *p.GuestID
-	}
-	return ""
-}
-
-func NewRoomPlayer(roomID uuid.UUID, userID *uuid.UUID, guestID *string, displayName string) *RoomPlayer {
+func NewRoomPlayer(roomID uuid.UUID, playerID uuid.UUID, isGuest bool, displayName string) *RoomPlayer {
 	return &RoomPlayer{
 		RoomID:          roomID,
-		UserID:          userID,
-		GuestID:         guestID,
+		PlayerID:        playerID.String(),
+		IsGuest:         isGuest,
 		DisplayName:     displayName,
 		Status:          PlayerStatusWaiting,
 		Result:          PlayerResultNone,
@@ -60,42 +49,21 @@ func NewRoomPlayer(roomID uuid.UUID, userID *uuid.UUID, guestID *string, display
 		TotalScore:      0,
 		Guesses:         []Guess{},
 	}
-}
-
-// NewRoomPlayerSimple creates a room player with a UUID (works for both users and guests)
-func NewRoomPlayerSimple(roomID uuid.UUID, userID uuid.UUID, isGuest bool, displayName string) *RoomPlayer {
-	player := &RoomPlayer{
-		RoomID:          roomID,
-		DisplayName:     displayName,
-		Status:          PlayerStatusWaiting,
-		Result:          PlayerResultNone,
-		CurrentAttempts: 0,
-		TotalScore:      0,
-		Guesses:         []Guess{},
-	}
-	if isGuest {
-		guestID := userID.String()
-		player.GuestID = &guestID
-	} else {
-		player.UserID = &userID
-	}
-	return player
 }
 
 func (p *RoomPlayer) ToProto() *roomv1.RoomPlayer {
 	player := &roomv1.RoomPlayer{
-		PlayerId:        p.PlayerID(),
+		PlayerId:        p.PlayerID,
 		DisplayName:     p.DisplayName,
 		Status:          p.Status.ToProto(),
 		Result:          p.Result.ToProto(),
 		CurrentAttempts: int32(p.CurrentAttempts),
 		TotalScore:      int32(p.TotalScore),
 	}
-	if p.UserID != nil {
-		player.UserId = p.UserID.String()
-	}
-	if p.GuestID != nil {
-		player.GuestId = *p.GuestID
+	if p.IsGuest {
+		player.GuestId = p.PlayerID
+	} else {
+		player.UserId = p.PlayerID
 	}
 	for _, g := range p.Guesses {
 		player.Guesses = append(player.Guesses, g.ToRoomProto())
@@ -130,16 +98,4 @@ func (r PlayerResult) ToProto() roomv1.PlayerResult {
 	default:
 		return roomv1.PlayerResult_PLAYER_RESULT_UNSPECIFIED
 	}
-}
-
-func ParsePlayerID(playerID string) (*uuid.UUID, *string, error) {
-	if len(playerID) > 6 && playerID[:6] == "guest:" {
-		guestID := playerID[6:]
-		return nil, &guestID, nil
-	}
-	userID, err := uuid.Parse(playerID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid player ID: %w", err)
-	}
-	return &userID, nil, nil
 }

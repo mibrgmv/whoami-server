@@ -136,11 +136,9 @@ func (h *Hub) handleBroadcast(msg *BroadcastMessage) {
 				"room", msg.RoomCode,
 				"error", err,
 			)
-			// Fallback to local delivery
 			h.deliverLocal(msg.RoomCode, msg.Event)
 		}
 	} else {
-		// No Redis, deliver locally only
 		h.deliverLocal(msg.RoomCode, msg.Event)
 	}
 }

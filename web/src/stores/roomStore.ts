@@ -1,17 +1,29 @@
 import { create } from 'zustand'
 import { room as roomApi } from '../api/client'
 import type { Room, RoomPlayer, LetterResult, CreateRoomRequest } from '../types/api'
+import { RoomStatusValues, PlayerStatusValues } from '../types/api'
+import { updateLetterStates } from '../utils/letterStates'
+import { useToastStore } from './toastStore'
 import type {
   WSEvent,
   PlayerJoinedPayload,
   PlayerLeftPayload,
   PlayerReadyPayload,
   GameStartedPayload,
+  PlayerAttemptPayload,
   PlayerGuessPayload,
   RoundEndedPayload,
   GameEndedPayload,
   ErrorPayload,
 } from '../types/ws'
+
+function resultToEmoji(result: string): string {
+  return result.split('').map(r => {
+    if (r === 'G') return '🟩'
+    if (r === 'Y') return '🟨'
+    return '⬜'
+  }).join('')
+}
 
 interface RoomState {
   room: Room | null
@@ -26,6 +38,7 @@ interface RoomState {
 
   // WebSocket
   ws: WebSocket | null
+  isWsConnected: boolean
 
   // Actions
   createRoom: (settings?: CreateRoomRequest) => Promise<string>
@@ -61,13 +74,31 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   error: null,
   gameResult: null,
   ws: null,
+  isWsConnected: false,
 
   createRoom: async (settings) => {
     set({ isLoading: true, error: null })
     try {
       const response = await roomApi.create(settings)
-      set({ room: response.room, isLoading: false })
-      return response.room.code
+      const code = response.room.code
+
+      const fullRoom = await roomApi.get(code)
+      const currentPlayer = fullRoom.players.find(
+        (p) => p.playerId === response.room.hostId
+      ) || null
+
+      if (currentPlayer) {
+        localStorage.setItem(`room_${code}_player`, currentPlayer.playerId)
+      }
+
+      set({
+        room: fullRoom.room,
+        players: fullRoom.players,
+        currentPlayer,
+        isLoading: false,
+      })
+
+      return code
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false })
       throw err
@@ -78,13 +109,15 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const response = await roomApi.join(code, displayName)
+
+      localStorage.setItem(`room_${code}_player`, response.player.playerId)
+
       set({
         room: response.room,
         currentPlayer: response.player,
         isLoading: false,
       })
 
-      // Fetch full room data with all players
       const fullRoom = await roomApi.get(code)
       set({ players: fullRoom.players })
     } catch (err) {
@@ -94,21 +127,30 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   connectWebSocket: (code, playerId) => {
-    const { ws: existingWs } = get()
+    const { ws: existingWs, isWsConnected } = get()
+
+    if (existingWs && isWsConnected) {
+      console.log('WebSocket already connected, skipping')
+      return
+    }
+
     if (existingWs) {
       existingWs.close()
     }
 
+    console.log('Connecting WebSocket to room:', code)
     const url = roomApi.wsUrl(code, playerId)
     const ws = new WebSocket(url)
 
     ws.onopen = () => {
       console.log('WebSocket connected')
+      set({ isWsConnected: true })
     }
 
     ws.onmessage = (event) => {
       try {
         const wsEvent = JSON.parse(event.data) as WSEvent
+        console.log('WebSocket message received:', wsEvent.type, wsEvent.payload)
         get().handleWSMessage(wsEvent)
       } catch (err) {
         console.error('Failed to parse WebSocket message:', err)
@@ -117,12 +159,23 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error)
-      set({ error: 'Connection error' })
+      set({ error: 'Connection error', isWsConnected: false })
     }
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected')
-      set({ ws: null })
+    ws.onclose = (event) => {
+      console.log('WebSocket disconnected', event.code, event.reason)
+      set({ ws: null, isWsConnected: false })
+
+      if (event.code !== 1000) {
+        console.log('Abnormal closure, attempting to reconnect in 2s...')
+        setTimeout(() => {
+          const state = get()
+          if (!state.isWsConnected && state.room) {
+            console.log('Reconnecting...')
+            get().connectWebSocket(state.room.code, playerId)
+          }
+        }, 2000)
+      }
     }
 
     set({ ws })
@@ -132,84 +185,155 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     const { ws } = get()
     if (ws) {
       ws.close()
-      set({ ws: null })
+      set({ ws: null, isWsConnected: false })
     }
   },
 
   handleWSMessage: (event) => {
-    const { players, currentPlayer } = get()
-
     switch (event.type) {
       case 'player_joined': {
         const payload = event.payload as PlayerJoinedPayload
-        set({ players: [...players, payload.player] })
+        useToastStore.getState().addToast(`${payload.player.displayName} joined`)
+        set((state) => ({ players: [...state.players, payload.player] }))
         break
       }
 
       case 'player_left': {
         const payload = event.payload as PlayerLeftPayload
-        set({ players: players.filter((p) => p.playerId !== payload.playerId) })
+        useToastStore.getState().addToast(`${payload.displayName} left`)
+        set((state) => ({
+          players: state.players.filter((p) => p.playerId !== payload.playerId),
+          currentPlayer: state.currentPlayer?.playerId === payload.playerId ? null : state.currentPlayer,
+        }))
         break
       }
 
       case 'player_ready': {
         const payload = event.payload as PlayerReadyPayload
-        set({
-          players: players.map((p) =>
-            p.playerId === payload.playerId
-              ? { ...p, status: payload.ready ? 'ready' : 'waiting' }
-              : p
-          ),
+        set((state) => {
+          const newStatus = payload.ready ? PlayerStatusValues.READY : PlayerStatusValues.WAITING
+          const updatedPlayers = state.players.map((p) =>
+            p.playerId === payload.playerId ? { ...p, status: newStatus } : p
+          )
+          const isCurrentPlayer = state.currentPlayer?.playerId === payload.playerId
+          return {
+            players: updatedPlayers,
+            currentPlayer: isCurrentPlayer && state.currentPlayer
+              ? { ...state.currentPlayer, status: newStatus }
+              : state.currentPlayer,
+          }
         })
         break
       }
 
       case 'game_started': {
         const payload = event.payload as GameStartedPayload
-        set({
-          wordLength: payload.wordLength,
-          currentGuess: '',
-          letterStates: {},
-          gameResult: null,
-          players: players.map((p) => ({ ...p, status: 'playing', guesses: [] })),
-          room: get().room ? { ...get().room!, status: 'playing', roundNumber: payload.roundNumber } : null,
+        set((state) => {
+          const updatedPlayers = state.players.map((p) => ({
+            ...p,
+            status: PlayerStatusValues.PLAYING,
+            guesses: [],
+            currentAttempts: 0,
+          }))
+          return {
+            wordLength: payload.wordLength,
+            currentGuess: '',
+            letterStates: {},
+            gameResult: null,
+            players: updatedPlayers,
+            currentPlayer: state.currentPlayer
+              ? { ...state.currentPlayer!, status: PlayerStatusValues.PLAYING, guesses: [], currentAttempts: 0 }
+              : null,
+            room: state.room ? { ...state.room, status: RoomStatusValues.PLAYING, roundNumber: payload.roundNumber } : null,
+          }
+        })
+        break
+      }
+
+      case 'player_attempt': {
+        const payload = event.payload as PlayerAttemptPayload
+        set((state) => {
+          const isCurrentPlayer = state.currentPlayer?.playerId === payload.playerId
+          const updatedPlayers = state.players.map((p) =>
+            p.playerId === payload.playerId
+              ? { ...p, currentAttempts: payload.attempts }
+              : p
+          )
+          return {
+            players: updatedPlayers,
+            currentPlayer: isCurrentPlayer && state.currentPlayer
+              ? { ...state.currentPlayer, currentAttempts: payload.attempts }
+              : state.currentPlayer,
+          }
         })
         break
       }
 
       case 'player_guess': {
         const payload = event.payload as PlayerGuessPayload
-        set({
-          players: players.map((p) =>
-            p.playerId === payload.playerId
-              ? { ...p, currentAttempts: payload.attempts }
-              : p
-          ),
-        })
+        const state = get()
+        const isCurrentPlayer = state.currentPlayer?.playerId === payload.playerId
 
-        // If it's our own guess, update letter states
-        if (currentPlayer && payload.playerId === currentPlayer.playerId && payload.result) {
-          // Parse result to update letter states
-          // Result format depends on backend implementation
+        if (!isCurrentPlayer) {
+          const emoji = resultToEmoji(payload.result)
+          useToastStore.getState().addToast(`${payload.displayName}  ${emoji}`)
         }
+
+        const newGuess = {
+          word: payload.guessWord,
+          attemptNumber: payload.attempts,
+          results: payload.result.split('').map(r => {
+            if (r === 'G') return 'LETTER_RESULT_CORRECT' as const
+            if (r === 'Y') return 'LETTER_RESULT_PRESENT' as const
+            return 'LETTER_RESULT_ABSENT' as const
+          })
+        }
+
+        set((state) => {
+          const updatedPlayers = state.players.map((p) =>
+            p.playerId === payload.playerId
+              ? { ...p, guesses: [...p.guesses, newGuess] }
+              : p
+          )
+
+          const newLetterStates = isCurrentPlayer
+            ? updateLetterStates(state.letterStates, newGuess)
+            : state.letterStates
+
+          return {
+            players: updatedPlayers,
+            currentPlayer: isCurrentPlayer && state.currentPlayer
+              ? { ...state.currentPlayer, guesses: [...state.currentPlayer.guesses, newGuess] }
+              : state.currentPlayer,
+            letterStates: newLetterStates,
+            currentGuess: isCurrentPlayer ? '' : state.currentGuess,
+            isLoading: false,
+          }
+        })
         break
       }
 
       case 'round_ended': {
         const payload = event.payload as RoundEndedPayload
-        set({
-          gameResult: payload,
-          players: players.map((p) => ({ ...p, status: 'finished' })),
+        set((state) => {
+          const updatedPlayers = state.players.map((p) => ({ ...p, status: PlayerStatusValues.FINISHED }))
+          return {
+            gameResult: payload,
+            players: updatedPlayers,
+            currentPlayer: state.currentPlayer
+              ? { ...state.currentPlayer!, status: PlayerStatusValues.FINISHED }
+              : null,
+          }
         })
         break
       }
 
       case 'game_ended': {
         const payload = event.payload as GameEndedPayload
-        set({
+        set((state) => ({
           gameResult: payload,
-          room: get().room ? { ...get().room!, status: 'finished' } : null,
-        })
+          room: state.room ? { ...state.room, status: RoomStatusValues.FINISHED } : null,
+        }))
         break
       }
 
@@ -231,22 +355,30 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   setReady: (ready) => {
     const { ws } = get()
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ready', payload: { ready } }))
+      const message = { type: 'ready', payload: { ready } }
+      console.log('Sending WebSocket message:', message)
+      ws.send(JSON.stringify(message))
+    } else {
+      console.warn('WebSocket not ready, state:', ws?.readyState)
     }
   },
 
   startGame: () => {
     const { ws } = get()
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'start_game' }))
+      const message = { type: 'start_game' }
+      console.log('Sending WebSocket message:', message)
+      ws.send(JSON.stringify(message))
     }
   },
 
   submitGuess: () => {
     const { ws, currentGuess, wordLength } = get()
     if (ws && ws.readyState === WebSocket.OPEN && currentGuess.length === wordLength) {
-      ws.send(JSON.stringify({ type: 'guess', payload: { word: currentGuess.toLowerCase() } }))
-      set({ currentGuess: '' })
+      const message = { type: 'guess', payload: { word: currentGuess.toLowerCase() } }
+      console.log('Sending WebSocket message:', message)
+      ws.send(JSON.stringify(message))
+      set({ isLoading: true })
     }
   },
 
@@ -258,9 +390,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   leaveRoom: () => {
-    const { ws } = get()
+    const { ws, room } = get()
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'leave' }))
+    }
+    if (room?.code) {
+      localStorage.removeItem(`room_${room.code}_player`)
     }
     get().disconnect()
     get().reset()
@@ -268,8 +403,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
   // Local actions
   addLetter: (letter) => {
-    const { currentGuess, wordLength, room } = get()
-    if (room?.status !== 'playing') return
+    const { currentGuess, wordLength, room, gameResult } = get()
+    if (room?.status !== RoomStatusValues.PLAYING || gameResult) return
     if (currentGuess.length < wordLength) {
       set({ currentGuess: currentGuess + letter.toUpperCase() })
     }
@@ -295,5 +430,6 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     error: null,
     gameResult: null,
     ws: null,
+    isWsConnected: false,
   }),
 }))
