@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/domain/models"
 )
 
 type StatisticsRepository interface {

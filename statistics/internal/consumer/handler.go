@@ -2,13 +2,15 @@ package consumer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
-	libskafka "gordle/libs/kafka"
-	"gordle/statistics/internal/service"
+	"google.golang.org/protobuf/proto"
+	"gordle/statistics/internal/domain/models"
+	"gordle/statistics/internal/domain/service"
+	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 type GameCompletedHandler struct {
@@ -22,26 +24,36 @@ func NewGameCompletedHandler(historyService service.HistoryService) *GameComplet
 }
 
 func (h *GameCompletedHandler) Handle(ctx context.Context, msg kafka.Message) error {
-	var event libskafka.GameCompletedEvent
-	if err := json.Unmarshal(msg.Value, &event); err != nil {
+	var event statisticsv1.GameCompletedEvent
+	if err := proto.Unmarshal(msg.Value, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal game completed event: %w", err)
 	}
 
-	serviceEvent := service.GameCompletedEvent{
-		UserID:       event.UserID,
-		SessionID:    event.SessionID,
+	userID, err := uuid.Parse(event.UserId)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	sessionID, err := uuid.Parse(event.SessionId)
+	if err != nil {
+		return fmt.Errorf("invalid session ID: %w", err)
+	}
+
+	result := &models.GameResult{
+		UserID:       userID,
+		SessionID:    sessionID,
 		GameMode:     event.GameMode,
 		GameDate:     event.GameDate,
 		TargetWord:   event.TargetWord,
 		Guesses:      event.Guesses,
 		Result:       event.Result,
-		AttemptsUsed: event.AttemptsUsed,
+		AttemptsUsed: int(event.AttemptsUsed),
 	}
 
-	if err := h.historyService.CreateFromEvent(ctx, serviceEvent); err != nil {
-		return fmt.Errorf("failed to create history from event: %w", err)
+	if err := h.historyService.CreateGameHistory(ctx, result); err != nil {
+		return fmt.Errorf("failed to create history: %w", err)
 	}
 
-	log.Printf("Successfully processed game completed event for user %s, session %s", event.UserID, event.SessionID)
+	log.Printf("Successfully processed game completed event for user %s, session %s", event.UserId, event.SessionId)
 	return nil
 }

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/domain/models"
 )
 
 type HistoryRepository interface {

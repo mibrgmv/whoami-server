@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 	"gordle/game/internal/models"
 	"gordle/game/internal/repository"
 	"gordle/libs/kafka"
+	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 var (
@@ -231,18 +233,24 @@ func (s *gameService) publishGameCompleted(ctx context.Context, session *models.
 		gameDate = *session.GameDate
 	}
 
-	event := kafka.GameCompletedEvent{
-		UserID:       session.UserID.String(),
-		SessionID:    session.ID.String(),
+	event := &statisticsv1.GameCompletedEvent{
+		UserId:       session.UserID.String(),
+		SessionId:    session.ID.String(),
 		GameMode:     string(session.GameMode),
 		GameDate:     gameDate,
 		TargetWord:   session.TargetWord,
 		Guesses:      guessWords,
 		Result:       string(session.Status),
-		AttemptsUsed: session.AttemptsUsed,
+		AttemptsUsed: int32(session.AttemptsUsed),
 	}
 
-	if err := s.producer.Produce(ctx, s.topic, session.ID.String(), event); err != nil {
+	data, err := proto.Marshal(event)
+	if err != nil {
+		fmt.Printf("failed to marshal game completed event: %v\n", err)
+		return
+	}
+
+	if err := s.producer.Produce(ctx, s.topic, session.ID.String(), data); err != nil {
 		fmt.Printf("failed to publish game completed event: %v\n", err)
 	}
 }

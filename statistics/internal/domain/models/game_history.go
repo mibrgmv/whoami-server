@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 type GameHistory struct {
@@ -18,25 +17,6 @@ type GameHistory struct {
 	Result       string    `json:"result"`
 	AttemptsUsed int       `json:"attempts_used"`
 	CreatedAt    time.Time `json:"created_at"`
-}
-
-func (g *GameHistory) ToProto() *statisticsv1.GameHistoryItem {
-	item := &statisticsv1.GameHistoryItem{
-		HistoryId:    g.ID.String(),
-		SessionId:    g.SessionID.String(),
-		GameMode:     g.GameMode,
-		TargetWord:   g.TargetWord,
-		Guesses:      g.Guesses,
-		Result:       g.Result,
-		AttemptsUsed: int32(g.AttemptsUsed),
-		CreatedAt:    g.CreatedAt.Format(time.RFC3339),
-	}
-
-	if g.GameDate != nil {
-		item.GameDate = *g.GameDate
-	}
-
-	return item
 }
 
 type GameHistoryQuery struct {

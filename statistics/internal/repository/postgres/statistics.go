@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/domain/models"
 	"gordle/statistics/internal/repository"
 )
 

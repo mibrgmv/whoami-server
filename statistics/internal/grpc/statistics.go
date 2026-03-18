@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	libsgrpc "gordle/libs/grpc"
-	"gordle/statistics/internal/service"
+	"gordle/statistics/internal/domain/service"
 	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
@@ -35,7 +35,7 @@ func (s *statisticsServer) GetMyStatistics(ctx context.Context, req *statisticsv
 		return nil, status.Errorf(codes.Internal, "failed to get statistics: %v", err)
 	}
 
-	return stats.ToProto(), nil
+	return userStatisticsToProto(stats), nil
 }
 
 func (s *statisticsServer) GetUserStatistics(ctx context.Context, req *statisticsv1.GetUserStatisticsRequest) (*statisticsv1.UserStatistics, error) {
@@ -54,7 +54,7 @@ func (s *statisticsServer) GetUserStatistics(ctx context.Context, req *statistic
 		return nil, status.Errorf(codes.Internal, "failed to get statistics: %v", err)
 	}
 
-	return stats.ToProto(), nil
+	return userStatisticsToProto(stats), nil
 }
 
 func (s *statisticsServer) GetMyHistory(ctx context.Context, req *statisticsv1.GetMyHistoryRequest) (*statisticsv1.GetMyHistoryResponse, error) {
@@ -70,7 +70,7 @@ func (s *statisticsServer) GetMyHistory(ctx context.Context, req *statisticsv1.G
 
 	var items []*statisticsv1.GameHistoryItem
 	for _, h := range history {
-		items = append(items, h.ToProto())
+		items = append(items, gameHistoryToProto(h))
 	}
 
 	return &statisticsv1.GetMyHistoryResponse{
@@ -92,7 +92,7 @@ func (s *statisticsServer) GetDailyLeaderboard(ctx context.Context, req *statist
 
 	var protoEntries []*statisticsv1.LeaderboardEntry
 	for _, e := range entries {
-		protoEntries = append(protoEntries, e.ToProto())
+		protoEntries = append(protoEntries, leaderboardEntryToProto(e))
 	}
 
 	return &statisticsv1.GetDailyLeaderboardResponse{

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/domain/models"
 	"gordle/statistics/internal/repository"
 )
 

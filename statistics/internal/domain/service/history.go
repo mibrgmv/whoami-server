@@ -7,24 +7,13 @@ import (
 
 	"github.com/google/uuid"
 	"gordle/libs/tools"
-	"gordle/statistics/internal/models"
+	"gordle/statistics/internal/domain/models"
 	"gordle/statistics/internal/repository"
 )
 
 type HistoryService interface {
-	CreateFromEvent(ctx context.Context, event GameCompletedEvent) error
+	CreateGameHistory(ctx context.Context, result *models.GameResult) error
 	GetUserHistory(ctx context.Context, userID uuid.UUID, pageSize int32, pageToken string) ([]*models.GameHistory, string, error)
-}
-
-type GameCompletedEvent struct {
-	UserID       string
-	SessionID    string
-	GameMode     string
-	GameDate     string
-	TargetWord   string
-	Guesses      []string
-	Result       string
-	AttemptsUsed int
 }
 
 type historyService struct {
@@ -39,40 +28,30 @@ func NewHistoryService(historyRepo repository.HistoryRepository, statisticsServi
 	}
 }
 
-func (s *historyService) CreateFromEvent(ctx context.Context, event GameCompletedEvent) error {
-	userID, err := uuid.Parse(event.UserID)
-	if err != nil {
-		return fmt.Errorf("invalid user ID: %w", err)
-	}
-
-	sessionID, err := uuid.Parse(event.SessionID)
-	if err != nil {
-		return fmt.Errorf("invalid session ID: %w", err)
-	}
-
-	var gameDate *string
-	if event.GameDate != "" {
-		gameDate = &event.GameDate
+func (s *historyService) CreateGameHistory(ctx context.Context, result *models.GameResult) error {
+	var gameDatePtr *string
+	if result.GameDate != "" {
+		gameDatePtr = &result.GameDate
 	}
 
 	history := &models.GameHistory{
-		UserID:       userID,
-		SessionID:    sessionID,
-		GameMode:     event.GameMode,
-		GameDate:     gameDate,
-		TargetWord:   event.TargetWord,
-		Guesses:      event.Guesses,
-		Result:       event.Result,
-		AttemptsUsed: event.AttemptsUsed,
+		UserID:       result.UserID,
+		SessionID:    result.SessionID,
+		GameMode:     result.GameMode,
+		GameDate:     gameDatePtr,
+		TargetWord:   result.TargetWord,
+		Guesses:      result.Guesses,
+		Result:       result.Result,
+		AttemptsUsed: result.AttemptsUsed,
 		CreatedAt:    time.Now(),
 	}
 
-	_, err = s.historyRepo.Create(ctx, history)
+	_, err := s.historyRepo.Create(ctx, history)
 	if err != nil {
 		return fmt.Errorf("failed to create history: %w", err)
 	}
 
-	if err := s.statisticsService.UpdateFromGame(ctx, userID, event.Result, event.AttemptsUsed, event.GameDate); err != nil {
+	if err := s.statisticsService.UpdateFromGame(ctx, result.UserID, result.Result, result.AttemptsUsed, result.GameDate); err != nil {
 		return fmt.Errorf("failed to update statistics: %w", err)
 	}
 

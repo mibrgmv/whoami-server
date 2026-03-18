@@ -13,9 +13,9 @@ import (
 	"gordle/libs/kafka"
 	"gordle/libs/logging"
 	"gordle/statistics/internal/consumer"
+	"gordle/statistics/internal/domain/service"
 	statisticsgrpc "gordle/statistics/internal/grpc"
 	"gordle/statistics/internal/repository/postgres"
-	"gordle/statistics/internal/service"
 	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
