@@ -24,6 +24,7 @@ export interface RegisterRequest {
   password: string
   first_name?: string
   last_name?: string
+  recaptcha_token?: string
 }
 
 // Game types
@@ -161,4 +162,22 @@ export interface UserStatistics {
   maxStreak: number
   guessDistribution: GuessDistribution
   lastPlayedDate: string
+  averageAttempts: number
+}
+
+export interface GameHistoryItem {
+  historyId: string
+  sessionId: string
+  gameMode: string
+  gameDate: string
+  targetWord: string
+  guesses: string[]
+  result: string
+  attemptsUsed: number
+  createdAt: string
+}
+
+export interface GameHistoryResponse {
+  items: GameHistoryItem[]
+  nextPageToken: string
 }

@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { statistics } from '../api/client'
-import type { UserStatistics } from '../types/api'
+import type { UserStatistics, GameHistoryItem } from '../types/api'
 import './Profile.css'
 
 export function Profile() {
   const navigate = useNavigate()
   const { isAuthenticated, isGuest, hasHydrated } = useAuthStore()
   const [stats, setStats] = useState<UserStatistics | null>(null)
+  const [history, setHistory] = useState<GameHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,8 +21,14 @@ export function Profile() {
       return
     }
 
-    statistics.getMyStats()
-      .then(setStats)
+    Promise.all([
+      statistics.getMyStats(),
+      statistics.getMyHistory(10)
+    ])
+      .then(([statsData, historyData]) => {
+        setStats(statsData)
+        setHistory(historyData.items || [])
+      })
       .catch((err) => setError(err.message || 'Failed to load statistics'))
       .finally(() => setLoading(false))
   }, [hasHydrated, isAuthenticated, isGuest, navigate])
@@ -70,6 +77,17 @@ export function Profile() {
         <div />
       </div>
 
+      <div className="profile-actions">
+        <a
+          href="/realms/gordle-realm/account/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+        >
+          Manage Account
+        </a>
+      </div>
+
       <div className="profile-content">
         <div className="stats-cards">
           <div className="stat-card">
@@ -88,6 +106,10 @@ export function Profile() {
             <div className="stat-value">{stats?.maxStreak ?? 0}</div>
             <div className="stat-label">Max Streak</div>
           </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats?.averageAttempts ?? 0}</div>
+            <div className="stat-label">Avg Attempts</div>
+          </div>
         </div>
 
         <div className="guess-distribution">
@@ -104,6 +126,19 @@ export function Profile() {
               </>
             )}
           </div>
+        </div>
+
+        <div className="game-history">
+          <h2>Recent Games</h2>
+          {history.length === 0 ? (
+            <div className="history-empty">No games played yet</div>
+          ) : (
+            <div className="history-list">
+              {history.map((game) => (
+                <HistoryItem key={game.historyId} game={game} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -123,6 +158,27 @@ function DistributionBar({ label, value, max }: { label: string; value: number; 
         >
           <span className="distribution-value">{value}</span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function HistoryItem({ game }: { game: GameHistoryItem }) {
+  const isWon = game.result === 'won'
+  const isDaily = game.gameMode === 'GAME_MODE_DAILY'
+  const date = new Date(game.createdAt).toLocaleDateString()
+
+  return (
+    <div className={`history-item ${isWon ? 'won' : 'lost'}`}>
+      <div className="history-item-header">
+        <span className="history-mode">{isDaily ? 'Daily' : 'Random'}</span>
+        <span className="history-date">{date}</span>
+      </div>
+      <div className="history-item-body">
+        <span className="history-word">{game.targetWord.toUpperCase()}</span>
+        <span className="history-result">
+          {isWon ? `${game.attemptsUsed}/6` : 'X/6'}
+        </span>
       </div>
     </div>
   )

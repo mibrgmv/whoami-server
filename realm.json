@@ -5,6 +5,13 @@
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host": "${SMTP_HOST}",
+    "port": "1025",
+    "from": "gordle@example.com",
+    "fromDisplayName": "Gordle"
+  },
   "roles": {
     "realm": [
       {
@@ -18,6 +25,43 @@
     ]
   },
   "defaultRoles": ["user"],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "google",
+      "providerId": "google",
+      "enabled": true,
+      "trustEmail": true,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "${GOOGLE_CLIENT_ID}",
+        "clientSecret": "${GOOGLE_CLIENT_SECRET}",
+        "defaultScope": "openid email profile",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "google-username-mapper",
+      "identityProviderAlias": "google",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute": "emailVerified",
+        "attribute.value": "true"
+      }
+    }
+  ],
   "clients": [
     {
       "clientId": "gordle-public",
@@ -58,8 +102,6 @@
     {
       "username": "admin",
       "email": "admin@example.com",
-      "firstName": "Adminus",
-      "lastName": "Adminskiy",
       "enabled": true,
       "emailVerified": true,
       "requiredActions": [],
@@ -75,8 +117,6 @@
     {
       "username": "user",
       "email": "user@example.com",
-      "firstName": "First",
-      "lastName": "Last",
       "enabled": true,
       "emailVerified": true,
       "requiredActions": [],

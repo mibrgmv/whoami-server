@@ -33,6 +33,19 @@ func (s *UserStatistics) WinPercentage() float64 {
 	return float64(s.GamesWon) / float64(s.GamesPlayed) * 100
 }
 
+func (s *UserStatistics) AverageAttempts() float64 {
+	if s.GamesWon == 0 {
+		return 0
+	}
+	total := s.GuessDistribution.One*1 +
+		s.GuessDistribution.Two*2 +
+		s.GuessDistribution.Three*3 +
+		s.GuessDistribution.Four*4 +
+		s.GuessDistribution.Five*5 +
+		s.GuessDistribution.Six*6
+	return float64(total) / float64(s.GamesWon)
+}
+
 type LeaderboardEntry struct {
 	Rank         int       `json:"rank"`
 	UserID       uuid.UUID `json:"user_id"`

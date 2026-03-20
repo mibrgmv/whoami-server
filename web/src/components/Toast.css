@@ -8,34 +8,68 @@
   flex-direction: column;
   gap: 8px;
   pointer-events: none;
+  max-width: 400px;
+  width: calc(100% - 32px);
 }
 
 .toast {
-  background: var(--color-surface);
+  background-color: var(--color-bg);
   color: var(--color-text);
   padding: 12px 20px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  font-size: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 0.875rem;
+  font-weight: 500;
   pointer-events: auto;
   cursor: pointer;
-  animation: slideIn 0.2s ease-out;
-  white-space: nowrap;
+  animation: toastIn 0.25s ease-out;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.toast-message {
+  position: relative;
+  z-index: 1;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  transition: width 50ms linear;
+  border-radius: 0 0 0 8px;
 }
 
 .toast-info {
   border-left: 3px solid var(--color-present);
 }
 
+.toast-info .toast-progress {
+  background-color: var(--color-present);
+  opacity: 0.5;
+}
+
 .toast-success {
   border-left: 3px solid var(--color-correct);
 }
 
-.toast-error {
-  border-left: 3px solid var(--color-absent);
+.toast-success .toast-progress {
+  background-color: var(--color-correct);
+  opacity: 0.5;
 }
 
-@keyframes slideIn {
+.toast-error {
+  border-left: 3px solid var(--color-error);
+}
+
+.toast-error .toast-progress {
+  background-color: var(--color-error);
+  opacity: 0.5;
+}
+
+@keyframes toastIn {
   from {
     opacity: 0;
     transform: translateY(-10px);

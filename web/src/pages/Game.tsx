@@ -5,7 +5,6 @@ import { Keyboard } from '../components/Keyboard'
 import { useGameStore } from '../stores/gameStore'
 import { useAuthStore } from '../stores/authStore'
 import { useKeyboardInput } from '../hooks/useKeyboardInput'
-import { useErrorProgress } from '../hooks/useErrorProgress'
 import { GameStatusValues } from '../types/api'
 import './Game.css'
 
@@ -20,16 +19,13 @@ export function Game() {
     currentGuess,
     letterStates,
     isLoading,
-    error,
     startGame,
     addLetter,
     removeLetter,
     submitGuess,
-    clearError,
     reset,
   } = useGameStore()
 
-  const errorProgress = useErrorProgress(error, 1500, clearError)
   const isGameOver = session?.status === GameStatusValues.WON || session?.status === GameStatusValues.LOST
 
   useKeyboardInput({
@@ -73,18 +69,6 @@ export function Game() {
         <h1>{isDaily ? 'DAILY' : 'GORDLE'}</h1>
         <div style={{ width: 60 }} />
       </header>
-
-      <div className="error-container">
-        {error && (
-          <div className="error-banner-game" onClick={clearError}>
-            {error}
-            <div
-              className="error-progress"
-              style={{ width: `${errorProgress}%` }}
-            />
-          </div>
-        )}
-      </div>
 
       {isLoading && !session && <div className="loading">Loading...</div>}
 

@@ -18,6 +18,12 @@
   font-weight: 700;
 }
 
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
 .profile-loading,
 .profile-error {
   display: flex;
@@ -39,9 +45,15 @@
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
   margin-bottom: 32px;
+}
+
+@media (max-width: 500px) {
+  .stats-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .stat-card {
@@ -111,4 +123,75 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
+}
+
+.game-history {
+  background-color: var(--color-tile-default);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.game-history h2 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 16px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  background-color: var(--color-bg);
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 4px solid var(--color-absent);
+}
+
+.history-item.won {
+  border-left-color: var(--color-correct);
+}
+
+.history-item.lost {
+  border-left-color: var(--color-absent);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.history-mode {
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.history-item-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-word {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+}
+
+.history-result {
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }

@@ -17,7 +17,7 @@ func NewGrpcServer(cfg *config.Config) *grpc.Server {
 	logger := logging.NewLogger("iam-service")
 	kc := keycloak.NewClient(&cfg.Keycloak)
 
-	authService := service.NewAuthService(kc, cfg.GuestSecret)
+	authService := service.NewAuthService(kc, cfg.GuestSecret, cfg.SmtpHost, cfg.Recaptcha)
 	userService := service.NewUserService(kc)
 
 	server := grpc.NewServer(

@@ -11,3 +11,8 @@ keycloak:
   admin_client_secret:
 
 guest_secret: "change-me-in-production"
+smtp_host:
+
+recaptcha:
+  secret_key:
+  verify_url: "https://www.google.com/recaptcha/api/siteverify"

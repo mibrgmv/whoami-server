@@ -63,6 +63,7 @@ message RegisterRequest {
   string password = 3;
   string first_name = 4;
   string last_name = 5;
+  string recaptcha_token = 6;
 }
 
 message RegisterResponse {

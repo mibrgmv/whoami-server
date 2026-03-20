@@ -1377,6 +1377,9 @@
         },
         "lastName": {
           "type": "string"
+        },
+        "recaptchaToken": {
+          "type": "string"
         }
       }
     },
@@ -1606,6 +1609,10 @@
         },
         "lastPlayedDate": {
           "type": "string"
+        },
+        "averageAttempts": {
+          "type": "number",
+          "format": "double"
         }
       },
       "title": "UserStatistics represents aggregated statistics for a user"

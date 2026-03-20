@@ -5,7 +5,7 @@ import { Keyboard } from '../components/Keyboard'
 import { useRoomStore } from '../stores/roomStore'
 import { useAuthStore } from '../stores/authStore'
 import { useKeyboardInput } from '../hooks/useKeyboardInput'
-import { useErrorProgress } from '../hooks/useErrorProgress'
+import { QRCodeSVG } from 'qrcode.react'
 import { room as roomApi } from '../api/client'
 import { RoomStatusValues, PlayerStatusValues } from '../types/api'
 import './Room.css'
@@ -23,7 +23,6 @@ export function Room() {
     letterStates,
     wordLength,
     isLoading,
-    error,
     gameResult,
     isWsConnected,
     joinRoom,
@@ -35,7 +34,6 @@ export function Room() {
     leaveRoom,
     addLetter,
     removeLetter,
-    clearError,
     reset,
   } = useRoomStore()
 
@@ -48,8 +46,6 @@ export function Room() {
   const allReady = players.length > 1 && players.every((p) => p.status === PlayerStatusValues.READY)
   const isPlaying = room?.status === RoomStatusValues.PLAYING
   const isFinished = room?.status === RoomStatusValues.FINISHED
-
-  const errorProgress = useErrorProgress(error, 3000, clearError)
 
   const canPlay = isPlaying &&
     !gameResult &&
@@ -149,18 +145,6 @@ export function Room() {
           <div style={{ width: 60 }} />
         </header>
 
-        <div className="error-container">
-          {error && (
-            <div className="error-banner-room" onClick={clearError}>
-              {error}
-              <div
-                className="error-progress"
-                style={{ width: `${errorProgress}%` }}
-              />
-            </div>
-          )}
-        </div>
-
         <div className="join-form">
           <p className="room-code-display">{code}</p>
           <input
@@ -194,21 +178,16 @@ export function Room() {
           <div style={{ width: 60 }} />
         </header>
 
-        <div className="error-container">
-          {error && (
-            <div className="error-banner-room" onClick={clearError}>
-              {error}
-              <div
-                className="error-progress"
-                style={{ width: `${errorProgress}%` }}
-              />
-            </div>
-          )}
-        </div>
-
         <div className="lobby">
           <div className="room-code-section">
-            <p>Room Code</p>
+            <div className="qr-code">
+              <QRCodeSVG
+                value={`${window.location.origin}/room/${code}`}
+                size={160}
+                bgColor="transparent"
+                fgColor="currentColor"
+              />
+            </div>
             <button className="room-code-btn" onClick={handleCopyCode}>
               {code} <span>{copiedCode ? '✓ Copied' : 'Copy'}</span>
             </button>
@@ -276,12 +255,6 @@ export function Room() {
         </h1>
         <div style={{ width: 60 }} />
       </header>
-
-      {error && (
-        <div className="error-banner" onClick={clearError}>
-          {error}
-        </div>
-      )}
 
       <div className="game-area">
         <div className="main-board">

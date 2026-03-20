@@ -1,16 +1,18 @@
 import { create } from 'zustand'
 import { game } from '../api/client'
-import type { GameSession, LetterResult, GameStatus } from '../types/api'
+import type { GameSession, LetterResult, GameStatus, DailyStatus } from '../types/api'
 import { GameStatusValues } from '../types/api'
 import { updateLetterStates } from '../utils/letterStates'
+import { useToastStore } from './toastStore'
 
 interface GameState {
   session: GameSession | null
   currentGuess: string
   isLoading: boolean
-  error: string | null
-
   letterStates: Record<string, LetterResult>
+
+  dailyStatus: DailyStatus | null
+  dailyStatusFetched: boolean
 
   startGame: (mode: 'daily' | 'random', language?: string) => Promise<void>
   loadGame: (sessionId: string) => Promise<void>
@@ -18,19 +20,21 @@ interface GameState {
   addLetter: (letter: string) => void
   removeLetter: () => void
   submitGuess: () => Promise<void>
-  clearError: () => void
   reset: () => void
+  fetchDailyStatus: () => Promise<void>
+  clearDailyStatus: () => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
   session: null,
   currentGuess: '',
   isLoading: false,
-  error: null,
   letterStates: {},
+  dailyStatus: null,
+  dailyStatusFetched: false,
 
   startGame: async (mode, language = 'en') => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true })
     try {
       const session = await game.start(mode, language)
       set({
@@ -40,12 +44,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         isLoading: false,
       })
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
+      useToastStore.getState().addToast((err as Error).message, 'error', 1500)
+      set({ isLoading: false })
     }
   },
 
   loadGame: async (sessionId) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true })
     try {
       const session = await game.get(sessionId)
 
@@ -56,7 +61,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       set({ session, letterStates, currentGuess: '', isLoading: false })
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
+      useToastStore.getState().addToast((err as Error).message, 'error', 1500)
+      set({ isLoading: false })
     }
   },
 
@@ -85,7 +91,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { session, currentGuess } = get()
     if (!session || currentGuess.length !== 5) return
 
-    set({ isLoading: true, error: null })
+    set({ isLoading: true })
     try {
       const result = await game.guess(session.sessionId, currentGuess.toLowerCase())
 
@@ -105,17 +111,26 @@ export const useGameStore = create<GameState>((set, get) => ({
         isLoading: false,
       })
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
+      useToastStore.getState().addToast((err as Error).message, 'error', 1500)
+      set({ isLoading: false })
     }
   },
-
-  clearError: () => set({ error: null }),
 
   reset: () => set({
     session: null,
     currentGuess: '',
     isLoading: false,
-    error: null,
     letterStates: {},
   }),
+
+  fetchDailyStatus: async () => {
+    try {
+      const status = await game.dailyStatus()
+      set({ dailyStatus: status, dailyStatusFetched: true })
+    } catch {
+      set({ dailyStatusFetched: true })
+    }
+  },
+
+  clearDailyStatus: () => set({ dailyStatus: null, dailyStatusFetched: false }),
 }))

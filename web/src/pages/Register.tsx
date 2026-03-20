@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import ReCAPTCHA from 'react-google-recaptcha'
 import { useAuthStore } from '../stores/authStore'
 import './Auth.css'
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
 
 export function Register() {
   const navigate = useNavigate()
@@ -13,6 +16,8 @@ export function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const recaptchaRef = useRef<ReCAPTCHA>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,13 +36,39 @@ export function Register() {
     setIsLoading(true)
 
     try {
-      await register({ username, email, password })
+      const recaptchaToken = recaptchaRef.current?.getValue() || undefined
+      await register({ username, email, password, recaptcha_token: recaptchaToken })
       navigate('/')
     } catch (err) {
-      setError((err as Error).message || 'Registration failed')
+      const message = (err as Error).message || 'Registration failed'
+      if (message === 'email_not_verified') {
+        setEmailSent(true)
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="auth-page">
+        <div className="auth-container">
+          <h1>Check your email</h1>
+          <p className="auth-message">
+            We sent a verification link to <strong>{email}</strong>.
+            Please verify your email and then log in.
+          </p>
+          <Link to="/login" className="btn btn-primary">
+            Go to Login
+          </Link>
+          <Link to="/" className="btn btn-text">
+            ← Back to Home
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -84,6 +115,15 @@ export function Register() {
             required
             autoComplete="new-password"
           />
+          {RECAPTCHA_SITE_KEY && (
+            <div className="recaptcha-container">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={RECAPTCHA_SITE_KEY}
+                theme="dark"
+              />
+            </div>
+          )}
           <button
             type="submit"
             className="btn btn-primary"

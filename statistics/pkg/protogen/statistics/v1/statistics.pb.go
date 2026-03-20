@@ -34,6 +34,7 @@ type UserStatistics struct {
 	MaxStreak         int32                  `protobuf:"varint,6,opt,name=max_streak,json=maxStreak,proto3" json:"max_streak,omitempty"`
 	GuessDistribution *GuessDistribution     `protobuf:"bytes,7,opt,name=guess_distribution,json=guessDistribution,proto3" json:"guess_distribution,omitempty"`
 	LastPlayedDate    string                 `protobuf:"bytes,8,opt,name=last_played_date,json=lastPlayedDate,proto3" json:"last_played_date,omitempty"`
+	AverageAttempts   float64                `protobuf:"fixed64,9,opt,name=average_attempts,json=averageAttempts,proto3" json:"average_attempts,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -122,6 +123,13 @@ func (x *UserStatistics) GetLastPlayedDate() string {
 		return x.LastPlayedDate
 	}
 	return ""
+}
+
+func (x *UserStatistics) GetAverageAttempts() float64 {
+	if x != nil {
+		return x.AverageAttempts
+	}
+	return 0
 }
 
 // GuessDistribution shows how many games were won in N guesses
@@ -687,7 +695,7 @@ var File_statistics_proto protoreflect.FileDescriptor
 
 const file_statistics_proto_rawDesc = "" +
 	"\n" +
-	"\x10statistics.proto\x12\rstatistics.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xd1\x02\n" +
+	"\x10statistics.proto\x12\rstatistics.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xfc\x02\n" +
 	"\x0eUserStatistics\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\fgames_played\x18\x02 \x01(\x05R\vgamesPlayed\x12\x1b\n" +
@@ -697,7 +705,8 @@ const file_statistics_proto_rawDesc = "" +
 	"\n" +
 	"max_streak\x18\x06 \x01(\x05R\tmaxStreak\x12O\n" +
 	"\x12guess_distribution\x18\a \x01(\v2 .statistics.v1.GuessDistributionR\x11guessDistribution\x12(\n" +
-	"\x10last_played_date\x18\b \x01(\tR\x0elastPlayedDate\"\x87\x01\n" +
+	"\x10last_played_date\x18\b \x01(\tR\x0elastPlayedDate\x12)\n" +
+	"\x10average_attempts\x18\t \x01(\x01R\x0faverageAttempts\"\x87\x01\n" +
 	"\x11GuessDistribution\x12\x10\n" +
 	"\x03one\x18\x01 \x01(\x05R\x03one\x12\x10\n" +
 	"\x03two\x18\x02 \x01(\x05R\x03two\x12\x14\n" +

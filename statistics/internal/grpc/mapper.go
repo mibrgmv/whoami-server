@@ -10,12 +10,13 @@ import (
 
 func userStatisticsToProto(s *models.UserStatistics) *statisticsv1.UserStatistics {
 	stats := &statisticsv1.UserStatistics{
-		UserId:        s.UserID.String(),
-		GamesPlayed:   int32(s.GamesPlayed),
-		GamesWon:      int32(s.GamesWon),
-		WinPercentage: roundToTwoDecimals(s.WinPercentage()),
-		CurrentStreak: int32(s.CurrentStreak),
-		MaxStreak:     int32(s.MaxStreak),
+		UserId:          s.UserID.String(),
+		GamesPlayed:     int32(s.GamesPlayed),
+		GamesWon:        int32(s.GamesWon),
+		WinPercentage:   roundToTwoDecimals(s.WinPercentage()),
+		CurrentStreak:   int32(s.CurrentStreak),
+		MaxStreak:       int32(s.MaxStreak),
+		AverageAttempts: roundToTwoDecimals(s.AverageAttempts()),
 		GuessDistribution: &statisticsv1.GuessDistribution{
 			One:   int32(s.GuessDistribution.One),
 			Two:   int32(s.GuessDistribution.Two),

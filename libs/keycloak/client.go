@@ -29,6 +29,7 @@ func NewClient(config *Config) *Client {
 type ErrorResponse struct {
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
+	ErrorMessage     string `json:"errorMessage"`
 }
 
 type TokenResponse struct {
@@ -260,7 +261,12 @@ func (c *Client) CreateUser(ctx context.Context, userReq CreateUserRequest) (*Cr
 	if resp.StatusCode != http.StatusCreated {
 		var errorResp ErrorResponse
 		if err := json.Unmarshal(body, &errorResp); err == nil {
-			return nil, fmt.Errorf("keycloak user creation error: %s - %s", errorResp.Error, errorResp.ErrorDescription)
+			if errorResp.ErrorMessage != "" {
+				return nil, fmt.Errorf("keycloak user creation error: %s", errorResp.ErrorMessage)
+			}
+			if errorResp.Error != "" || errorResp.ErrorDescription != "" {
+				return nil, fmt.Errorf("keycloak user creation error: %s - %s", errorResp.Error, errorResp.ErrorDescription)
+			}
 		}
 		return nil, fmt.Errorf("failed to create user, status %d: %s", resp.StatusCode, string(body))
 	}

@@ -33,7 +33,6 @@ interface RoomState {
   letterStates: Record<string, LetterResult>
   wordLength: number
   isLoading: boolean
-  error: string | null
   gameResult: RoundEndedPayload | GameEndedPayload | null
 
   // WebSocket
@@ -56,7 +55,6 @@ interface RoomState {
   // Local actions
   addLetter: (letter: string) => void
   removeLetter: () => void
-  clearError: () => void
   reset: () => void
 
   // Internal
@@ -71,13 +69,12 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   letterStates: {},
   wordLength: 5,
   isLoading: false,
-  error: null,
   gameResult: null,
   ws: null,
   isWsConnected: false,
 
   createRoom: async (settings) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true })
     try {
       const response = await roomApi.create(settings)
       const code = response.room.code
@@ -100,13 +97,14 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
       return code
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
+      useToastStore.getState().addToast((err as Error).message, 'error')
+      set({ isLoading: false })
       throw err
     }
   },
 
   joinRoom: async (code, displayName) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true })
     try {
       const response = await roomApi.join(code, displayName)
 
@@ -121,7 +119,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       const fullRoom = await roomApi.get(code)
       set({ players: fullRoom.players })
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
+      useToastStore.getState().addToast((err as Error).message, 'error')
+      set({ isLoading: false })
       throw err
     }
   },
@@ -159,7 +158,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error)
-      set({ error: 'Connection error', isWsConnected: false })
+      useToastStore.getState().addToast('Connection error', 'error')
+      set({ isWsConnected: false })
     }
 
     ws.onclose = (event) => {
@@ -345,7 +345,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
       case 'error': {
         const payload = event.payload as ErrorPayload
-        set({ error: payload.message })
+        useToastStore.getState().addToast(payload.message, 'error')
         break
       }
     }
@@ -417,8 +417,6 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
-  clearError: () => set({ error: null }),
-
   reset: () => set({
     room: null,
     players: [],
@@ -427,7 +425,6 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     letterStates: {},
     wordLength: 5,
     isLoading: false,
-    error: null,
     gameResult: null,
     ws: null,
     isWsConnected: false,

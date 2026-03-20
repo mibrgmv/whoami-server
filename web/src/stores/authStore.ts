@@ -47,7 +47,15 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (data) => {
         await auth.register(data)
-        await get().login({ username: data.username, password: data.password })
+        try {
+          await get().login({ username: data.username, password: data.password })
+        } catch (err) {
+          const message = (err as Error).message || ''
+          if (message.includes('email not verified')) {
+            throw new Error('email_not_verified')
+          }
+          throw err
+        }
       },
 
       loginAsGuest: async () => {

@@ -77,11 +77,14 @@
 }
 
 .hint-container {
-  min-height: 28px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
+}
+
+.hint-container:has(.hint-text) {
   padding-top: 4px;
+  min-height: 28px;
 }
 
 .hint-text {
@@ -135,8 +138,7 @@
 .join-room .input {
   flex: 1;
   text-align: center;
-  font-size: 1.25rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
   min-width: 0;
 }
 
@@ -147,15 +149,6 @@
 
 .home-footer {
   margin-top: 40px;
-}
-
-.error-banner {
-  background-color: var(--color-error);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  cursor: pointer;
 }
 
 .modal-overlay {
@@ -198,7 +191,53 @@
 }
 
 .room-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setting-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.setting-tabs {
+  display: flex;
+  gap: 4px;
+  background-color: var(--color-tile-default);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.setting-tab {
+  flex: 1;
+  padding: 8px 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.setting-tab:hover {
+  color: var(--color-text);
+}
+
+.setting-tab.active {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-setting {
@@ -216,12 +255,15 @@
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: var(--color-correct);
+  accent-color: var(--color-primary);
 }
 
 .setting-hint {
   font-size: 0.8rem;
   color: var(--color-text-secondary);
-  margin: 8px 0 0 0;
-  text-align: center;
+  margin: 0;
+}
+
+.room-settings > .setting-hint {
+  margin-top: -8px;
 }

@@ -36,7 +36,7 @@ func (h *authServiceServer) Login(ctx context.Context, req *authv1.LoginRequest)
 }
 
 func (h *authServiceServer) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
-	userID, username, email, err := h.service.Register(ctx, req.Username, req.Email, req.Password, req.FirstName, req.LastName)
+	userID, username, email, err := h.service.Register(ctx, req.Username, req.Email, req.Password, req.FirstName, req.LastName, req.RecaptchaToken)
 	if err != nil {
 		return nil, h.handleError(err)
 	}
@@ -94,6 +94,10 @@ func (h *authServiceServer) handleError(err error) error {
 		return status.Error(codes.Unauthenticated, err.Error())
 	case service.ErrUsernameExists, service.ErrEmailExists:
 		return status.Error(codes.AlreadyExists, err.Error())
+	case service.ErrEmailNotVerified:
+		return status.Error(codes.FailedPrecondition, err.Error())
+	case service.ErrRecaptchaRequired, service.ErrRecaptchaFailed:
+		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Internal, err.Error())
 	}

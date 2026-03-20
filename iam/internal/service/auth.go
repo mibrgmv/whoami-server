@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"gordle/iam/internal/config"
 	"gordle/libs/auth"
 	"gordle/libs/keycloak"
 )
@@ -12,11 +13,14 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrInvalidToken       = errors.New("invalid token")
+	ErrEmailNotVerified   = errors.New("email not verified")
+	ErrRecaptchaRequired  = errors.New("reCAPTCHA token is required")
+	ErrRecaptchaFailed    = errors.New("reCAPTCHA verification failed")
 )
 
 type AuthService interface {
 	Login(ctx context.Context, username, password string) (accessToken, refreshToken, tokenType string, expiresIn int, err error)
-	Register(ctx context.Context, username, email, password, firstName, lastName string) (userID, createdUsername, createdEmail string, err error)
+	Register(ctx context.Context, username, email, password, firstName, lastName, recaptchaToken string) (userID, createdUsername, createdEmail string, err error)
 	RefreshToken(ctx context.Context, refreshToken string) (accessToken, newRefreshToken, tokenType string, expiresIn int, err error)
 	Logout(ctx context.Context, refreshToken string) error
 	GuestAuth(ctx context.Context) (accessToken, guestID, tokenType string, expiresIn int, err error)
@@ -25,12 +29,16 @@ type AuthService interface {
 type authService struct {
 	keycloak       *keycloak.Client
 	guestGenerator *auth.GuestTokenGenerator
+	smtpConfigured bool
+	recaptcha      *recaptchaVerifier
 }
 
-func NewAuthService(keycloak *keycloak.Client, guestSecret string) AuthService {
+func NewAuthService(keycloak *keycloak.Client, guestSecret string, smtpHost string, recaptchaCfg config.RecaptchaConfig) AuthService {
 	return &authService{
 		keycloak:       keycloak,
 		guestGenerator: auth.NewGuestTokenGenerator(guestSecret),
+		smtpConfigured: smtpHost != "",
+		recaptcha:      newRecaptchaVerifier(recaptchaCfg),
 	}
 }
 
@@ -41,20 +49,27 @@ func (s *authService) Login(ctx context.Context, username, password string) (str
 
 	tokens, err := s.keycloak.ExchangeCredentialsForTokens(ctx, username, password)
 	if err != nil {
+		if strings.Contains(err.Error(), "Account is not fully set up") {
+			return "", "", "", 0, ErrEmailNotVerified
+		}
 		return "", "", "", 0, ErrInvalidCredentials
 	}
 
 	return tokens.AccessToken, tokens.RefreshToken, tokens.TokenType, tokens.ExpiresIn, nil
 }
 
-func (s *authService) Register(ctx context.Context, username, email, password, firstName, lastName string) (string, string, string, error) {
+func (s *authService) Register(ctx context.Context, username, email, password, firstName, lastName, recaptchaToken string) (string, string, string, error) {
+	if err := s.recaptcha.verify(ctx, recaptchaToken); err != nil {
+		return "", "", "", err
+	}
+
 	keycloakUser := keycloak.CreateUserRequest{
 		Username:      username,
 		Email:         email,
 		FirstName:     firstName,
 		LastName:      lastName,
 		Enabled:       true,
-		EmailVerified: false,
+		EmailVerified: !s.smtpConfigured,
 		Credentials: []keycloak.UserCredential{
 			{
 				Type:      "password",

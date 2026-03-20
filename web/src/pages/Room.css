@@ -21,49 +21,6 @@
   letter-spacing: 0.1em;
 }
 
-.error-container {
-  width: 100%;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-}
-
-.error-banner-room {
-  width: 100%;
-  max-width: 500px;
-  background-color: var(--color-error);
-  color: white;
-  padding: 12px 24px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.error-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background-color: rgba(255, 255, 255, 0.5);
-  transition: width 50ms linear;
-}
-
 .join-form {
   display: flex;
   flex-direction: column;
@@ -98,12 +55,16 @@
 }
 
 .room-code-section {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
-.room-code-section p {
-  margin: 0 0 8px;
-  color: var(--color-text-secondary);
+.qr-code {
+  padding: 16px;
+  background-color: var(--color-key);
+  border-radius: 12px;
 }
 
 .room-code-btn {

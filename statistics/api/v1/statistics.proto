@@ -79,6 +79,7 @@ message UserStatistics {
   int32 max_streak = 6;
   GuessDistribution guess_distribution = 7;
   string last_played_date = 8;
+  double average_attempts = 9;
 }
 
 // GuessDistribution shows how many games were won in N guesses

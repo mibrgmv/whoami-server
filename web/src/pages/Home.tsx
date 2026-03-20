@@ -2,28 +2,31 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { useRoomStore } from '../stores/roomStore'
-import { game } from '../api/client'
-import type { DailyStatus } from '../types/api'
+import { useGameStore } from '../stores/gameStore'
+import { useToastStore } from '../stores/toastStore'
 import { GameStatusValues } from '../types/api'
 import './Home.css'
 
 export function Home() {
   const navigate = useNavigate()
   const { isAuthenticated, isGuest, hasHydrated, loginAsGuest, logout } = useAuthStore()
-  const { createRoom, isLoading, error, clearError } = useRoomStore()
+  const { createRoom, isLoading } = useRoomStore()
+  const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus } = useGameStore()
 
   const [roomCode, setRoomCode] = useState('')
   const [showAuth, setShowAuth] = useState(false)
   const [showRoomSettings, setShowRoomSettings] = useState(false)
   const [showGuesses, setShowGuesses] = useState(true)
-  const [dailyStatus, setDailyStatus] = useState<DailyStatus | null>(null)
+  const [roomMode, setRoomMode] = useState<'single_round' | 'marathon'>('single_round')
+  const [maxPlayers, setMaxPlayers] = useState(6)
+  const [timeLimitSecs, setTimeLimitSecs] = useState(180)
   const [showDailyHint, setShowDailyHint] = useState(false)
 
   useEffect(() => {
-    if (hasHydrated && isAuthenticated) {
-      game.dailyStatus().then(setDailyStatus).catch(() => {})
+    if (hasHydrated && isAuthenticated && !isGuest && !dailyStatusFetched) {
+      fetchDailyStatus()
     }
-  }, [hasHydrated, isAuthenticated])
+  }, [hasHydrated, isAuthenticated, isGuest, dailyStatusFetched, fetchDailyStatus])
 
   const handlePlayDaily = () => {
     if (isDailyDisabled) {
@@ -45,7 +48,7 @@ export function Home() {
     }
 
     if (isGuest) {
-      alert('Guests cannot create rooms. Please log in.')
+      useToastStore.getState().addToast('Guests cannot create rooms. Please log in.', 'error')
       return
     }
 
@@ -54,7 +57,14 @@ export function Home() {
 
   const handleConfirmCreateRoom = async () => {
     try {
-      const code = await createRoom({ settings: { showGuesses } })
+      const code = await createRoom({
+        settings: {
+          mode: roomMode,
+          showGuesses,
+          maxPlayers,
+          ...(roomMode === 'marathon' ? { timeLimitSecs } : {}),
+        },
+      })
       setShowRoomSettings(false)
       navigate(`/room/${code}`)
     } catch {
@@ -73,16 +83,17 @@ export function Home() {
       await loginAsGuest()
       setShowAuth(false)
     } catch {
-      alert('Failed to login as guest')
+      useToastStore.getState().addToast('Failed to login as guest', 'error')
     }
   }
 
   const handleLogout = () => {
     logout()
-    setDailyStatus(null)
+    clearDailyStatus()
   }
 
   const getDailyButtonText = () => {
+    if (!dailyStatusFetched && isAuthenticated && !isGuest) return 'Daily...'
     if (!dailyStatus) return 'Daily Challenge'
     if (dailyStatus.hasPlayedToday) {
       if (dailyStatus.status === GameStatusValues.WON) {
@@ -127,12 +138,6 @@ export function Home() {
 
       <h1 className="home-title">GORDLE</h1>
       <p className="home-subtitle">Multiplayer word game</p>
-
-      {error && (
-        <div className="error-banner" onClick={clearError}>
-          {error}
-        </div>
-      )}
 
       <div className="home-actions">
         <div className="divider">
@@ -266,6 +271,61 @@ export function Home() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Room Settings</h2>
             <div className="room-settings">
+              <div className="setting-group">
+                <label className="setting-label">Game Mode</label>
+                <div className="setting-tabs">
+                  <button
+                    className={`setting-tab ${roomMode === 'single_round' ? 'active' : ''}`}
+                    onClick={() => setRoomMode('single_round')}
+                  >
+                    Single Round
+                  </button>
+                  <button
+                    className={`setting-tab ${roomMode === 'marathon' ? 'active' : ''}`}
+                    onClick={() => setRoomMode('marathon')}
+                  >
+                    Marathon
+                  </button>
+                </div>
+                <p className="setting-hint">
+                  {roomMode === 'single_round'
+                    ? 'Everyone guesses the same word'
+                    : 'Solve as many words as you can before time runs out'}
+                </p>
+              </div>
+
+              {roomMode === 'marathon' && (
+                <div className="setting-group">
+                  <label className="setting-label">Time Limit</label>
+                  <div className="setting-tabs">
+                    {[60, 120, 180, 300].map((secs) => (
+                      <button
+                        key={secs}
+                        className={`setting-tab ${timeLimitSecs === secs ? 'active' : ''}`}
+                        onClick={() => setTimeLimitSecs(secs)}
+                      >
+                        {secs >= 60 ? `${secs / 60}m` : `${secs}s`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="setting-group">
+                <label className="setting-label">Max Players</label>
+                <div className="setting-tabs">
+                  {[2, 3, 4, 5, 6].map((n) => (
+                    <button
+                      key={n}
+                      className={`setting-tab ${maxPlayers === n ? 'active' : ''}`}
+                      onClick={() => setMaxPlayers(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label className="toggle-setting">
                 <span>Show guesses to all players</span>
                 <input

@@ -11,6 +11,7 @@ import type {
   RoomResponse,
   RoomPlayer,
   UserStatistics,
+  GameHistoryResponse,
 } from '../types/api'
 
 const API_BASE = '/api/v1'
@@ -211,6 +212,13 @@ export const room = {
 export const statistics = {
   getMyStats: (): Promise<UserStatistics> =>
     request('/statistics/me'),
+
+  getMyHistory: (pageSize = 10, pageToken = ''): Promise<GameHistoryResponse> => {
+    const params = new URLSearchParams()
+    if (pageSize) params.set('pageSize', String(pageSize))
+    if (pageToken) params.set('pageToken', pageToken)
+    return request(`/statistics/me/history?${params}`)
+  },
 }
 
 export { ApiError }
