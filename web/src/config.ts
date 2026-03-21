@@ -1,8 +1,8 @@
-const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM || 'gordle-realm'
-const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'gordle-public'
+const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM
+const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID
 
 export const config = {
-  apiBase: import.meta.env.VITE_API_BASE || '/api/v1',
+  apiBase: import.meta.env.VITE_API_BASE,
 
   keycloak: {
     realm: KEYCLOAK_REALM,

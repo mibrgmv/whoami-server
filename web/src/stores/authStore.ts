@@ -4,6 +4,7 @@ import { config } from '../config'
 import { auth } from '../api/client'
 
 export function redirectToLogin(): void {
+  sessionStorage.setItem('auth_return_to', window.location.pathname)
   const params = new URLSearchParams({
     client_id: config.keycloak.clientId,
     redirect_uri: `${window.location.origin}/oauth/callback`,
@@ -14,6 +15,7 @@ export function redirectToLogin(): void {
 }
 
 export function redirectToRegister(): void {
+  sessionStorage.setItem('auth_return_to', window.location.pathname)
   const params = new URLSearchParams({
     client_id: config.keycloak.clientId,
     redirect_uri: `${window.location.origin}/oauth/callback`,
@@ -25,7 +27,10 @@ export function redirectToRegister(): void {
 
 function parseUsername(token: string): string | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+    const payload = JSON.parse(new TextDecoder().decode(bytes))
     return payload.preferred_username || null
   } catch {
     return null
@@ -83,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
 
       loginAsGuest: async () => {
         const response = await auth.guest()
-        get().setTokens(response.accessToken, '', true)
+        get().setTokens(response.access_token, '', true)
       },
 
       logout: async () => {

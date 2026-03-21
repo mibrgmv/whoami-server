@@ -42,14 +42,15 @@ export function Game() {
   }, [hasHydrated, isAuthenticated, navigate])
 
   useEffect(() => {
-    if (hasHydrated && isAuthenticated && !session) {
+    reset()
+    if (hasHydrated && isAuthenticated) {
       startGame(isDaily ? 'daily' : 'random')
     }
-
-    return () => {
-      reset()
-    }
   }, [hasHydrated, isAuthenticated, isDaily])
+
+  useEffect(() => {
+    return () => reset()
+  }, [])
 
   const handlePlayAgain = () => {
     if (isDaily) {
@@ -62,12 +63,10 @@ export function Game() {
 
   return (
     <div className="game-page">
-      <header className="game-header">
-        <button className="btn btn-text" onClick={() => navigate('/')}>
-          ← Back
-        </button>
+      <header className="page-header">
+        <button className="page-header-back" onClick={() => navigate('/')}>←</button>
         <h1>{isDaily ? 'DAILY' : 'GORDLE'}</h1>
-        <div style={{ width: 60 }} />
+        <div className="page-header-spacer" />
       </header>
 
       {isLoading && !session && <div className="loading">Loading...</div>}
@@ -106,6 +105,8 @@ export function Game() {
               </button>
             </div>
           )}
+
+          <div className="game-spacer" />
 
           <Keyboard
             onKey={addLetter}

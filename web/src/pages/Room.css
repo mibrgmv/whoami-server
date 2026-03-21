@@ -2,204 +2,308 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.room-header {
+/* ─── Shared content column ─── */
+.room-content {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
-  padding: 16px;
-  border-bottom: 1px solid var(--color-border);
-  position: relative;
-  z-index: 1;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
 }
 
-.room-header h1 {
-  margin: 0;
-  font-size: 1.25rem;
+/* ─── Glass card (room-local) ─── */
+.room-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.room-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
   letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  margin: 0 0 16px;
 }
 
-.join-form {
+/* ─── Join screen ─── */
+.join-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 40px 20px;
-  max-width: 400px;
-  margin: 0 auto;
+  text-align: center;
 }
 
-.room-code-display {
-  font-size: 2.5rem;
-  font-weight: 700;
-  letter-spacing: 0.3em;
+.join-card-code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
   margin: 0;
 }
 
-.join-form .input {
+.join-card .input {
   width: 100%;
   text-align: center;
 }
 
-.lobby {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 40px 20px;
-  max-width: 500px;
-  margin: 0 auto;
+.join-card .btn {
   width: 100%;
 }
 
-.room-code-section {
+/* ─── Lobby: invite card ─── */
+.invite-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
 }
 
-.qr-code {
-  padding: 16px;
-  background-color: var(--color-key);
+.invite-qr {
+  padding: 12px;
+  background: white;
   border-radius: 12px;
 }
 
-.room-code-btn {
+.invite-code-btn {
   background: none;
   border: 2px dashed var(--color-border);
-  padding: 16px 32px;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.3em;
+  padding: 10px 24px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
   cursor: pointer;
   color: var(--color-text);
-  border-radius: 8px;
-  transition: border-color 0.2s;
+  border-radius: 10px;
+  transition: border-color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  width: 100%;
+  text-align: center;
 }
 
-.room-code-btn:hover {
-  border-color: var(--color-primary);
+.invite-code-btn:hover {
+  border-color: var(--color-border-filled);
 }
 
-.room-code-btn span {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: normal;
+.invite-code-btn:active {
+  transform: scale(0.97);
+}
+
+.invite-code-hint {
+  font-size: 0.6875rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
   margin-top: 4px;
-  transition: color 0.2s;
 }
 
-.room-code-btn:active span {
-  color: var(--color-correct);
-}
-
-.players-list {
-  width: 100%;
-}
-
-.players-list h3 {
-  margin: 0 0 12px;
-}
-
-.player-item {
+/* ─── Lobby: players card ─── */
+.players-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background-color: var(--color-key);
-  border-radius: 8px;
-  margin-bottom: 8px;
+}
+
+.players-card-header span {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.player-row:last-child {
+  border-bottom: none;
+}
+
+.player-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.player-tag {
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
 .player-status {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
 }
 
 .player-status.ready {
   color: var(--color-correct);
+  font-weight: 600;
 }
 
-.lobby-actions {
+/* ─── Settings card ─── */
+.settings-rows {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
 }
 
-.lobby-hint {
-  color: var(--color-text-secondary);
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
   font-size: 0.875rem;
 }
 
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row span:first-child {
+  color: var(--color-text-secondary);
+}
+
+.settings-row span:last-child {
+  font-weight: 600;
+}
+
+/* ─── Lobby actions ─── */
+.lobby-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.lobby-actions .btn {
+  flex: 1;
+}
+
+.lobby-hint {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* ─── Game area ─── */
 .game-area {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   flex: 1;
-  gap: 20px;
-  padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 8px 16px;
+  gap: 8px;
+}
+
+/* Players bar (horizontal scroll) */
+.players-bar {
+  display: flex;
+  gap: 6px;
   width: 100%;
+  max-width: 500px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+
+.players-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.player-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.player-chip.current {
+  border-color: var(--color-border-filled);
+  font-weight: 700;
+}
+
+.player-chip-attempts {
+  color: var(--color-text-secondary);
+  font-weight: 600;
 }
 
 .main-board {
-  flex: 1;
   display: flex;
   justify-content: center;
 }
 
-.players-sidebar {
-  width: 200px;
+.game-spacer {
+  flex: 1;
 }
 
-.players-sidebar h3 {
-  margin: 0 0 12px;
-}
-
-.player-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background-color: var(--color-key);
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
-
-.player-card.current {
-  border: 2px solid var(--color-primary);
-}
-
-.player-attempts {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
+/* ─── Round result ─── */
 .round-result {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 32px;
-  background-color: var(--color-key);
-  border-radius: 12px;
-  margin: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-.round-result h2 {
-  margin: 0;
+.round-result-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  padding: 28px;
+  width: 100%;
+  text-align: center;
+  animation: resultFadeIn 0.3s ease-out;
 }
 
-.round-result p {
+@keyframes resultFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.round-result-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.round-result-card p {
   margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.round-result-card p strong {
+  color: var(--color-text);
 }
 
 .scores {
   width: 100%;
-  max-width: 300px;
+  margin-top: 16px;
 }
 
 .score-row {
@@ -207,25 +311,19 @@
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
 }
 
-@media (max-width: 768px) {
-  .game-area {
-    flex-direction: column;
-  }
+.score-row:last-child {
+  border-bottom: none;
+}
 
-  .players-sidebar {
-    width: 100%;
-    order: -1;
-  }
+.round-result-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
 
-  .players-sidebar h3 {
-    display: none;
-  }
-
-  .player-card {
-    display: inline-flex;
-    margin-right: 8px;
-    padding: 8px 12px;
-  }
+.round-result-actions .btn {
+  flex: 1;
 }

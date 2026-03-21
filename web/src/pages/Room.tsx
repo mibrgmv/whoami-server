@@ -4,6 +4,7 @@ import { GameBoard } from '../components/GameBoard'
 import { Keyboard } from '../components/Keyboard'
 import { useRoomStore } from '../stores/roomStore'
 import { useAuthStore } from '../stores/authStore'
+import { useToastStore } from '../stores/toastStore'
 import { useKeyboardInput } from '../hooks/useKeyboardInput'
 import { QRCodeSVG } from 'qrcode.react'
 import { room as roomApi } from '../api/client'
@@ -80,8 +81,13 @@ export function Room() {
             players: fullRoom.players,
             currentPlayer: player,
           })
+        } else {
+          localStorage.removeItem(`room_${code}_player`)
         }
       } catch {
+        localStorage.removeItem(`room_${code}_player`)
+        useToastStore.getState().addToast('Room not found or expired', 'error')
+        navigate('/')
       }
     }
 
@@ -134,80 +140,117 @@ export function Room() {
     }
   }
 
+  // ─── Join screen ───
   if (!hasJoined) {
     return (
       <div className="room-page">
-        <header className="room-header">
-          <button className="btn btn-text" onClick={() => navigate('/')}>
-            ← Back
-          </button>
-          <h1>Join Room</h1>
-          <div style={{ width: 60 }} />
+        <header className="page-header">
+          <button className="page-header-back" onClick={() => navigate('/')}>←</button>
+          <h1>JOIN</h1>
+          <div className="page-header-spacer" />
         </header>
 
-        <div className="join-form">
-          <p className="room-code-display">{code}</p>
-          <input
-            type="text"
-            placeholder="Your display name"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={20}
-            className="input"
-          />
-          <button
-            className="btn btn-primary"
-            onClick={handleJoin}
-            disabled={!displayName.trim() || isLoading}
-          >
-            {isLoading ? 'Joining...' : 'Join Room'}
-          </button>
+        <div className="room-content">
+          <div className="room-card join-card">
+            <p className="join-card-code">{code}</p>
+            <input
+              type="text"
+              placeholder="Your display name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+              maxLength={20}
+              className="input"
+            />
+            <button
+              className="btn btn-primary"
+              onClick={handleJoin}
+              disabled={!displayName.trim() || isLoading}
+            >
+              {isLoading ? 'Joining...' : 'Join Room'}
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
+  // ─── Lobby ───
   if (room?.status === RoomStatusValues.WAITING) {
     return (
       <div className="room-page">
-        <header className="room-header">
-          <button className="btn btn-text" onClick={handleLeave}>
-            ← Leave
-          </button>
-          <h1>Lobby</h1>
-          <div style={{ width: 60 }} />
+        <header className="page-header">
+          <button className="page-header-back" onClick={handleLeave}>←</button>
+          <h1>LOBBY</h1>
+          <div className="page-header-spacer" />
         </header>
 
-        <div className="lobby">
-          <div className="room-code-section">
-            <div className="qr-code">
+        <div className="room-content">
+          {/* Invite card */}
+          <div className="room-card invite-card">
+            <div className="invite-qr">
               <QRCodeSVG
                 value={`${window.location.origin}/room/${code}`}
-                size={160}
+                size={140}
                 bgColor="transparent"
                 fgColor="currentColor"
               />
             </div>
-            <button className="room-code-btn" onClick={handleCopyCode}>
-              {code} <span>{copiedCode ? '✓ Copied' : 'Copy'}</span>
+            <button className="invite-code-btn" onClick={handleCopyCode}>
+              {code}
+              <div className="invite-code-hint">
+                {copiedCode ? 'Copied!' : 'Tap to copy'}
+              </div>
             </button>
           </div>
 
-          <div className="players-list">
-            <h3>Players ({players.length}/{room.settings.maxPlayers})</h3>
+          {/* Players card */}
+          <div className="room-card">
+            <div className="players-card-header">
+              <div className="room-card-title">Players</div>
+              <span>{players.length}/{room.settings.maxPlayers}</span>
+            </div>
             {players.map((player) => (
-              <div key={player.playerId} className="player-item">
+              <div key={player.playerId} className="player-row">
                 <span className="player-name">
                   {player.displayName}
-                  {player.playerId === room.hostId && ' (Host)'}
+                  {player.playerId === room.hostId && (
+                    <span className="player-tag"> · Host</span>
+                  )}
                 </span>
                 <span className={`player-status ${player.status === PlayerStatusValues.READY ? 'ready' : ''}`}>
-                  {player.status === PlayerStatusValues.READY ? '✓ Ready' : 'Waiting'}
+                  {player.status === PlayerStatusValues.READY ? 'Ready' : 'Waiting'}
                 </span>
               </div>
             ))}
           </div>
 
+          {/* Settings card */}
+          <div className="room-card settings-card">
+            <div className="room-card-title">Settings</div>
+            <div className="settings-rows">
+              <div className="settings-row">
+                <span>Mode</span>
+                <span>{room.settings.mode === 'marathon' ? 'Marathon' : 'Single Round'}</span>
+              </div>
+              <div className="settings-row">
+                <span>Max Players</span>
+                <span>{room.settings.maxPlayers}</span>
+              </div>
+              {room.settings.mode === 'marathon' && (
+                <div className="settings-row">
+                  <span>Time Limit</span>
+                  <span>{room.settings.timeLimitSecs >= 60 ? `${room.settings.timeLimitSecs / 60}m` : `${room.settings.timeLimitSecs}s`}</span>
+                </div>
+              )}
+              <div className="settings-row">
+                <span>Show Guesses</span>
+                <span>{room.settings.showGuesses ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
           <div className="lobby-actions">
             <button
               className={`btn ${isReady ? 'btn-secondary' : 'btn-primary'}`}
@@ -228,14 +271,6 @@ export function Room() {
             )}
           </div>
 
-          {isHost && !allReady && players.length > 1 && (
-            <p className="lobby-hint">Waiting for all players to be ready...</p>
-          )}
-
-          {players.length === 1 && (
-            <p className="lobby-hint">Waiting for more players to join...</p>
-          )}
-
           {!isWsConnected && (
             <p className="lobby-hint">Connecting...</p>
           )}
@@ -244,19 +279,28 @@ export function Room() {
     )
   }
 
+  // ─── Playing / Finished ───
   return (
     <div className="room-page">
-      <header className="room-header">
-        <button className="btn btn-text" onClick={handleLeave}>
-          ← Leave
-        </button>
-        <h1>
-          {code} - Round {room?.roundNumber || 1}
-        </h1>
-        <div style={{ width: 60 }} />
+      <header className="page-header">
+        <button className="page-header-back" onClick={handleLeave}>←</button>
+        <h1>ROUND {room?.roundNumber || 1}</h1>
+        <div className="page-header-spacer" />
       </header>
 
       <div className="game-area">
+        <div className="players-bar">
+          {players.map((player) => (
+            <div
+              key={player.playerId}
+              className={`player-chip ${player.playerId === currentPlayer?.playerId ? 'current' : ''}`}
+            >
+              <span>{player.displayName}</span>
+              <span className="player-chip-attempts">{player.currentAttempts}/6</span>
+            </div>
+          ))}
+        </div>
+
         <div className="main-board">
           <GameBoard
             guesses={currentPlayer?.guesses || []}
@@ -266,50 +310,39 @@ export function Room() {
           />
         </div>
 
-        <div className="players-sidebar">
-          <h3>Players</h3>
-          {players.map((player) => (
-            <div
-              key={player.playerId}
-              className={`player-card ${player.playerId === currentPlayer?.playerId ? 'current' : ''}`}
-            >
-              <span className="player-name">{player.displayName}</span>
-              <span className="player-attempts">
-                {player.currentAttempts}/6
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {gameResult && (
-        <div className="round-result">
-          <h2>{'targetWord' in gameResult ? 'Round Over!' : 'Game Over!'}</h2>
-          {'targetWord' in gameResult && (
-            <p>
-              The word was: <strong>{gameResult.targetWord?.toUpperCase()}</strong>
-            </p>
-          )}
-          <div className="scores">
-            {(gameResult as { results?: Array<{ displayName: string; score: number }> }).results?.map((r, i) => (
-              <div key={i} className="score-row">
-                <span>{r.displayName}</span>
-                <span>{r.score} pts</span>
+        {gameResult && (
+          <div className="round-result">
+            <div className="round-result-card">
+              <h2>{'targetWord' in gameResult ? 'Round Over!' : 'Game Over!'}</h2>
+              {'targetWord' in gameResult && (
+                <p>
+                  The word was <strong>{gameResult.targetWord?.toUpperCase()}</strong>
+                </p>
+              )}
+              <div className="scores">
+                {(gameResult as { results?: Array<{ displayName: string; score: number }> }).results?.map((r, i) => (
+                  <div key={i} className="score-row">
+                    <span>{r.displayName}</span>
+                    <span>{r.score} pts</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            <div className="round-result-actions">
+              {isHost && isFinished && (
+                <button className="btn btn-primary" onClick={nextRound} disabled={!isWsConnected}>
+                  Play Again
+                </button>
+              )}
+              {isFinished && (
+                <button className="btn btn-secondary" onClick={handleLeave}>
+                  Home
+                </button>
+              )}
+            </div>
           </div>
-          {isHost && isFinished && (
-            <button className="btn btn-primary" onClick={nextRound} disabled={!isWsConnected}>
-              Play Again
-            </button>
-          )}
-          {isFinished && (
-            <button className="btn btn-primary" onClick={handleLeave}>
-              Back to Home
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {canPlay && (
         <Keyboard

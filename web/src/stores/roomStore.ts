@@ -25,6 +25,8 @@ function resultToEmoji(result: string): string {
   }).join('')
 }
 
+const MAX_RECONNECT_ATTEMPTS = 5
+
 interface RoomState {
   room: Room | null
   players: RoomPlayer[]
@@ -38,6 +40,7 @@ interface RoomState {
   // WebSocket
   ws: WebSocket | null
   isWsConnected: boolean
+  wsReconnectAttempts: number
 
   // Actions
   createRoom: (settings?: CreateRoomRequest) => Promise<string>
@@ -72,6 +75,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   gameResult: null,
   ws: null,
   isWsConnected: false,
+  wsReconnectAttempts: 0,
 
   createRoom: async (settings) => {
     set({ isLoading: true })
@@ -126,55 +130,63 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   connectWebSocket: (code, playerId) => {
-    const { ws: existingWs, isWsConnected } = get()
+    const { ws: existingWs } = get()
 
-    if (existingWs && isWsConnected) {
-      console.log('WebSocket already connected, skipping')
+    // Don't connect if there's already an open or connecting socket
+    if (existingWs && (existingWs.readyState === WebSocket.OPEN || existingWs.readyState === WebSocket.CONNECTING)) {
       return
     }
 
+    // Clean up any closing socket without triggering reconnect
     if (existingWs) {
+      existingWs.onclose = null
+      existingWs.onerror = null
       existingWs.close()
     }
 
-    console.log('Connecting WebSocket to room:', code)
     const url = roomApi.wsUrl(code, playerId)
     const ws = new WebSocket(url)
 
     ws.onopen = () => {
-      console.log('WebSocket connected')
-      set({ isWsConnected: true })
+      set({ isWsConnected: true, wsReconnectAttempts: 0 })
     }
 
     ws.onmessage = (event) => {
       try {
         const wsEvent = JSON.parse(event.data) as WSEvent
-        console.log('WebSocket message received:', wsEvent.type, wsEvent.payload)
         get().handleWSMessage(wsEvent)
-      } catch (err) {
-        console.error('Failed to parse WebSocket message:', err)
+      } catch {
+        // Ignore malformed messages
       }
     }
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
-      useToastStore.getState().addToast('Connection error', 'error')
-      set({ isWsConnected: false })
+    ws.onerror = () => {
+      // Only show error if this is still the active socket
+      if (get().ws === ws) {
+        set({ isWsConnected: false })
+      }
     }
 
     ws.onclose = (event) => {
-      console.log('WebSocket disconnected', event.code, event.reason)
+      // Ignore if this is a stale socket
+      if (get().ws !== ws) return
+
       set({ ws: null, isWsConnected: false })
 
       if (event.code !== 1000) {
-        console.log('Abnormal closure, attempting to reconnect in 2s...')
+        const attempts = get().wsReconnectAttempts
+        if (attempts >= MAX_RECONNECT_ATTEMPTS) {
+          useToastStore.getState().addToast('Connection lost. Please refresh the page.', 'error')
+          return
+        }
+        const delay = Math.min(2000 * Math.pow(2, attempts), 30000)
+        set({ wsReconnectAttempts: attempts + 1 })
         setTimeout(() => {
           const state = get()
-          if (!state.isWsConnected && state.room) {
-            console.log('Reconnecting...')
+          if (!state.isWsConnected && !state.ws && state.room) {
             get().connectWebSocket(state.room.code, playerId)
           }
-        }, 2000)
+        }, delay)
       }
     }
 
@@ -185,7 +197,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     const { ws } = get()
     if (ws) {
       ws.close()
-      set({ ws: null, isWsConnected: false })
+      set({ ws: null, isWsConnected: false, wsReconnectAttempts: 0 })
     }
   },
 
@@ -355,29 +367,21 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   setReady: (ready) => {
     const { ws } = get()
     if (ws && ws.readyState === WebSocket.OPEN) {
-      const message = { type: 'ready', payload: { ready } }
-      console.log('Sending WebSocket message:', message)
-      ws.send(JSON.stringify(message))
-    } else {
-      console.warn('WebSocket not ready, state:', ws?.readyState)
+      ws.send(JSON.stringify({ type: 'ready', payload: { ready } }))
     }
   },
 
   startGame: () => {
     const { ws } = get()
     if (ws && ws.readyState === WebSocket.OPEN) {
-      const message = { type: 'start_game' }
-      console.log('Sending WebSocket message:', message)
-      ws.send(JSON.stringify(message))
+      ws.send(JSON.stringify({ type: 'start_game' }))
     }
   },
 
   submitGuess: () => {
     const { ws, currentGuess, wordLength } = get()
     if (ws && ws.readyState === WebSocket.OPEN && currentGuess.length === wordLength) {
-      const message = { type: 'guess', payload: { word: currentGuess.toLowerCase() } }
-      console.log('Sending WebSocket message:', message)
-      ws.send(JSON.stringify(message))
+      ws.send(JSON.stringify({ type: 'guess', payload: { word: currentGuess.toLowerCase() } }))
       set({ isLoading: true })
     }
   },
@@ -417,16 +421,23 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
-  reset: () => set({
-    room: null,
-    players: [],
-    currentPlayer: null,
-    currentGuess: '',
-    letterStates: {},
-    wordLength: 5,
-    isLoading: false,
-    gameResult: null,
-    ws: null,
-    isWsConnected: false,
-  }),
+  reset: () => {
+    const { ws } = get()
+    if (ws) {
+      ws.close()
+    }
+    set({
+      room: null,
+      players: [],
+      currentPlayer: null,
+      currentGuess: '',
+      letterStates: {},
+      wordLength: 5,
+      isLoading: false,
+      gameResult: null,
+      ws: null,
+      isWsConnected: false,
+      wsReconnectAttempts: 0,
+    })
+  },
 }))

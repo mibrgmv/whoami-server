@@ -1,17 +1,14 @@
-// Auth types
 export interface GuestAuthResponse {
-  accessToken: string
-  guestId: string
-  tokenType: string
-  expiresIn: number
+  access_token: string
+  guest_id: string
+  token_type: string
+  expires_in: number
 }
 
-// Game types
 export type GameMode = 'GAME_MODE_DAILY' | 'GAME_MODE_RANDOM'
 export type GameStatus = 'GAME_STATUS_UNSPECIFIED' | 'GAME_STATUS_IN_PROGRESS' | 'GAME_STATUS_WON' | 'GAME_STATUS_LOST'
 export type LetterResult = 'LETTER_RESULT_CORRECT' | 'LETTER_RESULT_PRESENT' | 'LETTER_RESULT_ABSENT'
 
-// Helper constants for easier comparison
 export const GameStatusValues = {
   IN_PROGRESS: 'GAME_STATUS_IN_PROGRESS' as GameStatus,
   WON: 'GAME_STATUS_WON' as GameStatus,
@@ -57,7 +54,6 @@ export interface DailyStatus {
   status?: GameStatus
 }
 
-// Room types
 export type RoomMode = 'single_round' | 'marathon'
 export type RoomStatus = 'ROOM_STATUS_UNSPECIFIED' | 'ROOM_STATUS_WAITING' | 'ROOM_STATUS_PLAYING' | 'ROOM_STATUS_FINISHED'
 export type PlayerStatus = 'PLAYER_STATUS_UNSPECIFIED' | 'PLAYER_STATUS_WAITING' | 'PLAYER_STATUS_READY' | 'PLAYER_STATUS_PLAYING' | 'PLAYER_STATUS_FINISHED'
@@ -122,7 +118,6 @@ export interface RoomResponse {
   players: RoomPlayer[]
 }
 
-// Statistics types
 export interface GuessDistribution {
   one: number
   two: number

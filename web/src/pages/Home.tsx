@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore, redirectToLogin, redirectToRegister } from '../stores/authStore'
+import { useAuthStore, redirectToLogin } from '../stores/authStore'
 import { useRoomStore } from '../stores/roomStore'
+import { room as roomApi } from '../api/client'
 import { useGameStore } from '../stores/gameStore'
 import { useToastStore } from '../stores/toastStore'
 import { GameStatusValues } from '../types/api'
@@ -14,13 +15,13 @@ export function Home() {
   const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus } = useGameStore()
 
   const [roomCode, setRoomCode] = useState('')
-  const [showAuth, setShowAuth] = useState(false)
+  const [isJoining, setIsJoining] = useState(false)
   const [showRoomSettings, setShowRoomSettings] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
   const [showGuesses, setShowGuesses] = useState(true)
   const [roomMode, setRoomMode] = useState<'single_round' | 'marathon'>('single_round')
   const [maxPlayers, setMaxPlayers] = useState(6)
   const [timeLimitSecs, setTimeLimitSecs] = useState(180)
-  const [showDailyHint, setShowDailyHint] = useState(false)
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated && !isGuest && !dailyStatusFetched) {
@@ -29,15 +30,12 @@ export function Home() {
   }, [hasHydrated, isAuthenticated, isGuest, dailyStatusFetched, fetchDailyStatus])
 
   const handlePlayDaily = () => {
-    if (isDailyDisabled) {
-      setShowDailyHint(true)
-      setTimeout(() => setShowDailyHint(false), 1500)
-      return
-    }
+    if (!isAuthenticated || isGuest) return
     navigate('/game/daily')
   }
 
   const handlePlayRandom = () => {
+    if (!isAuthenticated) return
     navigate('/game')
   }
 
@@ -46,13 +44,7 @@ export function Home() {
       setShowAuth(true)
       return
     }
-
-    if (isGuest) {
-      useToastStore.getState().addToast('Guests cannot create rooms. Please log in.', 'error')
-      return
-    }
-
-    setShowRoomSettings(true)
+    setShowRoomSettings(!showRoomSettings)
   }
 
   const handleConfirmCreateRoom = async () => {
@@ -72,9 +64,17 @@ export function Home() {
     }
   }
 
-  const handleJoinRoom = () => {
-    if (roomCode.trim()) {
-      navigate(`/room/${roomCode.trim().toUpperCase()}`)
+  const handleJoinRoom = async () => {
+    const code = roomCode.trim().toUpperCase()
+    if (!code) return
+    setIsJoining(true)
+    try {
+      await roomApi.get(code)
+      navigate(`/room/${code}`)
+    } catch {
+      useToastStore.getState().addToast('Room not found', 'error')
+    } finally {
+      setIsJoining(false)
     }
   }
 
@@ -92,95 +92,44 @@ export function Home() {
     clearDailyStatus()
   }
 
-  const getDailyButtonText = () => {
-    if (!dailyStatusFetched && isAuthenticated && !isGuest) return 'Daily...'
-    if (!dailyStatus) return 'Daily Challenge'
-    if (dailyStatus.hasPlayedToday) {
-      if (dailyStatus.status === GameStatusValues.WON) {
-        return 'Daily ✓ Completed'
-      }
-      if (dailyStatus.status === GameStatusValues.LOST) {
-        return 'Daily ✗ Failed'
-      }
-      if (dailyStatus.status === GameStatusValues.IN_PROGRESS) {
-        return 'Daily - Continue'
-      }
-    }
-    return 'Daily Challenge'
+  const isDailyDisabled = !isAuthenticated || isGuest
+
+  const getDailyStatus = () => {
+    if (!dailyStatusFetched && isAuthenticated && !isGuest) return null
+    if (!dailyStatus?.hasPlayedToday) return null
+    if (dailyStatus.status === GameStatusValues.WON) return 'won'
+    if (dailyStatus.status === GameStatusValues.LOST) return 'lost'
+    if (dailyStatus.status === GameStatusValues.IN_PROGRESS) return 'continue'
+    return null
   }
 
-  const isDailyDisabled = !isAuthenticated || isGuest
+  const dailyStatusText = () => {
+    const s = getDailyStatus()
+    if (s === 'won') return 'Completed'
+    if (s === 'lost') return 'Failed'
+    if (s === 'continue') return 'Continue'
+    return null
+  }
 
   return (
     <div className="home">
-      <div className="home-header">
-        <div />
-        {isAuthenticated && (
-          <div className="header-actions">
-            {!isGuest && (
-              <button
-                className="btn btn-text"
-                onClick={() => navigate('/profile')}
-              >
-                Profile
-              </button>
-            )}
-            <div className="user-info">
-              {isGuest ? 'Playing as Guest' : username || 'User'}
-            </div>
-          </div>
-        )}
-      </div>
-
       <h1 className="home-title">GORDLE</h1>
       <p className="home-subtitle">Multiplayer word game</p>
 
-      <div className="home-actions">
-        <div className="divider">
-          <span>singleplayer</span>
-        </div>
+      <div className="home-cards">
 
-        <div className="play-modes">
-          <div
-            className="button-with-hint"
-            onClick={isDailyDisabled ? handlePlayDaily : undefined}
-          >
+        {/* Multiplayer card — prominent */}
+        <div className="card mp-card">
+          <div className="card-title">Multiplayer</div>
+          <div className="mp-actions">
             <button
-              className="btn btn-primary btn-large"
-              onClick={!isDailyDisabled ? handlePlayDaily : undefined}
-              disabled={isDailyDisabled}
+              className="btn btn-primary"
+              onClick={handleCreateRoom}
+              disabled={!isAuthenticated || isGuest || isLoading}
             >
-              {getDailyButtonText()}
+              {isLoading ? 'Creating...' : 'Create Room'}
             </button>
-            <div className="hint-container">
-              {showDailyHint && (
-                <div className="hint-text">
-                  Register to play Daily
-                </div>
-              )}
-            </div>
           </div>
-          <button
-            className="btn btn-secondary btn-large"
-            onClick={handlePlayRandom}
-            disabled={!isAuthenticated}
-          >
-            Random Word
-          </button>
-        </div>
-
-        <div className="divider">
-          <span>multiplayer</span>
-        </div>
-
-        <div className="multiplayer-actions">
-          <button
-            className="btn btn-secondary btn-large btn-full"
-            onClick={handleCreateRoom}
-            disabled={!isAuthenticated || isLoading}
-          >
-            {isLoading ? 'Creating...' : 'Create Room'}
-          </button>
 
           <div className="join-room">
             <input
@@ -188,170 +137,182 @@ export function Home() {
               placeholder="Room code"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
               maxLength={6}
               className="input"
             />
             <button
               className="btn btn-secondary"
               onClick={handleJoinRoom}
-              disabled={!isAuthenticated || !roomCode.trim()}
+              disabled={!isAuthenticated || !roomCode.trim() || isJoining}
             >
-              Join
+              {isJoining ? 'Checking...' : 'Join'}
             </button>
           </div>
-        </div>
-      </div>
 
-      <div className="home-footer">
-        <button className="btn btn-text" onClick={() => setShowAuth(true)}>
-          {isAuthenticated ? 'Log out' : 'Log in'}
-        </button>
-      </div>
-
-      {showAuth && (
-        <div className="modal-overlay" onClick={() => setShowAuth(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{isAuthenticated ? 'Account' : 'Get Started'}</h2>
-            <div className="modal-actions">
-              {isAuthenticated ? (
-                <>
-                  <div className="auth-status">
-                    {isGuest ? 'Playing as Guest' : 'Logged in'}
-                  </div>
-                  <button className="btn btn-primary" onClick={() => { handleLogout(); setShowAuth(false); }}>
-                    Log out
-                  </button>
-                  {isGuest && (
-                    <>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => redirectToLogin()}
-                      >
-                        Switch to Account
-                      </button>
-                      <button
-                        className="btn btn-text"
-                        onClick={() => redirectToRegister()}
-                      >
-                        Create account
-                      </button>
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <button className="btn btn-primary" onClick={handleGuestLogin}>
-                    Play as Guest
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => redirectToLogin()}
-                  >
-                    Log in
-                  </button>
-                  <button
-                    className="btn btn-text"
-                    onClick={() => redirectToRegister()}
-                  >
-                    Create account
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRoomSettings && (
-        <div className="modal-overlay" onClick={() => setShowRoomSettings(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Room Settings</h2>
-            <div className="room-settings">
-              <div className="setting-group">
-                <label className="setting-label">Game Mode</label>
-                <div className="setting-tabs">
-                  <button
-                    className={`setting-tab ${roomMode === 'single_round' ? 'active' : ''}`}
-                    onClick={() => setRoomMode('single_round')}
-                  >
-                    Single Round
-                  </button>
-                  <button
-                    className={`setting-tab ${roomMode === 'marathon' ? 'active' : ''}`}
-                    onClick={() => setRoomMode('marathon')}
-                  >
-                    Marathon
-                  </button>
-                </div>
-                <p className="setting-hint">
-                  {roomMode === 'single_round'
-                    ? 'Everyone guesses the same word'
-                    : 'Solve as many words as you can before time runs out'}
-                </p>
-              </div>
-
-              {roomMode === 'marathon' && (
+          {/* Room settings — inline expand */}
+          <div className={`collapsible ${showRoomSettings ? 'collapsible--open' : ''}`}>
+            <div className="collapsible-inner">
+              <div className="room-settings">
                 <div className="setting-group">
-                  <label className="setting-label">Time Limit</label>
+                  <label className="setting-label">Game Mode</label>
                   <div className="setting-tabs">
-                    {[60, 120, 180, 300].map((secs) => (
+                    <button
+                      className={`setting-tab ${roomMode === 'single_round' ? 'active' : ''}`}
+                      onClick={() => setRoomMode('single_round')}
+                    >
+                      Single Round
+                    </button>
+                    <button
+                      className={`setting-tab ${roomMode === 'marathon' ? 'active' : ''}`}
+                      onClick={() => setRoomMode('marathon')}
+                    >
+                      Marathon
+                    </button>
+                  </div>
+                  <p className="setting-hint">
+                    {roomMode === 'single_round'
+                      ? 'Everyone guesses the same word'
+                      : 'Solve as many words as you can before time runs out'}
+                  </p>
+                </div>
+
+                {roomMode === 'marathon' && (
+                  <div className="setting-group">
+                    <label className="setting-label">Time Limit</label>
+                    <div className="setting-tabs">
+                      {[60, 120, 180, 300].map((secs) => (
+                        <button
+                          key={secs}
+                          className={`setting-tab ${timeLimitSecs === secs ? 'active' : ''}`}
+                          onClick={() => setTimeLimitSecs(secs)}
+                        >
+                          {secs >= 60 ? `${secs / 60}m` : `${secs}s`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="setting-group">
+                  <label className="setting-label">Max Players</label>
+                  <div className="setting-tabs">
+                    {[2, 3, 4, 5, 6].map((n) => (
                       <button
-                        key={secs}
-                        className={`setting-tab ${timeLimitSecs === secs ? 'active' : ''}`}
-                        onClick={() => setTimeLimitSecs(secs)}
+                        key={n}
+                        className={`setting-tab ${maxPlayers === n ? 'active' : ''}`}
+                        onClick={() => setMaxPlayers(n)}
                       >
-                        {secs >= 60 ? `${secs / 60}m` : `${secs}s`}
+                        {n}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
 
-              <div className="setting-group">
-                <label className="setting-label">Max Players</label>
-                <div className="setting-tabs">
-                  {[2, 3, 4, 5, 6].map((n) => (
-                    <button
-                      key={n}
-                      className={`setting-tab ${maxPlayers === n ? 'active' : ''}`}
-                      onClick={() => setMaxPlayers(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                <label className="toggle-setting">
+                  <span>Show guesses to all players</span>
+                  <input
+                    type="checkbox"
+                    checked={showGuesses}
+                    onChange={(e) => setShowGuesses(e.target.checked)}
+                  />
+                </label>
+
+                <div className="room-settings-actions">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleConfirmCreateRoom}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Creating...' : 'Start Room'}
+                  </button>
+                  <button
+                    className="btn btn-text"
+                    onClick={() => setShowRoomSettings(false)}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-
-              <label className="toggle-setting">
-                <span>Show guesses to all players</span>
-                <input
-                  type="checkbox"
-                  checked={showGuesses}
-                  onChange={(e) => setShowGuesses(e.target.checked)}
-                />
-              </label>
-              <p className="setting-hint">
-                Players will see each other's results as emoji squares
-              </p>
-            </div>
-            <div className="modal-actions">
-              <button
-                className="btn btn-primary"
-                onClick={handleConfirmCreateRoom}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Creating...' : 'Create Room'}
-              </button>
-              <button
-                className="btn btn-text"
-                onClick={() => setShowRoomSettings(false)}
-              >
-                Cancel
-              </button>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Solo cards row */}
+        <div className="solo-row">
+          <div
+            className={`card solo-card ${isDailyDisabled ? 'solo-card--disabled' : ''}`}
+            onClick={handlePlayDaily}
+          >
+            <div className="solo-card-name">Daily</div>
+            <div className="solo-card-desc">One word per day</div>
+            {dailyStatusText() && (
+              <div className={`solo-card-status ${
+                getDailyStatus() === 'won' ? 'solo-card-status--won' :
+                getDailyStatus() === 'lost' ? 'solo-card-status--lost' : ''
+              }`}>
+                {dailyStatusText()}
+              </div>
+            )}
+            {isDailyDisabled && (
+              <div className="hint-text">Log in to play</div>
+            )}
+          </div>
+
+          <div
+            className={`card solo-card ${!isAuthenticated ? 'solo-card--disabled' : ''}`}
+            onClick={handlePlayRandom}
+          >
+            <div className="solo-card-name">Random</div>
+            <div className="solo-card-desc">Practice mode</div>
+          </div>
+        </div>
+
+        {/* Auth card */}
+        <div className="card auth-card" onClick={() => setShowAuth(!showAuth)}>
+          <div className="auth-card-label">
+            {isAuthenticated
+              ? (isGuest ? 'Playing as Guest' : username)
+              : 'Log in'}
+          </div>
+          <div className={`collapsible ${showAuth ? 'collapsible--open' : ''}`}>
+            <div className="collapsible-inner">
+              <div className="auth-card-actions" onClick={(e) => e.stopPropagation()}>
+                {!isAuthenticated && (
+                  <>
+                    <button className="btn btn-primary" onClick={handleGuestLogin}>
+                      Play as Guest
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => redirectToLogin()}>
+                      Log in
+                    </button>
+                  </>
+                )}
+                {isAuthenticated && isGuest && (
+                  <>
+                    <button className="btn btn-secondary" onClick={() => redirectToLogin()}>
+                      Log in
+                    </button>
+                    <button className="btn btn-secondary" onClick={handleLogout}>
+                      Log out
+                    </button>
+                  </>
+                )}
+                {isAuthenticated && !isGuest && (
+                  <>
+                    <button className="btn btn-secondary" onClick={() => navigate('/profile')}>
+                      Profile
+                    </button>
+                    <button className="btn btn-secondary" onClick={handleLogout}>
+                      Log out
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

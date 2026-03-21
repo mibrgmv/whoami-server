@@ -58,23 +58,13 @@ async function refreshAccessToken(): Promise<string> {
   return refreshPromise
 }
 
-function getAccessToken(): string | null {
-  const stored = localStorage.getItem('auth-storage')
-  if (!stored) return null
-  try {
-    const parsed = JSON.parse(stored)
-    return parsed.state?.accessToken || null
-  } catch {
-    return null
-  }
-}
-
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
   isRetry = false
 ): Promise<T> {
-  const token = getAccessToken()
+  const { useAuthStore } = await import('../stores/authStore')
+  const token = useAuthStore.getState().accessToken
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

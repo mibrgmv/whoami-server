@@ -61,11 +61,11 @@ export function Profile() {
   if (error) {
     return (
       <div className="profile">
-        <div className="profile-header">
-          <button className="btn btn-text" onClick={() => navigate('/')}>
-            Back
-          </button>
-        </div>
+        <header className="page-header">
+          <button className="page-header-back" onClick={() => navigate('/')}>←</button>
+          <h1>Profile</h1>
+          <div className="page-header-spacer" />
+        </header>
         <div className="profile-error">{error}</div>
       </div>
     )
@@ -86,24 +86,24 @@ export function Profile() {
 
   return (
     <div className="profile">
-      <div className="profile-header">
-        <button className="btn btn-text" onClick={() => navigate('/')}>
-          Back
-        </button>
+      <header className="page-header">
+        <button className="page-header-back" onClick={() => navigate('/')}>←</button>
         <h1>Profile</h1>
-        <div />
-      </div>
-
-      <div className="profile-actions">
-        <button className="btn btn-secondary" onClick={() => handleKeycloakAction('UPDATE_PASSWORD')}>
-          Change Password
-        </button>
-        <button className="btn btn-secondary" onClick={() => handleKeycloakAction('UPDATE_EMAIL')}>
-          Change Email
-        </button>
-      </div>
+        <div className="page-header-spacer" />
+      </header>
 
       <div className="profile-content">
+        <div className="profile-tiles">
+          <div className="profile-tile" onClick={() => handleKeycloakAction('UPDATE_PASSWORD')}>
+            <div className="profile-tile-name">Password</div>
+            <div className="profile-tile-desc">Change</div>
+          </div>
+          <div className="profile-tile" onClick={() => handleKeycloakAction('UPDATE_EMAIL')}>
+            <div className="profile-tile-name">Email</div>
+            <div className="profile-tile-desc">Change</div>
+          </div>
+        </div>
+
         <div className="stats-cards">
           <div className="stat-card">
             <div className="stat-value">{stats?.gamesPlayed ?? 0}</div>
@@ -155,6 +155,7 @@ export function Profile() {
             </div>
           )}
         </div>
+
       </div>
     </div>
   )
@@ -184,7 +185,7 @@ function HistoryItem({ game }: { game: GameHistoryItem }) {
     : game.gameMode === 'random' ? 'Random'
     : game.gameMode === 'room' ? 'Room'
     : game.gameMode
-  const date = new Date(game.createdAt).toLocaleDateString()
+  const date = new Date(game.gameDate).toLocaleDateString()
 
   return (
     <div className={`history-item ${isWon ? 'won' : 'lost'}`}>

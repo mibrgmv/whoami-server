@@ -5,6 +5,7 @@
   "displayNameHtml": "<h1 style=\"letter-spacing:0.1em;font-weight:700\">GORDLE</h1>",
   "loginTheme": "keycloak.v2",
   "registrationAllowed": true,
+  "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "verifyEmail": true,
@@ -50,6 +51,22 @@
       "enabled": true,
       "defaultAction": true,
       "priority": 50
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30
+    },
+    {
+      "alias": "UPDATE_EMAIL",
+      "name": "Update Email",
+      "providerId": "UPDATE_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 40
     },
     {
       "alias": "VERIFY_PROFILE",
