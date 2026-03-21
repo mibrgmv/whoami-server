@@ -1,30 +1,9 @@
 // Auth types
-export interface TokenResponse {
-  accessToken: string
-  refreshToken: string
-  tokenType: string
-  expiresIn: number
-}
-
 export interface GuestAuthResponse {
   accessToken: string
   guestId: string
   tokenType: string
   expiresIn: number
-}
-
-export interface LoginRequest {
-  username: string
-  password: string
-}
-
-export interface RegisterRequest {
-  username: string
-  email: string
-  password: string
-  first_name?: string
-  last_name?: string
-  recaptcha_token?: string
 }
 
 // Game types

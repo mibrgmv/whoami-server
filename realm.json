@@ -1,11 +1,28 @@
 {
   "realm": "gordle-realm",
   "enabled": true,
-  "displayName": "My Realm",
+  "displayName": "Gordle",
+  "displayNameHtml": "<h1 style=\"letter-spacing:0.1em;font-weight:700\">GORDLE</h1>",
+  "loginTheme": "keycloak.v2",
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "verifyEmail": true,
+  "browserSecurityHeaders": {
+    "contentSecurityPolicy": "frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'self'; object-src 'none';"
+  },
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"required\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"email\",\"displayName\":\"${email}\",\"required\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"required\":{},\"permissions\":{\"view\":[],\"edit\":[]}},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"required\":{},\"permissions\":{\"view\":[],\"edit\":[]}}]}"
+          ]
+        }
+      }
+    ]
+  },
   "smtpServer": {
     "host": "${SMTP_HOST}",
     "port": "1025",
@@ -27,39 +44,20 @@
   "defaultRoles": ["user"],
   "requiredActions": [
     {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 50
+    },
+    {
       "alias": "VERIFY_PROFILE",
       "name": "Verify Profile",
       "providerId": "VERIFY_PROFILE",
       "enabled": false,
       "defaultAction": false,
       "priority": 90
-    }
-  ],
-  "identityProviders": [
-    {
-      "alias": "google",
-      "providerId": "google",
-      "enabled": true,
-      "trustEmail": true,
-      "firstBrokerLoginFlowAlias": "first broker login",
-      "config": {
-        "clientId": "${GOOGLE_CLIENT_ID}",
-        "clientSecret": "${GOOGLE_CLIENT_SECRET}",
-        "defaultScope": "openid email profile",
-        "syncMode": "IMPORT"
-      }
-    }
-  ],
-  "identityProviderMappers": [
-    {
-      "name": "google-username-mapper",
-      "identityProviderAlias": "google",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute": "emailVerified",
-        "attribute.value": "true"
-      }
     }
   ],
   "clients": [
@@ -128,6 +126,55 @@
         }
       ],
       "realmRoles": ["user"]
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "registration",
+      "description": "Registration flow",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": true,
+      "authenticationExecutions": [
+        {
+          "authenticator": "registration-page-form",
+          "requirement": "REQUIRED",
+          "flowAlias": "registration form",
+          "authenticatorFlow": true
+        }
+      ]
+    },
+    {
+      "alias": "registration form",
+      "description": "Registration form",
+      "providerId": "form-flow",
+      "topLevel": false,
+      "builtIn": true,
+      "authenticationExecutions": [
+        {
+          "authenticator": "registration-user-creation",
+          "requirement": "REQUIRED"
+        },
+        {
+          "authenticator": "registration-password-action",
+          "requirement": "REQUIRED"
+        },
+        {
+          "authenticator": "registration-recaptcha-action",
+          "requirement": "REQUIRED",
+          "authenticatorConfig": "recaptcha-config"
+        }
+      ]
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "recaptcha-config",
+      "config": {
+        "site.key": "${RECAPTCHA_SITE_KEY}",
+        "secret": "${RECAPTCHA_SECRET_KEY}",
+        "useRecaptchaNet": "false"
+      }
     }
   ]
 }

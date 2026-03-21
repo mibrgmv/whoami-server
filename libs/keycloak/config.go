@@ -2,6 +2,7 @@ package keycloak
 
 type Config struct {
 	BaseURL            string `mapstructure:"base_url"`
+	IssuerURL          string `mapstructure:"issuer_url"`
 	Realm              string `mapstructure:"realm"`
 	PublicClientID     string `mapstructure:"public_client_id"`
 	PublicClientSecret string `mapstructure:"public_client_secret"`

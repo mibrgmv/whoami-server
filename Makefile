@@ -1,7 +1,7 @@
 COMPOSE := docker compose
 
-SERVICES := libs gateway game iam statistics
-BUILD_SERVICES := gateway game iam statistics
+SERVICES := libs gateway game statistics
+BUILD_SERVICES := gateway game statistics
 
 .PHONY: up down down-v rs logs build build-all lint test tidy gen web web-build web-install help
 
@@ -46,7 +46,7 @@ tidy:
 	done
 
 gen:
-	@for svc in gateway iam game statistics; do \
+	@for svc in gateway game statistics; do \
 		echo "==> Generating proto for $$svc"; \
 		cd $$svc && make gen && cd ..; \
 	done

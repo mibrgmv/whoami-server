@@ -47,7 +47,7 @@ func gameHistoryToProto(g *models.GameHistory) *statisticsv1.GameHistoryItem {
 	}
 
 	if g.GameDate != nil {
-		item.GameDate = *g.GameDate
+		item.GameDate = g.GameDate.Format("2006-01-02")
 	}
 
 	return item

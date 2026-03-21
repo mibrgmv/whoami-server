@@ -1,145 +1,16 @@
-import { useState, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import ReCAPTCHA from 'react-google-recaptcha'
-import { useAuthStore } from '../stores/authStore'
+import { useEffect } from 'react'
+import { redirectToRegister } from '../stores/authStore'
 import './Auth.css'
 
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
-
 export function Register() {
-  const navigate = useNavigate()
-  const { register } = useAuthStore()
-
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const recaptchaRef = useRef<ReCAPTCHA>(null)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      const recaptchaToken = recaptchaRef.current?.getValue() || undefined
-      await register({ username, email, password, recaptcha_token: recaptchaToken })
-      navigate('/')
-    } catch (err) {
-      const message = (err as Error).message || 'Registration failed'
-      if (message === 'email_not_verified') {
-        setEmailSent(true)
-      } else {
-        setError(message)
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (emailSent) {
-    return (
-      <div className="auth-page">
-        <div className="auth-container">
-          <h1>Check your email</h1>
-          <p className="auth-message">
-            We sent a verification link to <strong>{email}</strong>.
-            Please verify your email and then log in.
-          </p>
-          <Link to="/login" className="btn btn-primary">
-            Go to Login
-          </Link>
-          <Link to="/" className="btn btn-text">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    redirectToRegister()
+  }, [])
 
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h1>Register</h1>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="input"
-            required
-            autoComplete="username"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input"
-            required
-            autoComplete="email"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input"
-            required
-            autoComplete="new-password"
-          />
-          <input
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input"
-            required
-            autoComplete="new-password"
-          />
-          {RECAPTCHA_SITE_KEY && (
-            <div className="recaptcha-container">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={RECAPTCHA_SITE_KEY}
-                theme="dark"
-              />
-            </div>
-          )}
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <p className="auth-link">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-
-        <Link to="/" className="btn btn-text">
-          ← Back to Home
-        </Link>
+        <p className="auth-message">Redirecting to registration...</p>
       </div>
     </div>
   )

@@ -29,9 +29,11 @@ func NewHistoryService(historyRepo repository.HistoryRepository, statisticsServi
 }
 
 func (s *historyService) CreateGameHistory(ctx context.Context, result *models.GameResult) error {
-	var gameDatePtr *string
+	var gameDatePtr *time.Time
 	if result.GameDate != "" {
-		gameDatePtr = &result.GameDate
+		if parsed, err := time.Parse("2006-01-02", result.GameDate); err == nil {
+			gameDatePtr = &parsed
+		}
 	}
 
 	history := &models.GameHistory{

@@ -1,8 +1,6 @@
+import { config } from '../config'
 import type {
-  TokenResponse,
   GuestAuthResponse,
-  LoginRequest,
-  RegisterRequest,
   GameSession,
   GuessResult,
   DailyStatus,
@@ -13,8 +11,6 @@ import type {
   UserStatistics,
   GameHistoryResponse,
 } from '../types/api'
-
-const API_BASE = '/api/v1'
 
 class ApiError extends Error {
   constructor(
@@ -45,25 +41,13 @@ async function refreshAccessToken(): Promise<string> {
         throw new Error('No refresh token available')
       }
 
-      const response = await fetch(`${API_BASE}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Refresh token failed')
-      }
-
-      const data: { accessToken: string; refreshToken: string } = await response.json()
-
-      store.setTokens(data.accessToken, data.refreshToken, store.isGuest)
-
-      return data.accessToken
+      const data = await auth.refresh(refreshToken)
+      store.setTokens(data.access_token, data.refresh_token, store.isGuest)
+      return data.access_token
     } catch (error) {
       const { useAuthStore } = await import('../stores/authStore')
       const store = useAuthStore.getState()
-      await store.logout()
+      store.clearAuth()
       throw error
     } finally {
       isRefreshing = false
@@ -101,7 +85,7 @@ async function request<T>(
     ;(headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`${config.apiBase}${endpoint}`, {
     ...options,
     headers,
   })
@@ -128,36 +112,51 @@ async function request<T>(
   return response.json()
 }
 
+async function keycloakPost<T>(path: string, body: URLSearchParams): Promise<T> {
+  const response = await fetch(`${config.keycloak.oidcBase}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.error_description || error.error || 'Keycloak request failed')
+  }
+
+  if (response.status === 204) {
+    return {} as T
+  }
+
+  return response.json()
+}
+
 // Auth API
 export const auth = {
-  login: (data: LoginRequest): Promise<TokenResponse> =>
-    request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  register: (data: RegisterRequest): Promise<{ id: string; message: string }> =>
-    request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
   guest: (): Promise<GuestAuthResponse> =>
-    request('/auth/guest', {
-      method: 'POST',
-    }),
+    request('/auth/guest', { method: 'POST' }),
 
-  refresh: (refreshToken: string): Promise<TokenResponse> =>
-    request('/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    }),
+  exchangeCode: (code: string): Promise<{ access_token: string; refresh_token: string }> =>
+    keycloakPost('/token', new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: config.keycloak.clientId,
+      code,
+      redirect_uri: `${window.location.origin}/oauth/callback`,
+    })),
 
-  logout: (refreshToken: string): Promise<void> =>
-    request('/auth/logout', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    }),
+  refresh: (refreshToken: string): Promise<{ access_token: string; refresh_token: string }> =>
+    keycloakPost('/token', new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: config.keycloak.clientId,
+      refresh_token: refreshToken,
+    })),
+
+  logout: async (refreshToken: string): Promise<void> => {
+    await keycloakPost('/logout', new URLSearchParams({
+      client_id: config.keycloak.clientId,
+      refresh_token: refreshToken,
+    }))
+  },
 }
 
 // Game API
@@ -204,7 +203,7 @@ export const room = {
   wsUrl: (code: string, playerId: string): string => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    return `${protocol}//${host}/api/v1/rooms/${code}/ws?player_id=${playerId}`
+    return `${protocol}//${host}${config.apiBase}/rooms/${code}/ws?player_id=${playerId}`
   },
 }
 

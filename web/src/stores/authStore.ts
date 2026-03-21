@@ -1,19 +1,48 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { config } from '../config'
 import { auth } from '../api/client'
-import type { LoginRequest, RegisterRequest } from '../types/api'
+
+export function redirectToLogin(): void {
+  const params = new URLSearchParams({
+    client_id: config.keycloak.clientId,
+    redirect_uri: `${window.location.origin}/oauth/callback`,
+    response_type: 'code',
+    scope: 'openid',
+  })
+  window.location.href = `${config.keycloak.oidcBase}/auth?${params}`
+}
+
+export function redirectToRegister(): void {
+  const params = new URLSearchParams({
+    client_id: config.keycloak.clientId,
+    redirect_uri: `${window.location.origin}/oauth/callback`,
+    response_type: 'code',
+    scope: 'openid',
+  })
+  window.location.href = `${config.keycloak.oidcBase}/registrations?${params}`
+}
+
+function parseUsername(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.preferred_username || null
+  } catch {
+    return null
+  }
+}
 
 interface AuthState {
   accessToken: string | null
   refreshToken: string | null
+  username: string | null
   isGuest: boolean
   isAuthenticated: boolean
   hasHydrated: boolean
 
-  login: (data: LoginRequest) => Promise<void>
-  register: (data: RegisterRequest) => Promise<void>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
+  clearAuth: () => void
   setTokens: (accessToken: string, refreshToken: string, isGuest?: boolean) => void
   setHasHydrated: (state: boolean) => void
 }
@@ -23,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       accessToken: null,
       refreshToken: null,
+      username: null,
       isGuest: false,
       isAuthenticated: false,
       hasHydrated: false,
@@ -35,27 +65,20 @@ export const useAuthStore = create<AuthState>()(
         set({
           accessToken,
           refreshToken,
+          username: parseUsername(accessToken),
           isGuest,
           isAuthenticated: true,
         })
       },
 
-      login: async (data) => {
-        const response = await auth.login(data)
-        get().setTokens(response.accessToken, response.refreshToken, false)
-      },
-
-      register: async (data) => {
-        await auth.register(data)
-        try {
-          await get().login({ username: data.username, password: data.password })
-        } catch (err) {
-          const message = (err as Error).message || ''
-          if (message.includes('email not verified')) {
-            throw new Error('email_not_verified')
-          }
-          throw err
-        }
+      clearAuth: () => {
+        set({
+          accessToken: null,
+          refreshToken: null,
+          username: null,
+          isGuest: false,
+          isAuthenticated: false,
+        })
       },
 
       loginAsGuest: async () => {
@@ -64,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        const { refreshToken } = get()
+        const { refreshToken, isGuest } = get()
         if (refreshToken) {
           try {
             await auth.logout(refreshToken)
@@ -72,12 +95,15 @@ export const useAuthStore = create<AuthState>()(
             // Ignore logout errors
           }
         }
-        set({
-          accessToken: null,
-          refreshToken: null,
-          isGuest: false,
-          isAuthenticated: false,
-        })
+        get().clearAuth()
+
+        if (!isGuest) {
+          const params = new URLSearchParams({
+            client_id: config.keycloak.clientId,
+            post_logout_redirect_uri: window.location.origin,
+          })
+          window.location.href = `${config.keycloak.oidcBase}/logout?${params}`
+        }
       },
     }),
     {
@@ -85,6 +111,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        username: state.username,
         isGuest: state.isGuest,
         isAuthenticated: state.isAuthenticated,
       }),

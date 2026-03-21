@@ -29,16 +29,6 @@ services:
       args:
         SERVICE: game
 
-  iam-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: iam
-      args:
-        SERVICE: iam
-    environment:
-      - KEYCLOAK_BASE_URL=http://keycloak:8080
-
   statistics-service:
     build:
       context: .

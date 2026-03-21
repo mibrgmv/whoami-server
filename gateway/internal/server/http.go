@@ -18,14 +18,13 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/handler"
 	"gordle/gateway/internal/metrics"
 	"gordle/gateway/internal/middleware"
 	"gordle/gateway/internal/websocket"
-	authv1 "gordle/gateway/pkg/protogen/auth/v1"
 	gamev1 "gordle/gateway/pkg/protogen/game/v1"
 	roomv1 "gordle/gateway/pkg/protogen/room/v1"
 	statisticsv1 "gordle/gateway/pkg/protogen/statistics/v1"
-	userv1 "gordle/gateway/pkg/protogen/user/v1"
 )
 
 func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger) (*http.Server, error) {
@@ -69,8 +68,6 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		register func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error
 		addr     string
 	}{
-		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.IamService.GetAddr()},
-		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.IamService.GetAddr()},
 		{"game", gamev1.RegisterGameServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
 		{"room", roomv1.RegisterRoomServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
 		{"statistics", statisticsv1.RegisterStatisticsServiceHandlerFromEndpoint, cfg.StatisticsService.GetAddr()},
@@ -83,12 +80,13 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	}
 
 	jwtConfig := middleware.JWTConfig{
-		KeycloakBaseURL: cfg.Keycloak.BaseURL,
-		Realm:           cfg.Keycloak.Realm,
-		KeyRefreshTTL:   1 * time.Hour,
-		HTTPTimeout:     10 * time.Second,
-		Metrics:         collector,
-		GuestSecret:     cfg.GuestSecret,
+		KeycloakBaseURL:   cfg.Keycloak.BaseURL,
+		KeycloakIssuerURL: cfg.Keycloak.IssuerURL,
+		Realm:             cfg.Keycloak.Realm,
+		KeyRefreshTTL:     1 * time.Hour,
+		HTTPTimeout:       10 * time.Second,
+		Metrics:           collector,
+		GuestSecret:       cfg.GuestSecret,
 	}
 	jwtMiddleware := middleware.JWT(jwtConfig)
 	jwtOptionalMiddleware := middleware.JWTOptional(jwtConfig)
@@ -133,8 +131,8 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/api/v1/swagger.json")))
 
-	// Public routes (no auth required)
-	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
+	// Guest auth (no Keycloak needed)
+	router.POST("/api/v1/auth/guest", handler.GuestAuth(cfg.GuestSecret))
 
 	// Game routes (auth optional - guests can play)
 	gamesGroup := router.Group("/api/v1")
@@ -166,9 +164,6 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	protectedGroup := router.Group("/api/v1")
 	protectedGroup.Use(jwtMiddleware)
 	{
-		protectedGroup.Any("/users", gin.WrapH(gwmux))
-		protectedGroup.Any("/users/*path", gin.WrapH(gwmux))
-
 		protectedGroup.Any("/statistics", gin.WrapH(gwmux))
 		protectedGroup.Any("/statistics/*path", gin.WrapH(gwmux))
 	}

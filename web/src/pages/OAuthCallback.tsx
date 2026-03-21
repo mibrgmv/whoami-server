@@ -1,34 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore, redirectToLogin } from '../stores/authStore'
+import { auth } from '../api/client'
 import './Auth.css'
-
-async function exchangeCodeForTokens(code: string): Promise<{
-  access_token: string
-  refresh_token: string
-}> {
-  const redirectUri = `${window.location.origin}/oauth/callback`
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: 'gordle-public',
-    code,
-    redirect_uri: redirectUri,
-  })
-
-  const tokenUrl = `/realms/gordle-realm/protocol/openid-connect/token`
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    throw new Error(error.error_description || 'Failed to exchange authorization code')
-  }
-
-  return response.json()
-}
 
 export function OAuthCallback() {
   const navigate = useNavigate()
@@ -41,6 +15,10 @@ export function OAuthCallback() {
     const errorParam = searchParams.get('error')
 
     if (errorParam) {
+      if (searchParams.get('error_description') === 'authentication_expired') {
+        navigate('/')
+        return
+      }
       setError(searchParams.get('error_description') || 'Authentication failed')
       return
     }
@@ -50,10 +28,12 @@ export function OAuthCallback() {
       return
     }
 
-    exchangeCodeForTokens(code)
+    auth.exchangeCode(code)
       .then((tokens) => {
         setTokens(tokens.access_token, tokens.refresh_token, false)
-        navigate('/')
+        const returnTo = sessionStorage.getItem('auth_return_to')
+        sessionStorage.removeItem('auth_return_to')
+        navigate(returnTo || '/')
       })
       .catch((err) => {
         setError((err as Error).message || 'Failed to complete sign-in')
@@ -66,7 +46,7 @@ export function OAuthCallback() {
         <div className="auth-container">
           <h1>Sign-in failed</h1>
           <div className="auth-error">{error}</div>
-          <button className="btn btn-primary" onClick={() => navigate('/login')}>
+          <button className="btn btn-primary" onClick={() => redirectToLogin()}>
             Back to Login
           </button>
         </div>

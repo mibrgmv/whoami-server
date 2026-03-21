@@ -1,9 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { config } from '../config'
 import { useAuthStore } from '../stores/authStore'
 import { statistics } from '../api/client'
 import type { UserStatistics, GameHistoryItem } from '../types/api'
 import './Profile.css'
+
+function keycloakActionUrl(action: string): string {
+  const params = new URLSearchParams({
+    client_id: config.keycloak.clientId,
+    redirect_uri: `${window.location.origin}/oauth/callback`,
+    response_type: 'code',
+    scope: 'openid',
+    kc_action: action,
+  })
+  return `${config.keycloak.oidcBase}/auth?${params}`
+}
+
+function handleKeycloakAction(action: string) {
+  sessionStorage.setItem('auth_return_to', '/profile')
+  window.location.href = keycloakActionUrl(action)
+}
 
 export function Profile() {
   const navigate = useNavigate()
@@ -78,14 +95,12 @@ export function Profile() {
       </div>
 
       <div className="profile-actions">
-        <a
-          href="/realms/gordle-realm/account/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary"
-        >
-          Manage Account
-        </a>
+        <button className="btn btn-secondary" onClick={() => handleKeycloakAction('UPDATE_PASSWORD')}>
+          Change Password
+        </button>
+        <button className="btn btn-secondary" onClick={() => handleKeycloakAction('UPDATE_EMAIL')}>
+          Change Email
+        </button>
       </div>
 
       <div className="profile-content">
@@ -165,13 +180,16 @@ function DistributionBar({ label, value, max }: { label: string; value: number; 
 
 function HistoryItem({ game }: { game: GameHistoryItem }) {
   const isWon = game.result === 'won'
-  const isDaily = game.gameMode === 'GAME_MODE_DAILY'
+  const modeLabel = game.gameMode === 'daily' ? 'Daily'
+    : game.gameMode === 'random' ? 'Random'
+    : game.gameMode === 'room' ? 'Room'
+    : game.gameMode
   const date = new Date(game.createdAt).toLocaleDateString()
 
   return (
     <div className={`history-item ${isWon ? 'won' : 'lost'}`}>
       <div className="history-item-header">
-        <span className="history-mode">{isDaily ? 'Daily' : 'Random'}</span>
+        <span className="history-mode">{modeLabel}</span>
         <span className="history-date">{date}</span>
       </div>
       <div className="history-item-body">

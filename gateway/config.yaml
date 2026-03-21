@@ -15,10 +15,6 @@ metrics:
   host: 0.0.0.0
   port: 9090
 
-iam_service:
-  host: localhost
-  port: 50052
-
 game_service:
   host: localhost
   port: 50051
@@ -33,6 +29,7 @@ statistics_service:
 
 keycloak:
   base_url:
+  issuer_url:
   realm:
   public_client_id:
   public_client_secret:

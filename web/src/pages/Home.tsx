@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore, redirectToLogin, redirectToRegister } from '../stores/authStore'
 import { useRoomStore } from '../stores/roomStore'
 import { useGameStore } from '../stores/gameStore'
 import { useToastStore } from '../stores/toastStore'
@@ -9,7 +9,7 @@ import './Home.css'
 
 export function Home() {
   const navigate = useNavigate()
-  const { isAuthenticated, isGuest, hasHydrated, loginAsGuest, logout } = useAuthStore()
+  const { isAuthenticated, isGuest, username, hasHydrated, loginAsGuest, logout } = useAuthStore()
   const { createRoom, isLoading } = useRoomStore()
   const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus } = useGameStore()
 
@@ -100,7 +100,7 @@ export function Home() {
         return 'Daily ✓ Completed'
       }
       if (dailyStatus.status === GameStatusValues.LOST) {
-        return 'Daily ✗ Try Tomorrow'
+        return 'Daily ✗ Failed'
       }
       if (dailyStatus.status === GameStatusValues.IN_PROGRESS) {
         return 'Daily - Continue'
@@ -109,11 +109,7 @@ export function Home() {
     return 'Daily Challenge'
   }
 
-  const isDailyDisabled = !isAuthenticated ||
-    isGuest ||
-    (dailyStatus?.hasPlayedToday &&
-     (dailyStatus.status === GameStatusValues.WON ||
-      dailyStatus.status === GameStatusValues.LOST))
+  const isDailyDisabled = !isAuthenticated || isGuest
 
   return (
     <div className="home">
@@ -130,7 +126,7 @@ export function Home() {
               </button>
             )}
             <div className="user-info">
-              {isGuest ? 'Playing as Guest' : 'User'}
+              {isGuest ? 'Playing as Guest' : username || 'User'}
             </div>
           </div>
         )}
@@ -229,13 +225,13 @@ export function Home() {
                     <>
                       <button
                         className="btn btn-secondary"
-                        onClick={() => navigate('/login')}
+                        onClick={() => redirectToLogin()}
                       >
                         Switch to Account
                       </button>
                       <button
                         className="btn btn-text"
-                        onClick={() => navigate('/register')}
+                        onClick={() => redirectToRegister()}
                       >
                         Create account
                       </button>
@@ -249,13 +245,13 @@ export function Home() {
                   </button>
                   <button
                     className="btn btn-secondary"
-                    onClick={() => navigate('/login')}
+                    onClick={() => redirectToLogin()}
                   >
                     Log in
                   </button>
                   <button
                     className="btn btn-text"
-                    onClick={() => navigate('/register')}
+                    onClick={() => redirectToRegister()}
                   >
                     Create account
                   </button>

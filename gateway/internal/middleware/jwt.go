@@ -46,12 +46,20 @@ type AuthFailureRecorder interface {
 }
 
 type JWTConfig struct {
-	KeycloakBaseURL string
-	Realm           string
-	KeyRefreshTTL   time.Duration
-	HTTPTimeout     time.Duration
-	Metrics         AuthFailureRecorder
-	GuestSecret     string
+	KeycloakBaseURL   string
+	KeycloakIssuerURL string
+	Realm             string
+	KeyRefreshTTL     time.Duration
+	HTTPTimeout       time.Duration
+	Metrics           AuthFailureRecorder
+	GuestSecret       string
+}
+
+func (c JWTConfig) issuerURL() string {
+	if c.KeycloakIssuerURL != "" {
+		return c.KeycloakIssuerURL
+	}
+	return c.KeycloakBaseURL
 }
 
 func JWT(cfg JWTConfig) gin.HandlerFunc {
@@ -278,7 +286,7 @@ func (v *jwtValidator) validateToken(tokenString string) (*keycloak.Claims, erro
 		return nil, errors.New("failed to parse claims")
 	}
 
-	if claims.Issuer != fmt.Sprintf("%s/realms/%s", v.config.KeycloakBaseURL, v.config.Realm) {
+	if claims.Issuer != fmt.Sprintf("%s/realms/%s", v.config.issuerURL(), v.config.Realm) {
 		return nil, errors.New("invalid issuer")
 	}
 

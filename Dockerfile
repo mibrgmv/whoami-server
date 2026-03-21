@@ -27,16 +27,6 @@ EXPOSE 8080
 CMD ["./app"]
 
 
-FROM runtime AS iam
-
-COPY iam/bin/app ./app
-COPY iam/config.yaml ./config.yaml
-
-EXPOSE 50052
-
-CMD ["./app"]
-
-
 FROM runtime AS statistics
 
 COPY statistics/bin/app ./app
