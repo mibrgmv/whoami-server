@@ -3,7 +3,7 @@
   "enabled": true,
   "displayName": "Gordle",
   "displayNameHtml": "<h1 style=\"letter-spacing:0.1em;font-weight:700\">GORDLE</h1>",
-  "loginTheme": "keycloak.v2",
+  "loginTheme": "gordle",
   "registrationAllowed": true,
   "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,

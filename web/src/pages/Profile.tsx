@@ -63,8 +63,6 @@ export function Profile() {
       <div className="profile">
         <header className="page-header">
           <button className="page-header-back" onClick={() => navigate('/')}>←</button>
-          <h1>Profile</h1>
-          <div className="page-header-spacer" />
         </header>
         <div className="profile-error">{error}</div>
       </div>
@@ -88,8 +86,6 @@ export function Profile() {
     <div className="profile">
       <header className="page-header">
         <button className="page-header-back" onClick={() => navigate('/')}>←</button>
-        <h1>Profile</h1>
-        <div className="page-header-spacer" />
       </header>
 
       <div className="profile-content">
@@ -185,7 +181,7 @@ function HistoryItem({ game }: { game: GameHistoryItem }) {
     : game.gameMode === 'random' ? 'Random'
     : game.gameMode === 'room' ? 'Room'
     : game.gameMode
-  const date = new Date(game.gameDate).toLocaleDateString()
+  const date = new Date(game.createdAt).toLocaleDateString()
 
   return (
     <div className={`history-item ${isWon ? 'won' : 'lost'}`}>

@@ -156,26 +156,10 @@ body {
   color: var(--color-text-secondary);
 }
 
-/* ─── Shared page header ─── */
+/* ─── Shared page header (back button only) ─── */
 .page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
-  padding: 16px;
-  background: rgba(240, 240, 242, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
+  padding: 12px 16px;
 }
 
 .page-header-back {
@@ -199,6 +183,11 @@ body {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-.page-header-spacer {
-  width: 40px;
+/* ─── Page title (part of content flow) ─── */
+.page-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-align: center;
 }

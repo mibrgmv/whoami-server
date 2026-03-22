@@ -20,7 +20,6 @@ type RoomMode string
 
 const (
 	RoomModeSingleRound RoomMode = "single_round"
-	RoomModeMarathon    RoomMode = "marathon"
 )
 
 const (
@@ -31,10 +30,9 @@ const (
 )
 
 type RoomSettings struct {
-	Mode          RoomMode `json:"mode"`
-	MaxPlayers    int      `json:"maxPlayers"`
-	TimeLimitSecs *int     `json:"timeLimitSecs,omitempty"`
-	ShowGuesses   bool     `json:"showGuesses"`
+	Mode        RoomMode `json:"mode"`
+	MaxPlayers  int      `json:"maxPlayers"`
+	ShowGuesses bool     `json:"showGuesses"`
 }
 
 type Room struct {
@@ -111,46 +109,25 @@ func (s RoomStatus) ToProto() roomv1.RoomStatus {
 }
 
 func RoomModeFromProto(mode roomv1.RoomMode) RoomMode {
-	switch mode {
-	case roomv1.RoomMode_ROOM_MODE_MARATHON:
-		return RoomModeMarathon
-	default:
-		return RoomModeSingleRound
-	}
+	return RoomModeSingleRound
 }
 
 func (m RoomMode) ToProto() roomv1.RoomMode {
-	switch m {
-	case RoomModeMarathon:
-		return roomv1.RoomMode_ROOM_MODE_MARATHON
-	case RoomModeSingleRound:
-		return roomv1.RoomMode_ROOM_MODE_SINGLE_ROUND
-	default:
-		return roomv1.RoomMode_ROOM_MODE_UNSPECIFIED
-	}
+	return roomv1.RoomMode_ROOM_MODE_SINGLE_ROUND
 }
 
 func (s *RoomSettings) ToProto() *roomv1.RoomSettings {
-	settings := &roomv1.RoomSettings{
+	return &roomv1.RoomSettings{
 		Mode:        s.Mode.ToProto(),
 		MaxPlayers:  int32(s.MaxPlayers),
 		ShowGuesses: s.ShowGuesses,
 	}
-	if s.TimeLimitSecs != nil {
-		settings.TimeLimitSecs = int32(*s.TimeLimitSecs)
-	}
-	return settings
 }
 
 func RoomSettingsFromProto(s *roomv1.RoomSettings) RoomSettings {
-	settings := RoomSettings{
+	return RoomSettings{
 		Mode:        RoomModeFromProto(s.GetMode()),
 		MaxPlayers:  int(s.GetMaxPlayers()),
 		ShowGuesses: s.GetShowGuesses(),
 	}
-	if s.GetTimeLimitSecs() > 0 {
-		secs := int(s.GetTimeLimitSecs())
-		settings.TimeLimitSecs = &secs
-	}
-	return settings
 }

@@ -55,9 +55,12 @@ services:
       - "50051:50051"
       - "8081:8081"
     depends_on:
-      - postgres-game
-      - redis
-      - kafka
+      postgres-game:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     environment:
@@ -79,8 +82,10 @@ services:
     ports:
       - "50053:50053"
     depends_on:
-      - postgres-statistics
-      - kafka
+      postgres-statistics:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     environment:
@@ -217,6 +222,12 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       CLUSTER_ID: MkU3OEVBNkYwNkJCMzJBQg==
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     volumes:
       - kafka-data:/var/lib/kafka/data
     restart: unless-stopped

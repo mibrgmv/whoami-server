@@ -85,7 +85,6 @@ type PlayerScore struct {
 	DisplayName string `json:"displayName"`
 	Result      string `json:"result"`
 	Attempts    int    `json:"attempts"`
-	Score       int    `json:"score"`
 }
 
 type GameEndedPayload struct {

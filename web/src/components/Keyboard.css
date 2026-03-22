@@ -37,7 +37,7 @@
 }
 
 .key:hover:not(:disabled) {
-  background-color: var(--color-key-hover);
+  filter: brightness(0.9);
 }
 
 .key:active:not(:disabled) {

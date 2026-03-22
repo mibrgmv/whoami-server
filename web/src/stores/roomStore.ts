@@ -358,6 +358,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       case 'error': {
         const payload = event.payload as ErrorPayload
         useToastStore.getState().addToast(payload.message, 'error')
+        set({ isLoading: false })
         break
       }
     }

@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -128,7 +129,13 @@ func (h *Handler) handleGuess(roomCode, playerID string, payload json.RawMessage
 
 	_, _, _, err := h.roomService.SubmitGuess(context.Background(), roomCode, playerID, p.Word)
 	if err != nil {
-		h.sendError(roomCode, playerID, "guess_failed", err.Error())
+		msg := err.Error()
+		if errors.Is(err, service.ErrInvalidWord) {
+			msg = "word is not in dictionary"
+		} else if errors.Is(err, service.ErrInvalidWordLength) {
+			msg = "word must be 5 characters"
+		}
+		h.sendError(roomCode, playerID, "guess_failed", msg)
 		return
 	}
 }

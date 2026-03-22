@@ -3,7 +3,7 @@ COMPOSE := docker compose
 SERVICES := libs gateway game statistics
 BUILD_SERVICES := gateway game statistics
 
-.PHONY: up down down-v rs logs build build-all lint test tidy gen web web-build web-install help
+.PHONY: up down down-v rs rs-web logs build build-all lint test tidy gen web web-build web-install help
 
 up: build-all
 	$(COMPOSE) up -d --build
@@ -15,6 +15,9 @@ down-v:
 	$(COMPOSE) down -v
 
 rs: down up
+
+rs-web: web-build
+	$(COMPOSE) up -d --build web
 
 logs:
 	$(COMPOSE) logs -f
@@ -66,6 +69,7 @@ help:
 	@echo "  down    - stop all"
 	@echo "  down-v  - stop all + remove volumes"
 	@echo "  rs      - restart all (down + up with rebuild)"
+	@echo "  rs-web  - rebuild and restart frontend container"
 	@echo "  logs    - follow logs"
 	@echo ""
 	@echo "Build:"

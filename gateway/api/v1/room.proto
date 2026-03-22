@@ -47,7 +47,6 @@ service RoomService {
 enum RoomMode {
   ROOM_MODE_UNSPECIFIED = 0;
   ROOM_MODE_SINGLE_ROUND = 1;
-  ROOM_MODE_MARATHON = 2;
 }
 
 // RoomStatus represents the current status of a room
@@ -86,7 +85,6 @@ enum LetterResult {
 message RoomSettings {
   RoomMode mode = 1;
   int32 max_players = 2;
-  int32 time_limit_secs = 3;  // For marathon mode
   bool show_guesses = 4;
 }
 
@@ -119,7 +117,6 @@ message RoomPlayer {
   PlayerStatus status = 5;
   PlayerResult result = 6;
   int32 current_attempts = 7;
-  int32 total_score = 8;
   repeated Guess guesses = 9;
   string finished_at = 10;
 }

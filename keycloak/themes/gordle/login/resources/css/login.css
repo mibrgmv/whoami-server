@@ -1,125 +1,362 @@
-/* Gordle Keycloak theme — light, clean, matches the app */
+/* =============================================
+   Gordle — Keycloak Login Theme
+   Black & white + glassmorphism
+   ============================================= */
 
-/* ── Page background ── */
+/* ── Page ── */
 body.kcBodyClass {
-  background-color: #ffffff;
+  margin: 0;
   font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  color: #1a1a1b;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(180, 180, 190, 0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 50%, rgba(170, 175, 185, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 100%, rgba(185, 185, 195, 0.3) 0%, transparent 50%),
+    #f0f0f2;
+  min-height: 100vh;
 }
 
-/* ── Card ── */
-#kc-login {
-  max-width: 400px;
+/* ── Hide Keycloak logo ── */
+.pf-v5-c-login__header,
+.pf-v5-c-brand {
+  display: none;
 }
 
-.pf-v5-c-card,
-.pf-v5-c-login__main-body {
-  background-color: #ffffff;
+/* ── Login container ── */
+.pf-v5-c-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ── Header / title ── */
-#kc-page-title,
+.pf-v5-c-login__container {
+  max-width: 420px;
+  width: 100%;
+  padding: 0 20px;
+}
+
+/* ── Glass card ── */
+.pf-v5-c-login__main,
+.pf-v5-c-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.pf-v5-c-login__main-body,
+.pf-v5-c-card__body {
+  background: transparent;
+  padding: 0;
+}
+
+.pf-v5-c-login__main-header {
+  padding: 0;
+  margin-bottom: 24px;
+}
+
+.pf-v5-c-login__main-footer {
+  padding: 0;
+  margin-top: 16px;
+}
+
+/* ── Title ── */
+#kc-page-title {
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #1a1a1b;
+  text-align: center;
+  margin: 0;
+}
+
 .pf-v5-c-login__main-header-desc {
   font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
-  letter-spacing: 0.05em;
-  color: #1a1a1b;
+  color: #787c7e;
+  text-align: center;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+/* ── Form ── */
+.pf-v5-c-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pf-v5-c-form__group {
+  margin: 0;
+}
+
+/* ── Labels ── */
+.pf-v5-c-form__label-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #787c7e;
 }
 
 /* ── Inputs ── */
 .pf-v5-c-form-control {
-  border: 2px solid #d3d6da;
+  border: 1px solid #d3d6da !important;
   border-radius: 8px;
-  background-color: #ffffff;
+  background: rgba(255, 255, 255, 0.6) !important;
   color: #1a1a1b;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
   font-size: 1rem;
-  padding: 10px 12px;
+  padding: 0;
+  transition: border-color 0.15s;
+  --pf-v5-c-form-control--after--BorderBottomWidth: 0;
+  --pf-v5-c-form-control--after--BorderBottomColor: transparent;
+}
+
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control::before {
+  border: none !important;
+  display: none !important;
 }
 
 .pf-v5-c-form-control:focus-within {
-  border-color: #1877F2;
-  box-shadow: none;
-  outline: none;
+  border-color: #878a8c !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.pf-v5-c-form-control input,
+.pf-v5-c-form-control select,
+.pf-v5-c-form-control textarea {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  color: #1a1a1b;
+  padding: 10px 12px;
 }
 
 /* ── Primary button ── */
 .pf-v5-c-button.pf-m-primary {
-  background-color: #1877F2;
+  background-color: #1a1a1b;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  color: #ffffff;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
   font-size: 1rem;
   padding: 12px;
-  letter-spacing: 0.02em;
   width: 100%;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  letter-spacing: 0.02em;
 }
 
 .pf-v5-c-button.pf-m-primary:hover {
-  background-color: #1565d8;
+  background-color: #3a3a3c;
+}
+
+.pf-v5-c-button.pf-m-primary:active {
+  transform: scale(0.98);
+}
+
+/* ── Kill all PF5 button pseudo-element borders ── */
+.pf-v5-c-button::after,
+.pf-v5-c-button::before {
+  border: none !important;
+  box-shadow: none !important;
+  display: none !important;
+}
+
+/* ── Secondary / tertiary / link / all non-primary buttons ── */
+.pf-v5-c-button.pf-m-link,
+.pf-v5-c-button.pf-m-secondary,
+.pf-v5-c-button.pf-m-tertiary,
+.pf-v5-c-button.pf-m-warning,
+.pf-v5-c-button.pf-m-danger,
+.pf-v5-c-button.pf-m-plain {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #1a1a1b;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.pf-v5-c-button.pf-m-link:hover,
+.pf-v5-c-button.pf-m-secondary:hover,
+.pf-v5-c-button.pf-m-tertiary:hover,
+.pf-v5-c-button.pf-m-warning:hover,
+.pf-v5-c-button.pf-m-danger:hover,
+.pf-v5-c-button.pf-m-plain:hover {
+  color: #3a3a3c;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  text-decoration: none;
 }
 
 /* ── Links ── */
-a, .pf-v5-c-button.pf-m-link {
-  color: #1877F2;
+a {
+  color: #1a1a1b;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
 }
 
-a:hover, .pf-v5-c-button.pf-m-link:hover {
-  color: #1565d8;
+a:hover {
+  color: #3a3a3c;
 }
 
-/* ── Social providers (Google, etc.) ── */
+/* ── Social providers ── */
 #kc-social-providers {
   margin-top: 16px;
 }
 
 #kc-social-providers .pf-v5-c-button {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid #d3d6da;
   border-radius: 8px;
-  background-color: #ffffff;
   color: #1a1a1b;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 600;
+  font-size: 0.9375rem;
   padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
 #kc-social-providers .pf-v5-c-button:hover {
-  background-color: #f5f5f5;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #878a8c;
 }
 
-/* Scale down social provider icons */
 #kc-social-providers .pf-v5-c-button svg,
 #kc-social-providers .pf-v5-c-button img {
   width: 20px;
   height: 20px;
 }
 
-/* ── Error messages ── */
-.pf-v5-c-alert.pf-m-danger,
-.pf-v5-c-alert.pf-m-warning {
-  border-radius: 8px;
-}
-
-/* ── Footer / info text ── */
-.pf-v5-c-login__main-footer-band-item,
-#kc-registration span,
-#kc-info-message {
-  color: #787c7e;
-}
-
-/* ── Hide the Keycloak logo ── */
-.pf-v5-c-login__header,
-.pf-v5-c-brand {
-  display: none;
-}
-
-/* ── Separator between form and social ── */
+/* ── Separator ("or") ── */
 #kc-form-separator {
   color: #787c7e;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin: 8px 0;
 }
 
 #kc-form-separator::before,
 #kc-form-separator::after {
   background-color: #d3d6da;
+}
+
+/* ── Error / alert messages ── */
+.pf-v5-c-alert {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #d3d6da;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+}
+
+.pf-v5-c-alert.pf-m-danger {
+  border-left: 3px solid #dc3545;
+}
+
+.pf-v5-c-alert.pf-m-warning {
+  border-left: 3px solid #c9b458;
+}
+
+.pf-v5-c-alert.pf-m-success {
+  border-left: 3px solid #6aaa64;
+}
+
+.pf-v5-c-alert.pf-m-info {
+  border-left: 3px solid #878a8c;
+}
+
+.pf-v5-c-alert__title {
+  color: #1a1a1b;
+  font-weight: 600;
+}
+
+.pf-v5-c-alert__description {
+  color: #787c7e;
+}
+
+/* ── Footer / info text ── */
+.pf-v5-c-login__main-footer-band,
+.pf-v5-c-login__main-footer-band-item {
+  background: transparent;
+  text-align: center;
+}
+
+.pf-v5-c-login__main-footer-band-item,
+#kc-registration span,
+#kc-info-message {
+  color: #787c7e;
+  font-size: 0.8125rem;
+}
+
+/* ── Checkbox / remember me ── */
+.pf-v5-c-check__input {
+  accent-color: #1a1a1b;
+}
+
+.pf-v5-c-check__label {
+  font-size: 0.875rem;
+  color: #787c7e;
+}
+
+/* ── Password visibility toggle (eye icon) ── */
+.pf-v5-c-button.pf-m-control {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #787c7e;
+  padding: 10px 12px;
+}
+
+.pf-v5-c-button.pf-m-control::after,
+.pf-v5-c-button.pf-m-control::before {
+  border: none !important;
+  display: none !important;
+}
+
+.pf-v5-c-button.pf-m-control:hover {
+  color: #1a1a1b;
+}
+
+/* ── Required field indicator ── */
+.pf-v5-c-form__label-required {
+  color: #dc3545;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .pf-v5-c-login__container {
+    padding: 0 16px;
+  }
+
+  .pf-v5-c-login__main,
+  .pf-v5-c-card {
+    padding: 24px;
+    border-radius: 12px;
+  }
 }

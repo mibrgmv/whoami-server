@@ -32,7 +32,6 @@ type RoomPlayer struct {
 	Status          PlayerStatus `json:"status"`
 	Result          PlayerResult `json:"result"`
 	CurrentAttempts int          `json:"currentAttempts"`
-	TotalScore      int          `json:"totalScore"`
 	Guesses         []Guess      `json:"guesses"`
 	FinishedAt      *time.Time   `json:"finishedAt,omitempty"`
 }
@@ -46,7 +45,6 @@ func NewRoomPlayer(roomID uuid.UUID, playerID uuid.UUID, isGuest bool, displayNa
 		Status:          PlayerStatusWaiting,
 		Result:          PlayerResultNone,
 		CurrentAttempts: 0,
-		TotalScore:      0,
 		Guesses:         []Guess{},
 	}
 }
@@ -58,7 +56,6 @@ func (p *RoomPlayer) ToProto() *roomv1.RoomPlayer {
 		Status:          p.Status.ToProto(),
 		Result:          p.Result.ToProto(),
 		CurrentAttempts: int32(p.CurrentAttempts),
-		TotalScore:      int32(p.TotalScore),
 	}
 	if p.IsGuest {
 		player.GuestId = p.PlayerID

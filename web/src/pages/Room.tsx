@@ -9,12 +9,14 @@ import { useKeyboardInput } from '../hooks/useKeyboardInput'
 import { QRCodeSVG } from 'qrcode.react'
 import { room as roomApi } from '../api/client'
 import { RoomStatusValues, PlayerStatusValues } from '../types/api'
+import type { LetterResult } from '../types/api'
+import { updateLetterStates } from '../utils/letterStates'
 import './Room.css'
 
 export function Room() {
   const { code } = useParams<{ code: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isGuest, username } = useAuthStore()
 
   const {
     room,
@@ -76,10 +78,15 @@ export function Room() {
         const player = fullRoom.players.find(p => p.playerId === savedPlayerId)
 
         if (player) {
+          let letterStates: Record<string, LetterResult> = {}
+          for (const guess of player.guesses) {
+            letterStates = updateLetterStates(letterStates, guess)
+          }
           useRoomStore.setState({
             room: fullRoom.room,
             players: fullRoom.players,
             currentPlayer: player,
+            letterStates,
           })
         } else {
           localStorage.removeItem(`room_${code}_player`)
@@ -113,10 +120,11 @@ export function Room() {
   }, [hasJoined, currentPlayer?.playerId, code, isWsConnected, connectWebSocket])
 
   const handleJoin = async () => {
-    if (!code || !displayName.trim()) return
+    const name = isGuest ? displayName.trim() : username
+    if (!code || !name) return
 
     try {
-      await joinRoom(code, displayName.trim())
+      await joinRoom(code, name)
       setHasJoined(true)
     } catch {
       // Error handled in store
@@ -140,14 +148,22 @@ export function Room() {
     }
   }
 
-  // ─── Join screen ───
+  // Auto-join for logged-in (non-guest) users — skip if restoring existing session
+  useEffect(() => {
+    if (!hasJoined && !currentPlayer && !isLoading && isAuthenticated && !isGuest && username && code) {
+      const savedPlayerId = localStorage.getItem(`room_${code}_player`)
+      if (!savedPlayerId) {
+        handleJoin()
+      }
+    }
+  }, [hasJoined, currentPlayer, isLoading, isAuthenticated, isGuest, username, code])
+
+  // ─── Join screen (guests only) ───
   if (!hasJoined) {
     return (
       <div className="room-page">
         <header className="page-header">
           <button className="page-header-back" onClick={() => navigate('/')}>←</button>
-          <h1>JOIN</h1>
-          <div className="page-header-spacer" />
         </header>
 
         <div className="room-content">
@@ -181,8 +197,6 @@ export function Room() {
       <div className="room-page">
         <header className="page-header">
           <button className="page-header-back" onClick={handleLeave}>←</button>
-          <h1>LOBBY</h1>
-          <div className="page-header-spacer" />
         </header>
 
         <div className="room-content">
@@ -230,19 +244,9 @@ export function Room() {
             <div className="room-card-title">Settings</div>
             <div className="settings-rows">
               <div className="settings-row">
-                <span>Mode</span>
-                <span>{room.settings.mode === 'marathon' ? 'Marathon' : 'Single Round'}</span>
-              </div>
-              <div className="settings-row">
                 <span>Max Players</span>
                 <span>{room.settings.maxPlayers}</span>
               </div>
-              {room.settings.mode === 'marathon' && (
-                <div className="settings-row">
-                  <span>Time Limit</span>
-                  <span>{room.settings.timeLimitSecs >= 60 ? `${room.settings.timeLimitSecs / 60}m` : `${room.settings.timeLimitSecs}s`}</span>
-                </div>
-              )}
               <div className="settings-row">
                 <span>Show Guesses</span>
                 <span>{room.settings.showGuesses ? 'Yes' : 'No'}</span>
@@ -284,8 +288,6 @@ export function Room() {
     <div className="room-page">
       <header className="page-header">
         <button className="page-header-back" onClick={handleLeave}>←</button>
-        <h1>ROUND {room?.roundNumber || 1}</h1>
-        <div className="page-header-spacer" />
       </header>
 
       <div className="game-area">
@@ -344,15 +346,13 @@ export function Room() {
         )}
       </div>
 
-      {canPlay && (
-        <Keyboard
-          onKey={addLetter}
-          onEnter={submitGuess}
-          onBackspace={removeLetter}
-          letterStates={letterStates}
-          disabled={isLoading}
-        />
-      )}
+      <Keyboard
+        onKey={addLetter}
+        onEnter={submitGuess}
+        onBackspace={removeLetter}
+        letterStates={letterStates}
+        disabled={!canPlay}
+      />
     </div>
   )
 }

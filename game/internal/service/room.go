@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,9 +54,6 @@ type roomService struct {
 	producer    kafka.Producer
 	topic       string
 	broadcaster WSBroadcaster
-
-	mu         sync.Mutex
-	gameTimers map[string]*time.Timer
 }
 
 func NewRoomService(
@@ -73,7 +69,6 @@ func NewRoomService(
 		producer:    producer,
 		topic:       topic,
 		broadcaster: broadcaster,
-		gameTimers:  make(map[string]*time.Timer),
 	}
 }
 
@@ -346,10 +341,6 @@ func (s *roomService) StartGame(ctx context.Context, code string, hostID string)
 		WordLength:  WordLength,
 	})
 
-	if room.Settings.Mode == models.RoomModeMarathon && room.Settings.TimeLimitSecs != nil {
-		s.scheduleGameEnd(room.Code, time.Duration(*room.Settings.TimeLimitSecs)*time.Second)
-	}
-
 	return room, nil
 }
 
@@ -411,10 +402,6 @@ func (s *roomService) SubmitGuess(ctx context.Context, code string, playerID str
 		player.Status = models.PlayerStatusFinished
 		player.Result = models.PlayerResultWon
 		player.FinishedAt = &now
-
-		if room.Settings.Mode == models.RoomModeMarathon {
-			player.TotalScore += s.calculateScore(player.CurrentAttempts)
-		}
 	} else if player.CurrentAttempts >= models.MaxAttempts {
 		now := time.Now()
 		player.Status = models.PlayerStatusFinished
@@ -446,14 +433,8 @@ func (s *roomService) SubmitGuess(ctx context.Context, code string, playerID str
 		s.broadcastEvent(room.Code, models.WSEventPlayerGuess, guessPayload)
 	}
 
-	if room.Settings.Mode == models.RoomModeSingleRound {
-		if err := s.checkRoundEnd(ctx, room); err != nil {
-			return nil, nil, nil, err
-		}
-	} else if room.Settings.Mode == models.RoomModeMarathon && solved {
-		if err := s.assignNewWordForPlayer(ctx, room, player); err != nil {
-			return nil, nil, nil, err
-		}
+	if err := s.checkRoundEnd(ctx, room); err != nil {
+		return nil, nil, nil, err
 	}
 
 	updatedRoom, err := s.roomRepo.GetByCode(ctx, code)
@@ -462,10 +443,6 @@ func (s *roomService) SubmitGuess(ctx context.Context, code string, playerID str
 	}
 
 	return guess, player, updatedRoom, nil
-}
-
-func (s *roomService) calculateScore(attempts int) int {
-	return models.MaxAttempts - attempts + 1
 }
 
 func (s *roomService) checkRoundEnd(ctx context.Context, room *models.Room) error {
@@ -497,7 +474,6 @@ func (s *roomService) endRound(ctx context.Context, room *models.Room, players [
 			DisplayName: p.DisplayName,
 			Result:      string(p.Result),
 			Attempts:    p.CurrentAttempts,
-			Score:       p.TotalScore,
 		}
 	}
 
@@ -517,28 +493,6 @@ func (s *roomService) endRound(ctx context.Context, room *models.Room, players [
 		FinalScores: results,
 		TargetWord:  room.CurrentWord,
 	})
-
-	return nil
-}
-
-func (s *roomService) assignNewWordForPlayer(ctx context.Context, room *models.Room, player *models.RoomPlayer) error {
-	word, err := s.wordService.GetRandomSolution(ctx, room.Language)
-	if err != nil {
-		return fmt.Errorf("failed to get new word: %w", err)
-	}
-	if word == nil {
-		return ErrNoWordsAvailable
-	}
-
-	player.Status = models.PlayerStatusPlaying
-	player.CurrentAttempts = 0
-	player.Guesses = []models.Guess{}
-	player.Result = models.PlayerResultNone
-	player.FinishedAt = nil
-
-	if err := s.roomRepo.UpdatePlayer(ctx, player); err != nil {
-		return fmt.Errorf("failed to update player for new word: %w", err)
-	}
 
 	return nil
 }
@@ -598,71 +552,6 @@ func (s *roomService) NextRound(ctx context.Context, code string, hostID string)
 	})
 
 	return room, nil
-}
-
-func (s *roomService) scheduleGameEnd(roomCode string, duration time.Duration) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if existing, ok := s.gameTimers[roomCode]; ok {
-		existing.Stop()
-	}
-
-	timer := time.AfterFunc(duration, func() {
-		s.handleMarathonTimeout(roomCode)
-	})
-
-	s.gameTimers[roomCode] = timer
-}
-
-func (s *roomService) handleMarathonTimeout(roomCode string) {
-	ctx := context.Background()
-
-	room, err := s.roomRepo.GetByCode(ctx, roomCode)
-	if err != nil || room == nil {
-		return
-	}
-
-	if room.Status != models.RoomStatusPlaying {
-		return
-	}
-
-	players, err := s.roomRepo.GetPlayers(ctx, room.ID)
-	if err != nil {
-		return
-	}
-
-	for i := range players {
-		if players[i].Status == models.PlayerStatusPlaying {
-			now := time.Now()
-			players[i].Status = models.PlayerStatusFinished
-			players[i].FinishedAt = &now
-			_ = s.roomRepo.UpdatePlayer(ctx, &players[i])
-		}
-	}
-
-	room.Status = models.RoomStatusFinished
-	_ = s.roomRepo.Update(ctx, room)
-
-	results := make([]models.PlayerScore, len(players))
-	for i, p := range players {
-		results[i] = models.PlayerScore{
-			PlayerID:    p.PlayerID,
-			DisplayName: p.DisplayName,
-			Result:      string(p.Result),
-			Attempts:    p.CurrentAttempts,
-			Score:       p.TotalScore,
-		}
-	}
-
-	s.broadcastEvent(roomCode, models.WSEventGameEnded, models.GameEndedPayload{
-		Reason:      "time_up",
-		FinalScores: results,
-	})
-
-	s.mu.Lock()
-	delete(s.gameTimers, roomCode)
-	s.mu.Unlock()
 }
 
 func (s *roomService) broadcastEvent(roomCode string, eventType models.WSEventType, payload any) {

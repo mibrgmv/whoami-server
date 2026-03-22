@@ -19,9 +19,7 @@ export function Home() {
   const [showRoomSettings, setShowRoomSettings] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [showGuesses, setShowGuesses] = useState(true)
-  const [roomMode, setRoomMode] = useState<'single_round' | 'marathon'>('single_round')
   const [maxPlayers, setMaxPlayers] = useState(6)
-  const [timeLimitSecs, setTimeLimitSecs] = useState(180)
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated && !isGuest && !dailyStatusFetched) {
@@ -59,10 +57,9 @@ export function Home() {
     try {
       const code = await createRoom({
         settings: {
-          mode: roomMode,
+          mode: 'single_round',
           showGuesses,
           maxPlayers,
-          ...(roomMode === 'marathon' ? { timeLimitSecs } : {}),
         },
       })
       setShowRoomSettings(false)
@@ -160,46 +157,6 @@ export function Home() {
             <div className="collapsible-inner">
               <div className="room-settings">
                 <div className="setting-group">
-                  <label className="setting-label">Game Mode</label>
-                  <div className="setting-tabs">
-                    <button
-                      className={`setting-tab ${roomMode === 'single_round' ? 'active' : ''}`}
-                      onClick={() => setRoomMode('single_round')}
-                    >
-                      Single Round
-                    </button>
-                    <button
-                      className={`setting-tab ${roomMode === 'marathon' ? 'active' : ''}`}
-                      onClick={() => setRoomMode('marathon')}
-                    >
-                      Marathon
-                    </button>
-                  </div>
-                  <p className="setting-hint">
-                    {roomMode === 'single_round'
-                      ? 'Everyone guesses the same word'
-                      : 'Solve as many words as you can before time runs out'}
-                  </p>
-                </div>
-
-                {roomMode === 'marathon' && (
-                  <div className="setting-group">
-                    <label className="setting-label">Time Limit</label>
-                    <div className="setting-tabs">
-                      {[60, 120, 180, 300].map((secs) => (
-                        <button
-                          key={secs}
-                          className={`setting-tab ${timeLimitSecs === secs ? 'active' : ''}`}
-                          onClick={() => setTimeLimitSecs(secs)}
-                        >
-                          {secs >= 60 ? `${secs / 60}m` : `${secs}s`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="setting-group">
                   <label className="setting-label">Max Players</label>
                   <div className="setting-tabs">
                     {[2, 3, 4, 5, 6].map((n) => (
@@ -259,7 +216,7 @@ export function Home() {
           >
             <div className="solo-card-name">Random</div>
             <div className="solo-card-desc">
-              {randomStatus === GameStatusValues.IN_PROGRESS ? 'Continue' : 'Practice with infinite words'}
+              {randomStatus === GameStatusValues.IN_PROGRESS ? 'Continue' : 'Infinite words'}
             </div>
           </div>
         </div>

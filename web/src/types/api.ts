@@ -54,7 +54,7 @@ export interface DailyStatus {
   status?: GameStatus
 }
 
-export type RoomMode = 'single_round' | 'marathon'
+export type RoomMode = 'single_round'
 export type RoomStatus = 'ROOM_STATUS_UNSPECIFIED' | 'ROOM_STATUS_WAITING' | 'ROOM_STATUS_PLAYING' | 'ROOM_STATUS_FINISHED'
 export type PlayerStatus = 'PLAYER_STATUS_UNSPECIFIED' | 'PLAYER_STATUS_WAITING' | 'PLAYER_STATUS_READY' | 'PLAYER_STATUS_PLAYING' | 'PLAYER_STATUS_FINISHED'
 export type PlayerResult = 'PLAYER_RESULT_WON' | 'PLAYER_RESULT_LOST'
@@ -75,7 +75,6 @@ export const PlayerStatusValues = {
 export interface RoomSettings {
   mode: RoomMode
   maxPlayers: number
-  timeLimitSecs: number
   showGuesses: boolean
 }
 
@@ -98,7 +97,6 @@ export interface RoomPlayer {
   status: PlayerStatus
   result?: PlayerResult
   currentAttempts: number
-  totalScore: number
   guesses: Guess[]
   finishedAt?: string
 }

@@ -66,9 +66,9 @@ export function Game() {
     <div className="game-page">
       <header className="page-header">
         <button className="page-header-back" onClick={() => navigate('/')}>←</button>
-        <h1>{isDaily ? 'DAILY' : 'GORDLE'}</h1>
-        <div className="page-header-spacer" />
       </header>
+
+      <h1 className="page-title">{isDaily ? 'DAILY' : 'RANDOM'}</h1>
 
       {isLoading && !session && <div className="loading">Loading...</div>}
 

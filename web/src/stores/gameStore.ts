@@ -31,6 +31,8 @@ interface GameState {
 
 const RANDOM_SESSION_KEY = 'gordle_random_session'
 
+const WORD_LENGTH = 5
+
 const getRandomSessionId = () => localStorage.getItem(RANDOM_SESSION_KEY)
 const saveRandomSessionId = (id: string) => localStorage.setItem(RANDOM_SESSION_KEY, id)
 const removeRandomSessionId = () => localStorage.removeItem(RANDOM_SESSION_KEY)
@@ -107,7 +109,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setCurrentGuess: (guess) => {
-    if (guess.length <= 5) {
+    if (guess.length <= WORD_LENGTH) {
       set({ currentGuess: guess.toUpperCase() })
     }
   },
@@ -115,7 +117,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   addLetter: (letter) => {
     const { currentGuess, session } = get()
     if (session?.status !== GameStatusValues.IN_PROGRESS) return
-    if (currentGuess.length < 5) {
+    if (currentGuess.length < WORD_LENGTH) {
       set({ currentGuess: currentGuess + letter.toUpperCase() })
     }
   },
@@ -129,7 +131,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   submitGuess: async () => {
     const { session, currentGuess } = get()
-    if (!session || currentGuess.length !== 5) return
+    if (!session || currentGuess.length !== WORD_LENGTH) return
 
     set({ isLoading: true })
     try {
