@@ -56,6 +56,7 @@ export function Game() {
     if (isDaily) {
       navigate('/')
     } else {
+      useGameStore.getState().clearRandomSession()
       reset()
       startGame('random')
     }

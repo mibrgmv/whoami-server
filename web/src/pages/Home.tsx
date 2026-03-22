@@ -12,7 +12,7 @@ export function Home() {
   const navigate = useNavigate()
   const { isAuthenticated, isGuest, username, hasHydrated, loginAsGuest, logout } = useAuthStore()
   const { createRoom, isLoading } = useRoomStore()
-  const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus } = useGameStore()
+  const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus, randomStatus, randomStatusFetched, fetchRandomStatus } = useGameStore()
 
   const [roomCode, setRoomCode] = useState('')
   const [isJoining, setIsJoining] = useState(false)
@@ -29,6 +29,12 @@ export function Home() {
     }
   }, [hasHydrated, isAuthenticated, isGuest, dailyStatusFetched, fetchDailyStatus])
 
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated && !randomStatusFetched) {
+      fetchRandomStatus()
+    }
+  }, [hasHydrated, isAuthenticated, randomStatusFetched, fetchRandomStatus])
+
   const handlePlayDaily = () => {
     if (!isAuthenticated || isGuest) return
     navigate('/game/daily')
@@ -38,6 +44,8 @@ export function Home() {
     if (!isAuthenticated) return
     navigate('/game')
   }
+
+  const isDailyDisabled = !isAuthenticated || isGuest
 
   const handleCreateRoom = () => {
     if (!isAuthenticated) {
@@ -92,8 +100,6 @@ export function Home() {
     clearDailyStatus()
   }
 
-  const isDailyDisabled = !isAuthenticated || isGuest
-
   const getDailyStatus = () => {
     if (!dailyStatusFetched && isAuthenticated && !isGuest) return null
     if (!dailyStatus?.hasPlayedToday) return null
@@ -103,12 +109,11 @@ export function Home() {
     return null
   }
 
-  const dailyStatusText = () => {
+  const dailyDesc = () => {
     const s = getDailyStatus()
-    if (s === 'won') return 'Completed'
-    if (s === 'lost') return 'Failed'
     if (s === 'continue') return 'Continue'
-    return null
+    if (s === 'won' || s === 'lost') return 'Come back tomorrow'
+    return 'New word everyday'
   }
 
   return (
@@ -241,30 +246,21 @@ export function Home() {
         {/* Solo cards row */}
         <div className="solo-row">
           <div
-            className={`card solo-card ${isDailyDisabled ? 'solo-card--disabled' : ''}`}
+            className={`card solo-card ${isDailyDisabled ? 'solo-card--disabled' : ''} ${getDailyStatus() === 'continue' ? 'solo-card--active' : ''}`}
             onClick={handlePlayDaily}
           >
             <div className="solo-card-name">Daily</div>
-            <div className="solo-card-desc">One word per day</div>
-            {dailyStatusText() && (
-              <div className={`solo-card-status ${
-                getDailyStatus() === 'won' ? 'solo-card-status--won' :
-                getDailyStatus() === 'lost' ? 'solo-card-status--lost' : ''
-              }`}>
-                {dailyStatusText()}
-              </div>
-            )}
-            {isDailyDisabled && (
-              <div className="hint-text">Log in to play</div>
-            )}
+            <div className="solo-card-desc">{dailyDesc()}</div>
           </div>
 
           <div
-            className={`card solo-card ${!isAuthenticated ? 'solo-card--disabled' : ''}`}
+            className={`card solo-card ${!isAuthenticated ? 'solo-card--disabled' : ''} ${randomStatus === GameStatusValues.IN_PROGRESS ? 'solo-card--active' : ''}`}
             onClick={handlePlayRandom}
           >
             <div className="solo-card-name">Random</div>
-            <div className="solo-card-desc">Practice mode</div>
+            <div className="solo-card-desc">
+              {randomStatus === GameStatusValues.IN_PROGRESS ? 'Continue' : 'Practice with infinite words'}
+            </div>
           </div>
         </div>
 

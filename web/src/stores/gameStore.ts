@@ -13,6 +13,8 @@ interface GameState {
 
   dailyStatus: DailyStatus | null
   dailyStatusFetched: boolean
+  randomStatus: GameStatus | null
+  randomStatusFetched: boolean
 
   startGame: (mode: 'daily' | 'random', language?: string) => Promise<void>
   loadGame: (sessionId: string) => Promise<void>
@@ -22,8 +24,16 @@ interface GameState {
   submitGuess: () => Promise<void>
   reset: () => void
   fetchDailyStatus: () => Promise<void>
+  fetchRandomStatus: () => Promise<void>
   clearDailyStatus: () => void
+  clearRandomSession: () => void
 }
+
+const RANDOM_SESSION_KEY = 'gordle_random_session'
+
+const getRandomSessionId = () => localStorage.getItem(RANDOM_SESSION_KEY)
+const saveRandomSessionId = (id: string) => localStorage.setItem(RANDOM_SESSION_KEY, id)
+const removeRandomSessionId = () => localStorage.removeItem(RANDOM_SESSION_KEY)
 
 export const useGameStore = create<GameState>((set, get) => ({
   session: null,
@@ -32,11 +42,41 @@ export const useGameStore = create<GameState>((set, get) => ({
   letterStates: {},
   dailyStatus: null,
   dailyStatusFetched: false,
+  randomStatus: null,
+  randomStatusFetched: false,
 
   startGame: async (mode, language = 'en') => {
     set({ isLoading: true })
     try {
+      // For random mode, try to resume an existing session first
+      if (mode === 'random') {
+        const savedId = getRandomSessionId()
+        if (savedId) {
+          try {
+            const session = await game.get(savedId)
+            if (session.status === GameStatusValues.IN_PROGRESS) {
+              let letterStates: Record<string, LetterResult> = {}
+              for (const guess of session.guesses) {
+                letterStates = updateLetterStates(letterStates, guess)
+              }
+              set({ session, letterStates, currentGuess: '', isLoading: false })
+              return
+            }
+            get().clearRandomSession()
+            set({ randomStatus: session.status })
+          } catch {
+            get().clearRandomSession()
+          }
+        }
+      }
+
       const session = await game.start(mode, language)
+
+      if (mode === 'random') {
+        saveRandomSessionId(session.sessionId)
+        set({ randomStatus: session.status })
+      }
+
       set({
         session,
         currentGuess: '',
@@ -98,6 +138,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       const newGuesses = [...session.guesses, result.guess]
       const newLetterStates = updateLetterStates(get().letterStates, result.guess)
 
+      const gameOver = result.gameStatus === GameStatusValues.WON ||
+        result.gameStatus === GameStatusValues.LOST
+
+      if (gameOver && session.gameMode === 'GAME_MODE_RANDOM') {
+        get().clearRandomSession()
+        set({ randomStatus: result.gameStatus as GameStatus })
+      }
+
       set({
         session: {
           ...session,
@@ -121,6 +169,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     currentGuess: '',
     isLoading: false,
     letterStates: {},
+    dailyStatusFetched: false,
+    randomStatusFetched: false,
   }),
 
   fetchDailyStatus: async () => {
@@ -132,5 +182,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  fetchRandomStatus: async () => {
+    const savedId = getRandomSessionId()
+    if (!savedId) {
+      set({ randomStatus: null, randomStatusFetched: true })
+      return
+    }
+    try {
+      const session = await game.get(savedId)
+      if (session.status === GameStatusValues.IN_PROGRESS) {
+        set({ randomStatus: session.status, randomStatusFetched: true })
+      } else {
+        removeRandomSessionId()
+        set({ randomStatus: null, randomStatusFetched: true })
+      }
+    } catch {
+      removeRandomSessionId()
+      set({ randomStatus: null, randomStatusFetched: true })
+    }
+  },
+
   clearDailyStatus: () => set({ dailyStatus: null, dailyStatusFetched: false }),
+
+  clearRandomSession: () => {
+    removeRandomSessionId()
+    set({ randomStatus: null })
+  },
 }))

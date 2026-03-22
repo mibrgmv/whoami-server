@@ -258,6 +258,19 @@
   cursor: not-allowed;
 }
 
+.solo-card--active {
+  background: var(--color-text);
+  border-color: var(--color-text);
+}
+
+.solo-card--active .solo-card-name {
+  color: #ffffff;
+}
+
+.solo-card--active .solo-card-desc {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .solo-card-name {
   font-size: 0.9375rem;
   font-weight: 700;
@@ -270,20 +283,6 @@
   line-height: 1.3;
 }
 
-.solo-card-status {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-top: auto;
-}
-
-.solo-card-status--won {
-  color: var(--color-correct);
-}
-
-.solo-card-status--lost {
-  color: var(--color-error);
-}
 
 
 /* ─── Hint ─── */
