@@ -1,0 +1,1638 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Wordle API",
+    "description": "Wordle Game Platform API",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "AuthService"
+    },
+    {
+      "name": "GameService"
+    },
+    {
+      "name": "RoomService"
+    },
+    {
+      "name": "StatisticsService"
+    },
+    {
+      "name": "UserService"
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/auth/guest": {
+      "post": {
+        "summary": "GuestAuth generates a temporary guest token for playing without registration",
+        "operationId": "AuthService_GuestAuth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GuestAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthService_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1TokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthService_Logout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthService_RefreshToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1TokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RefreshTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthService_Register",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RegisterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/api/v1/games": {
+      "post": {
+        "summary": "StartGame starts a new game session (daily or random mode)",
+        "operationId": "GameService_StartGame",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GameSession"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1StartGameRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GameService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games/daily/status": {
+      "get": {
+        "summary": "GetDailyStatus checks if the user has played today's daily game",
+        "operationId": "GameService_GetDailyStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DailyStatus"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GameService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games/validate/{word}": {
+      "get": {
+        "summary": "ValidateWord checks if a word exists in the dictionary",
+        "operationId": "GameService_ValidateWord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ValidateWordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "word",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GameService"
+        ]
+      }
+    },
+    "/api/v1/games/{sessionId}": {
+      "get": {
+        "summary": "GetGame returns the current state of a game session",
+        "operationId": "GameService_GetGame",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GameSession"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GameService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games/{sessionId}/guesses": {
+      "post": {
+        "summary": "SubmitGuess submits a guess for the current game",
+        "operationId": "GameService_SubmitGuess",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GuessResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GameServiceSubmitGuessBody"
+            }
+          }
+        ],
+        "tags": [
+          "GameService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms": {
+      "post": {
+        "summary": "CreateRoom creates a new multiplayer room",
+        "operationId": "RoomService_CreateRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateRoomResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateRoomRequest"
+            }
+          }
+        ],
+        "tags": [
+          "RoomService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rooms/{code}": {
+      "get": {
+        "summary": "GetRoom returns the current state of a room",
+        "operationId": "RoomService_GetRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetRoomResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "RoomService"
+        ]
+      }
+    },
+    "/api/v1/rooms/{code}/join": {
+      "post": {
+        "summary": "JoinRoom joins an existing room",
+        "operationId": "RoomService_JoinRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1JoinRoomResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RoomServiceJoinRoomBody"
+            }
+          }
+        ],
+        "tags": [
+          "RoomService"
+        ]
+      }
+    },
+    "/api/v1/statistics/leaderboard/daily": {
+      "get": {
+        "summary": "GetDailyLeaderboard returns the leaderboard for today's daily game",
+        "operationId": "StatisticsService_GetDailyLeaderboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDailyLeaderboardResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "language",
+            "description": "'en' or 'ru', defaults to 'en'",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Max entries to return, defaults to 10",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statistics/me": {
+      "get": {
+        "summary": "GetMyStatistics returns the current user's statistics",
+        "operationId": "StatisticsService_GetMyStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserStatistics"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statistics/me/history": {
+      "get": {
+        "summary": "GetMyHistory returns the current user's game history",
+        "operationId": "StatisticsService_GetMyHistory",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMyHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statistics/users/{userId}": {
+      "get": {
+        "summary": "GetUserStatistics returns statistics for a specific user (must be a friend)",
+        "operationId": "StatisticsService_GetUserStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserStatistics"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatisticsService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "UserService_BatchGetUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BatchGetUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/current": {
+      "get": {
+        "operationId": "UserService_GetCurrentUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1User"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UserService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "delete": {
+        "operationId": "UserService_DeleteUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "UserService_UpdateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1User"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{id}/password": {
+      "put": {
+        "operationId": "UserService_ChangePassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceChangePasswordBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "GameServiceSubmitGuessBody": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string"
+        }
+      },
+      "title": "SubmitGuessRequest is the request to submit a guess"
+    },
+    "RoomServiceJoinRoomBody": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        }
+      },
+      "title": "JoinRoomRequest is the request to join a room"
+    },
+    "UserServiceChangePasswordBody": {
+      "type": "object",
+      "properties": {
+        "currentPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        },
+        "confirmPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "UserServiceUpdateUserBody": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        }
+      }
+    },
+    "gamev1Guess": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/gamev1LetterResult"
+          }
+        },
+        "attemptNumber": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Guess represents a single guess in a game"
+    },
+    "gamev1LetterResult": {
+      "type": "string",
+      "enum": [
+        "LETTER_RESULT_UNSPECIFIED",
+        "LETTER_RESULT_CORRECT",
+        "LETTER_RESULT_PRESENT",
+        "LETTER_RESULT_ABSENT"
+      ],
+      "default": "LETTER_RESULT_UNSPECIFIED",
+      "title": "LetterResult represents the result of a letter in a guess"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "roomv1Guess": {
+      "type": "object",
+      "properties": {
+        "word": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/roomv1LetterResult"
+          }
+        },
+        "attemptNumber": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Guess represents a single guess"
+    },
+    "roomv1LetterResult": {
+      "type": "string",
+      "enum": [
+        "LETTER_RESULT_UNSPECIFIED",
+        "LETTER_RESULT_CORRECT",
+        "LETTER_RESULT_PRESENT",
+        "LETTER_RESULT_ABSENT"
+      ],
+      "default": "LETTER_RESULT_UNSPECIFIED",
+      "title": "LetterResult represents the result of a letter in a guess"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1BatchGetUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1User"
+          }
+        },
+        "nextOffset": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ChangePasswordResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateRoomRequest": {
+      "type": "object",
+      "properties": {
+        "settings": {
+          "$ref": "#/definitions/v1RoomSettings"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "title": "CreateRoomRequest is the request to create a new room"
+    },
+    "v1CreateRoomResponse": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "$ref": "#/definitions/v1Room"
+        }
+      },
+      "title": "CreateRoomResponse is the response for room creation"
+    },
+    "v1DailyStatus": {
+      "type": "object",
+      "properties": {
+        "hasPlayedToday": {
+          "type": "boolean"
+        },
+        "sessionId": {
+          "type": "string",
+          "title": "If played, the session ID"
+        },
+        "status": {
+          "$ref": "#/definitions/v1GameStatus",
+          "title": "If played, the game status"
+        }
+      },
+      "title": "DailyStatus is the response for daily game status check"
+    },
+    "v1DeleteUserResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GameHistoryItem": {
+      "type": "object",
+      "properties": {
+        "historyId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "gameMode": {
+          "type": "string"
+        },
+        "gameDate": {
+          "type": "string"
+        },
+        "targetWord": {
+          "type": "string"
+        },
+        "guesses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "result": {
+          "type": "string"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "title": "GameHistoryItem represents a single game in history"
+    },
+    "v1GameMode": {
+      "type": "string",
+      "enum": [
+        "GAME_MODE_UNSPECIFIED",
+        "GAME_MODE_DAILY",
+        "GAME_MODE_RANDOM"
+      ],
+      "default": "GAME_MODE_UNSPECIFIED",
+      "title": "GameMode represents the type of game"
+    },
+    "v1GameSession": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "gameMode": {
+          "$ref": "#/definitions/v1GameMode"
+        },
+        "gameDate": {
+          "type": "string",
+          "title": "YYYY-MM-DD for daily games"
+        },
+        "status": {
+          "$ref": "#/definitions/v1GameStatus"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "guesses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gamev1Guess"
+          }
+        },
+        "targetWord": {
+          "type": "string",
+          "title": "Only revealed when game is over"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "completedAt": {
+          "type": "string"
+        }
+      },
+      "title": "GameSession represents an active or completed game"
+    },
+    "v1GameStatus": {
+      "type": "string",
+      "enum": [
+        "GAME_STATUS_UNSPECIFIED",
+        "GAME_STATUS_IN_PROGRESS",
+        "GAME_STATUS_WON",
+        "GAME_STATUS_LOST"
+      ],
+      "default": "GAME_STATUS_UNSPECIFIED",
+      "title": "GameStatus represents the current status of a game"
+    },
+    "v1GetDailyLeaderboardResponse": {
+      "type": "object",
+      "properties": {
+        "gameDate": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1LeaderboardEntry"
+          }
+        }
+      }
+    },
+    "v1GetMyHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameHistoryItem"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetRoomResponse": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "$ref": "#/definitions/v1Room"
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1RoomPlayer"
+          }
+        }
+      },
+      "title": "GetRoomResponse is the response for getting a room"
+    },
+    "v1GuessDistribution": {
+      "type": "object",
+      "properties": {
+        "one": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "two": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "three": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "four": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "five": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "six": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "GuessDistribution shows how many games were won in N guesses"
+    },
+    "v1GuessResult": {
+      "type": "object",
+      "properties": {
+        "guess": {
+          "$ref": "#/definitions/gamev1Guess"
+        },
+        "gameStatus": {
+          "$ref": "#/definitions/v1GameStatus"
+        },
+        "targetWord": {
+          "type": "string",
+          "title": "Only set if game is over"
+        }
+      },
+      "title": "GuessResult is the result of a guess submission"
+    },
+    "v1GuestAuthResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "guestId": {
+          "type": "string"
+        },
+        "tokenType": {
+          "type": "string"
+        },
+        "expiresIn": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1JoinRoomResponse": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "$ref": "#/definitions/v1Room"
+        },
+        "player": {
+          "$ref": "#/definitions/v1RoomPlayer"
+        }
+      },
+      "title": "JoinRoomResponse is the response for joining a room"
+    },
+    "v1LeaderboardEntry": {
+      "type": "object",
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "attemptsUsed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isWon": {
+          "type": "boolean"
+        }
+      },
+      "title": "LeaderboardEntry represents a user's position in the leaderboard"
+    },
+    "v1LoginRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "v1LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1PlayerResult": {
+      "type": "string",
+      "enum": [
+        "PLAYER_RESULT_UNSPECIFIED",
+        "PLAYER_RESULT_WON",
+        "PLAYER_RESULT_LOST"
+      ],
+      "default": "PLAYER_RESULT_UNSPECIFIED",
+      "title": "PlayerResult represents the result of a player in a round"
+    },
+    "v1PlayerStatus": {
+      "type": "string",
+      "enum": [
+        "PLAYER_STATUS_UNSPECIFIED",
+        "PLAYER_STATUS_WAITING",
+        "PLAYER_STATUS_READY",
+        "PLAYER_STATUS_PLAYING",
+        "PLAYER_STATUS_FINISHED"
+      ],
+      "default": "PLAYER_STATUS_UNSPECIFIED",
+      "title": "PlayerStatus represents the current status of a player in a room"
+    },
+    "v1RefreshTokenRequest": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1RegisterRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "recaptchaToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1RegisterResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Room": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "hostId": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/v1RoomStatus"
+        },
+        "settings": {
+          "$ref": "#/definitions/v1RoomSettings"
+        },
+        "roundNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "language": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        }
+      },
+      "title": "Room represents a multiplayer room"
+    },
+    "v1RoomMode": {
+      "type": "string",
+      "enum": [
+        "ROOM_MODE_UNSPECIFIED",
+        "ROOM_MODE_SINGLE_ROUND",
+        "ROOM_MODE_MARATHON"
+      ],
+      "default": "ROOM_MODE_UNSPECIFIED",
+      "title": "RoomMode represents the type of multiplayer game"
+    },
+    "v1RoomPlayer": {
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "guestId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/v1PlayerStatus"
+        },
+        "result": {
+          "$ref": "#/definitions/v1PlayerResult"
+        },
+        "currentAttempts": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalScore": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "guesses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/roomv1Guess"
+          }
+        },
+        "finishedAt": {
+          "type": "string"
+        }
+      },
+      "title": "RoomPlayer represents a player in a room"
+    },
+    "v1RoomSettings": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/v1RoomMode"
+        },
+        "maxPlayers": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "timeLimitSecs": {
+          "type": "integer",
+          "format": "int32",
+          "title": "For marathon mode"
+        },
+        "showGuesses": {
+          "type": "boolean"
+        }
+      },
+      "title": "RoomSettings contains the settings for a room"
+    },
+    "v1RoomStatus": {
+      "type": "string",
+      "enum": [
+        "ROOM_STATUS_UNSPECIFIED",
+        "ROOM_STATUS_WAITING",
+        "ROOM_STATUS_PLAYING",
+        "ROOM_STATUS_FINISHED"
+      ],
+      "default": "ROOM_STATUS_UNSPECIFIED",
+      "title": "RoomStatus represents the current status of a room"
+    },
+    "v1StartGameRequest": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/v1GameMode"
+        },
+        "language": {
+          "type": "string",
+          "title": "'en' or 'ru', defaults to 'en'"
+        }
+      },
+      "title": "StartGameRequest is the request to start a new game"
+    },
+    "v1TokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "tokenType": {
+          "type": "string"
+        },
+        "expiresIn": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "emailVerified": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UserStatistics": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "gamesPlayed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gamesWon": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "winPercentage": {
+          "type": "number",
+          "format": "double"
+        },
+        "currentStreak": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxStreak": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "guessDistribution": {
+          "$ref": "#/definitions/v1GuessDistribution"
+        },
+        "lastPlayedDate": {
+          "type": "string"
+        },
+        "averageAttempts": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "UserStatistics represents aggregated statistics for a user"
+    },
+    "v1ValidateWordResponse": {
+      "type": "object",
+      "properties": {
+        "isValid": {
+          "type": "boolean"
+        }
+      },
+      "title": "ValidateWordResponse is the response for word validation"
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "Enter: Bearer {token}",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}

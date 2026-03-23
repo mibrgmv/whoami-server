@@ -1,0 +1,176 @@
+{
+  "realm": "gordle-realm",
+  "enabled": true,
+  "displayName": "Gordle",
+  "displayNameHtml": "<h1 style=\"letter-spacing:0.1em;font-weight:700\">GORDLE</h1>",
+  "loginTheme": "gordle",
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": true,
+  "browserSecurityHeaders": {
+    "contentSecurityPolicy": "frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'self'; object-src 'none';"
+  },
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"required\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"email\",\"displayName\":\"${email}\",\"required\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]}},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"required\":{},\"permissions\":{\"view\":[],\"edit\":[]}},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"required\":{},\"permissions\":{\"view\":[],\"edit\":[]}}]}"
+          ]
+        }
+      }
+    ]
+  },
+  "smtpServer": {
+    "host": "${SMTP_HOST}",
+    "port": "1025",
+    "from": "gordle@example.com",
+    "fromDisplayName": "Gordle"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Regular user - can manage own quizzes"
+      },
+      {
+        "name": "admin",
+        "description": "Administrator - full access"
+      }
+    ]
+  },
+  "defaultRoles": ["user"],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 50
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30
+    },
+    {
+      "alias": "UPDATE_EMAIL",
+      "name": "Update Email",
+      "providerId": "UPDATE_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 40
+    },
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "gordle-gateway",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "ropopo-ropopo",
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/api/v1/auth/callback", "http://localhost:3000"],
+      "webOrigins": ["*"],
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@example.com",
+      "enabled": true,
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user", "admin"]
+    },
+    {
+      "username": "user",
+      "email": "user@example.com",
+      "enabled": true,
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "registration",
+      "description": "Registration flow",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": true,
+      "authenticationExecutions": [
+        {
+          "authenticator": "registration-page-form",
+          "requirement": "REQUIRED",
+          "flowAlias": "registration form",
+          "authenticatorFlow": true
+        }
+      ]
+    },
+    {
+      "alias": "registration form",
+      "description": "Registration form",
+      "providerId": "form-flow",
+      "topLevel": false,
+      "builtIn": true,
+      "authenticationExecutions": [
+        {
+          "authenticator": "registration-user-creation",
+          "requirement": "REQUIRED"
+        },
+        {
+          "authenticator": "registration-password-action",
+          "requirement": "REQUIRED"
+        },
+        {
+          "authenticator": "registration-recaptcha-action",
+          "requirement": "REQUIRED",
+          "authenticatorConfig": "recaptcha-config"
+        }
+      ]
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "recaptcha-config",
+      "config": {
+        "site.key": "${RECAPTCHA_SITE_KEY}",
+        "secret": "${RECAPTCHA_SECRET_KEY}",
+        "useRecaptchaNet": "false"
+      }
+    }
+  ]
+}
