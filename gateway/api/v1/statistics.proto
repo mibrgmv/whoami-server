@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package statistics.v1;
+
+option go_package = "gordle/gateway/pkg/protogen/statistics/v1;statisticsv1";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service StatisticsService {
+  // GetMyStatistics returns the current user's statistics
+  rpc GetMyStatistics(GetMyStatisticsRequest) returns (UserStatistics) {
+    option (google.api.http) = {
+      get: "/api/v1/statistics/me"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetUserStatistics returns statistics for a specific user (must be a friend)
+  rpc GetUserStatistics(GetUserStatisticsRequest) returns (UserStatistics) {
+    option (google.api.http) = {
+      get: "/api/v1/statistics/users/{user_id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetMyHistory returns the current user's game history
+  rpc GetMyHistory(GetMyHistoryRequest) returns (GetMyHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/statistics/me/history"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+
+  // GetDailyLeaderboard returns the leaderboard for today's daily game
+  rpc GetDailyLeaderboard(GetDailyLeaderboardRequest) returns (GetDailyLeaderboardResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/statistics/leaderboard/daily"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth";
+          value: {};
+        }
+      }
+    };
+  }
+}
+
+// UserStatistics represents aggregated statistics for a user
+message UserStatistics {
+  string user_id = 1;
+  int32 games_played = 2;
+  int32 games_won = 3;
+  double win_percentage = 4;
+  int32 current_streak = 5;
+  int32 max_streak = 6;
+  GuessDistribution guess_distribution = 7;
+  string last_played_date = 8;
+  double average_attempts = 9;
+}
+
+// GuessDistribution shows how many games were won in N guesses
+message GuessDistribution {
+  int32 one = 1;
+  int32 two = 2;
+  int32 three = 3;
+  int32 four = 4;
+  int32 five = 5;
+  int32 six = 6;
+}
+
+// GameHistoryItem represents a single game in history
+message GameHistoryItem {
+  string history_id = 1;
+  string session_id = 2;
+  string game_mode = 3;
+  string game_date = 4;
+  string target_word = 5;
+  repeated string guesses = 6;
+  string result = 7;
+  int32 attempts_used = 8;
+  string created_at = 9;
+}
+
+// LeaderboardEntry represents a user's position in the leaderboard
+message LeaderboardEntry {
+  int32 rank = 1;
+  string user_id = 2;
+  string username = 3;
+  int32 attempts_used = 4;
+  bool is_won = 5;
+}
+
+// Request/Response messages
+
+message GetMyStatisticsRequest {}
+
+message GetUserStatisticsRequest {
+  string user_id = 1;
+}
+
+message GetMyHistoryRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message GetMyHistoryResponse {
+  repeated GameHistoryItem items = 1;
+  string next_page_token = 2;
+}
+
+message GetDailyLeaderboardRequest {
+  string language = 1;  // 'en' or 'ru', defaults to 'en'
+  int32 limit = 2;      // Max entries to return, defaults to 10
+}
+
+message GetDailyLeaderboardResponse {
+  string game_date = 1;
+  repeated LeaderboardEntry entries = 2;
+}

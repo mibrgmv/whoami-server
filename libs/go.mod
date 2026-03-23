@@ -1,4 +1,4 @@
-module whoami-server/libs
+module gordle/libs
 
 go 1.25.0
 

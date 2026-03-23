@@ -1,0 +1,27 @@
+grpc:
+  host: localhost
+  port: 50051
+
+websocket:
+  host: localhost
+  port: 8081
+
+postgres:
+  host: localhost
+  port: 5432
+  database: postgres
+  username: postgres
+  password: postgres
+  ssl_mode: prefer
+
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0
+  ttl: 15m
+
+kafka:
+  brokers:
+    - "localhost:29092"
+  topics:
+    game_completed: "game-completed"

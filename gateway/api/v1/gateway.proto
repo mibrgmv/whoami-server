@@ -1,14 +1,14 @@
 syntax = "proto3";
 
-option go_package = "whoami-server/gateway/pkg/protogen/gateway/v1;gatewayv1";
+option go_package = "gordle/gateway/pkg/protogen/gateway/v1;gatewayv1";
 
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
-    title: "Whoami API";
+    title: "Wordle API";
     version: "1.0";
-    description: "Whoami Backend API";
+    description: "Wordle Game Platform API";
   };
   host: "localhost:8080";
   schemes: HTTP;

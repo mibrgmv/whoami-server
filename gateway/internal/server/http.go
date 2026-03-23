@@ -11,22 +11,27 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	goredis "github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	appcfg "whoami-server/gateway/internal/config"
-	"whoami-server/gateway/internal/metrics"
-	"whoami-server/gateway/internal/middleware"
-	authv1 "whoami-server/gateway/pkg/protogen/auth/v1"
-	historyv1 "whoami-server/gateway/pkg/protogen/history/v1"
-	questionv1 "whoami-server/gateway/pkg/protogen/question/v1"
-	quizv1 "whoami-server/gateway/pkg/protogen/quiz/v1"
-	userv1 "whoami-server/gateway/pkg/protogen/user/v1"
+
+	"gordle/gateway/internal/auth"
+	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/handler"
+	"gordle/gateway/internal/metrics"
+	"gordle/gateway/internal/middleware"
+	redisrepo "gordle/gateway/internal/repository/redis"
+	"gordle/gateway/internal/websocket"
+	gamev1 "gordle/gateway/pkg/protogen/game/v1"
+	roomv1 "gordle/gateway/pkg/protogen/room/v1"
+	statisticsv1 "gordle/gateway/pkg/protogen/statistics/v1"
+	"gordle/libs/keycloak"
 )
 
-func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger) (*http.Server, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger, redisClient *goredis.Client, keycloakClient *keycloak.Client) (*http.Server, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -67,11 +72,9 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		register func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error
 		addr     string
 	}{
-		{"auth", authv1.RegisterAuthServiceHandlerFromEndpoint, cfg.AuthService.GetAddr()},
-		{"quiz", quizv1.RegisterQuizServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
-		{"question", questionv1.RegisterQuestionServiceHandlerFromEndpoint, cfg.QuizService.GetAddr()},
-		{"user", userv1.RegisterUserServiceHandlerFromEndpoint, cfg.UserService.GetAddr()},
-		{"history", historyv1.RegisterHistoryServiceHandlerFromEndpoint, cfg.HistoryService.GetAddr()},
+		{"game", gamev1.RegisterGameServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
+		{"room", roomv1.RegisterRoomServiceHandlerFromEndpoint, cfg.GameService.GetAddr()},
+		{"statistics", statisticsv1.RegisterStatisticsServiceHandlerFromEndpoint, cfg.StatisticsService.GetAddr()},
 	}
 
 	for _, svc := range services {
@@ -80,13 +83,31 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		}
 	}
 
-	jwtMiddleware := middleware.JWT(middleware.JWTConfig{
-		KeycloakBaseURL: cfg.Keycloak.BaseURL,
-		Realm:           cfg.Keycloak.Realm,
-		KeyRefreshTTL:   1 * time.Hour,
-		HTTPTimeout:     10 * time.Second,
-		Metrics:         collector,
+	sessionRepo := redisrepo.NewSessionRepository(redisClient)
+
+	keycloakValidator := auth.NewKeycloakValidator(auth.KeycloakValidatorConfig{
+		BaseURL:       cfg.Keycloak.BaseURL,
+		IssuerURL:     cfg.Keycloak.IssuerURL,
+		Realm:         cfg.Keycloak.Realm,
+		KeyRefreshTTL: 1 * time.Hour,
+		HTTPTimeout:   10 * time.Second,
 	})
+
+	var guestValidator *auth.GuestTokenValidator
+	if cfg.GuestSecret != "" {
+		guestValidator = auth.NewGuestTokenValidator(cfg.GuestSecret)
+	}
+
+	authConfig := middleware.AuthConfig{
+		KeycloakValidator: keycloakValidator,
+		GuestValidator:    guestValidator,
+		SessionRepo:       sessionRepo,
+		KeycloakClient:    keycloakClient,
+		CookieName:        cfg.Session.CookieName,
+		Metrics:           collector,
+	}
+	authMiddleware := middleware.Auth(authConfig)
+	authOptionalMiddleware := middleware.AuthOptional(authConfig)
 
 	switch cfg.HTTP.Mode {
 	case "debug":
@@ -128,22 +149,46 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/api/v1/swagger.json")))
 
-	router.Any("/api/v1/auth/*path", gin.WrapH(gwmux))
+	authHandler := handler.NewAuthHandler(sessionRepo, keycloakClient, cfg.Session)
+	router.GET("/api/v1/auth/login", authHandler.Login)
+	router.GET("/api/v1/auth/register", authHandler.Register)
+	router.GET("/api/v1/auth/callback", authHandler.Callback)
+	router.GET("/api/v1/auth/logout", authHandler.Logout)
+	router.GET("/api/v1/auth/me", authOptionalMiddleware, authHandler.Me)
+	router.GET("/api/v1/auth/action", authHandler.Action)
 
-	gwmuxGroup := router.Group("/api/v1")
-	gwmuxGroup.Use(jwtMiddleware)
+	router.POST("/api/v1/auth/guest", handler.GuestAuth(cfg.GuestSecret))
+
+	gamesGroup := router.Group("/api/v1")
+	gamesGroup.Use(authOptionalMiddleware)
 	{
-		gwmuxGroup.Any("/quizzes", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/quizzes/*path", gin.WrapH(gwmux))
+		gamesGroup.Any("/games", gin.WrapH(gwmux))
+		gamesGroup.Any("/games/*path", gin.WrapH(gwmux))
+	}
 
-		gwmuxGroup.Any("/questions", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/questions/*path", gin.WrapH(gwmux))
+	roomsGroup := router.Group("/api/v1/rooms")
+	{
+		roomsGroup.POST("", authMiddleware, gin.WrapH(gwmux))
 
-		gwmuxGroup.Any("/users", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/users/*path", gin.WrapH(gwmux))
+		roomsGroup.Use(authOptionalMiddleware)
+		roomsGroup.GET("/:code", gin.WrapH(gwmux))
+		roomsGroup.POST("/:code/join", gin.WrapH(gwmux))
 
-		gwmuxGroup.Any("/history", gin.WrapH(gwmux))
-		gwmuxGroup.Any("/history/*path", gin.WrapH(gwmux))
+		if cfg.GameWebSocket.Port > 0 {
+			wsProxy, err := websocket.NewProxy(cfg.GameWebSocket.GetAddr(), logger)
+			if err != nil {
+				logger.Error("failed to create WebSocket proxy", slog.String("error", err.Error()))
+			} else {
+				roomsGroup.GET("/:code/ws", gin.WrapH(wsProxy))
+			}
+		}
+	}
+
+	protectedGroup := router.Group("/api/v1")
+	protectedGroup.Use(authMiddleware)
+	{
+		protectedGroup.Any("/statistics", gin.WrapH(gwmux))
+		protectedGroup.Any("/statistics/*path", gin.WrapH(gwmux))
 	}
 
 	router.NoRoute(func(c *gin.Context) {

@@ -1,0 +1,250 @@
+.profile {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.profile-loading,
+.profile-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.profile-error {
+  color: var(--color-error);
+}
+
+/* ─── Content ─── */
+.profile-content {
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Stats cards ─── */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px 8px;
+  text-align: center;
+  box-shadow: var(--glass-shadow);
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Guess distribution ─── */
+.guess-distribution {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--glass-shadow);
+}
+
+.guess-distribution h2 {
+  margin: 0 0 16px 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.distribution-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.distribution-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.distribution-label {
+  width: 14px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.distribution-bar-container {
+  flex: 1;
+}
+
+.distribution-bar {
+  background-color: var(--color-correct);
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 24px;
+  display: flex;
+  justify-content: flex-end;
+  transition: width 0.4s ease;
+}
+
+.distribution-value {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* ─── Game history ─── */
+.game-history {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--glass-shadow);
+}
+
+.game-history h2 {
+  margin: 0 0 16px 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 16px;
+  font-size: 0.875rem;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  background-color: var(--color-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--color-absent);
+}
+
+.history-item.won {
+  border-left-color: var(--color-correct);
+}
+
+.history-item.lost {
+  border-left-color: var(--color-absent);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.history-mode {
+  font-weight: 700;
+}
+
+.history-item-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-word {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+}
+
+.history-result {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Profile tiles (side by side like Home solo cards) ─── */
+.profile-tiles {
+  display: flex;
+  gap: 12px;
+}
+
+.profile-tile {
+  flex: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.profile-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.profile-tile:active {
+  transform: scale(0.98);
+}
+
+.profile-tile-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.profile-tile-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}

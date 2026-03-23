@@ -25,12 +25,12 @@ var File_gateway_proto protoreflect.FileDescriptor
 
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\rgateway.proto\x1a.protoc-gen-openapiv2/options/annotations.protoB\xd8\x01\x92A\x9b\x01\x12%\n" +
+	"\rgateway.proto\x1a.protoc-gen-openapiv2/options/annotations.protoB\xd7\x01\x92A\xa1\x01\x12+\n" +
 	"\n" +
-	"Whoami API\x12\x12Whoami Backend API2\x031.0\x1a\x0elocalhost:8080*\x02\x01\x022\x10application/json:\x10application/jsonZ:\n" +
+	"Wordle API\x12\x18Wordle Game Platform API2\x031.0\x1a\x0elocalhost:8080*\x02\x01\x022\x10application/json:\x10application/jsonZ:\n" +
 	"8\n" +
 	"\n" +
-	"BearerAuth\x12*\b\x02\x12\x15Enter: Bearer {token}\x1a\rAuthorization \x02Z7whoami-server/gateway/pkg/protogen/gateway/v1;gatewayv1b\x06proto3"
+	"BearerAuth\x12*\b\x02\x12\x15Enter: Bearer {token}\x1a\rAuthorization \x02Z0gordle/gateway/pkg/protogen/gateway/v1;gatewayv1b\x06proto3"
 
 var file_gateway_proto_goTypes = []any{}
 var file_gateway_proto_depIdxs = []int32{

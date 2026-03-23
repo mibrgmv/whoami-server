@@ -1,4 +1,12 @@
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        VITE_API_BASE: ${VITE_API_BASE}
+
   gateway:
     build:
       context: .
@@ -8,39 +16,45 @@ services:
         SERVICE: gateway
     environment:
       - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - REDIS_ADDRESS=redis:6379
+      - SESSION_CALLBACK_URL=http://localhost:3000/api/v1/auth/callback
 
-  auth-service:
+  game-service:
     build:
       context: .
       dockerfile: Dockerfile
-      target: auth
+      target: game
       args:
-        SERVICE: auth
+        SERVICE: game
+
+  statistics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: statistics
+      args:
+        SERVICE: statistics
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8082:8080"
+    networks:
+      - app-network
     environment:
-      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    restart: unless-stopped
 
-  quiz-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: quiz
-      args:
-        SERVICE: quiz
-
-  user-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: user
-      args:
-        SERVICE: user
-    environment:
-      - KEYCLOAK_BASE_URL=http://keycloak:8080
-
-  history-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: history
-      args:
-        SERVICE: history
+  mailpit:
+    image: axllent/mailpit:v1.29
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+    restart: unless-stopped

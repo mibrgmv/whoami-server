@@ -8,11 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	appcfg "whoami-server/gateway/internal/config"
-	"whoami-server/gateway/internal/metrics"
-	"whoami-server/gateway/internal/server"
-	"whoami-server/libs/config"
-	"whoami-server/libs/logging"
+	appcfg "gordle/gateway/internal/config"
+	"gordle/gateway/internal/metrics"
+	"gordle/gateway/internal/server"
+	"gordle/libs/config"
+	"gordle/libs/keycloak"
+	"gordle/libs/logging"
+	"gordle/libs/storage/redis"
 )
 
 func main() {
@@ -33,6 +35,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	redisClient, err := redis.NewClient(ctx, cfg.Redis)
+	if err != nil {
+		logger.Error("failed to create Redis client", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	logger.Info("connected to Redis")
+
+	keycloakClient := keycloak.NewClient(&cfg.Keycloak)
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -46,7 +57,7 @@ func main() {
 		}
 	}()
 
-	s, err := server.NewHttpServer(ctx, cfg, collector, logger)
+	s, err := server.NewHttpServer(ctx, cfg, collector, logger, redisClient.Raw(), keycloakClient)
 	if err != nil {
 		logger.Error("failed to create HTTP server", slog.String("error", err.Error()))
 		os.Exit(1)

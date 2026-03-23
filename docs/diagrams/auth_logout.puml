@@ -1,0 +1,43 @@
+@startuml Logout Flow
+skinparam style strictuml
+
+actor Browser
+participant "Gateway\n/auth/logout" as GW
+database Redis
+participant Keycloak
+
+Browser -> GW: GET /api/v1/auth/logout\n(Cookie: gordle_session=abc123)
+activate GW
+
+== Destroy Server Session ==
+
+GW -> Redis: Get("gordle:session:abc123")
+Redis --> GW: session {id_token, refresh_token, ...}
+
+GW -> Keycloak: POST /token\n(revoke refresh_token)
+Keycloak --> GW: OK
+
+GW -> Redis: Delete("gordle:session:abc123")
+Redis --> GW: OK
+
+== Clear Cookie ==
+
+GW -> GW: Set-Cookie: gordle_session=""\nMaxAge=-1, HttpOnly
+
+== Redirect to Keycloak Logout ==
+
+GW -> GW: Build logout URL\nid_token_hint, client_id,\npost_logout_redirect_uri
+
+Browser <-- GW: 302 Redirect → Keycloak /logout?id_token_hint=...
+deactivate GW
+
+Browser -> Keycloak: GET /realms/{realm}/protocol/openid-connect/logout?...
+activate Keycloak
+
+note right of Keycloak: id_token_hint allows\nKeycloak to skip\n"Do you want to log out?" page
+
+Keycloak -> Keycloak: Destroy SSO session
+Browser <-- Keycloak: 302 Redirect → http://localhost:3000
+deactivate Keycloak
+
+@enduml

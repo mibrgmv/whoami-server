@@ -8,6 +8,7 @@ type Config struct {
 
 type Topics struct {
 	QuizCompleted string `mapstructure:"quiz_completed"`
+	GameCompleted string `mapstructure:"game_completed"`
 }
 
 func (c *Config) GetBrokers() []string {

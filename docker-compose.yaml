@@ -5,13 +5,24 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-quiz-data:
-  postgres-history-data:
+  postgres-game-data:
+  postgres-statistics-data:
   postgres-keycloak-data:
   prometheus-data:
   kafka-data:
 
 services:
+  web:
+    image: ghcr.io/${GITHUB_OWNER}/web:${IMAGE_TAG}
+    container_name: web
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    networks:
+      - app-network
+    restart: unless-stopped
+
   gateway:
     image: ghcr.io/${GITHUB_OWNER}/gateway:${IMAGE_TAG}
     container_name: gateway
@@ -19,104 +30,86 @@ services:
       - "8080:8080"
       - "9090:9090"
     depends_on:
-      - auth-service
-      - quiz-service
-      - user-service
-      - history-service
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      game-service:
+        condition: service_started
+      statistics-service:
+        condition: service_started
     networks:
       - app-network
     environment:
       - HTTP_MODE=${HTTP_MODE}
-      - AUTH_SERVICE_HOST=auth-service
-      - QUIZ_SERVICE_HOST=quiz-service
-      - USER_SERVICE_HOST=user-service
-      - HISTORY_SERVICE_HOST=history-service
-      - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
+      - GAME_SERVICE_HOST=game-service
+      - GAME_WEBSOCKET_HOST=game-service
+      - STATISTICS_SERVICE_HOST=statistics-service
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_ISSUER_URL=${KEYCLOAK_ISSUER_URL}
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - GUEST_SECRET=${GUEST_SECRET}
+      - REDIS_ADDRESS=redis:6379
+      - SESSION_CALLBACK_URL=${SESSION_CALLBACK_URL}
     restart: unless-stopped
 
-  auth-service:
-    image: ghcr.io/${GITHUB_OWNER}/auth:${IMAGE_TAG}
-    container_name: auth-service
-    ports:
-      - "50055:50055"
-    networks:
-      - app-network
-    environment:
-      - GRPC_HOST=0.0.0.0
-      - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
-      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
-      - KEYCLOAK_PUBLIC_CLIENT_ID=${KEYCLOAK_PUBLIC_CLIENT_ID}
-      - KEYCLOAK_PUBLIC_CLIENT_SECRET=${KEYCLOAK_PUBLIC_CLIENT_SECRET}
-      - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=${KEYCLOAK_ADMIN_CLIENT_SECRET}
-    restart: unless-stopped
-
-  quiz-service:
-    image: ghcr.io/${GITHUB_OWNER}/quiz:${IMAGE_TAG}
-    container_name: quiz-service
+  game-service:
+    image: ghcr.io/${GITHUB_OWNER}/game:${IMAGE_TAG}
+    container_name: game-service
     ports:
       - "50051:50051"
+      - "8081:8081"
     depends_on:
-      - postgres-quiz
-      - redis
-      - kafka
+      postgres-game:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     environment:
-      - POSTGRES_HOST=postgres-quiz
+      - POSTGRES_HOST=postgres-game
       - POSTGRES_PORT=5432
       - POSTGRES_DATABASE=${POSTGRES_DATABASE}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - GRPC_HOST=0.0.0.0
+      - WEBSOCKET_HOST=0.0.0.0
       - REDIS_ADDRESS=redis:6379
       - KAFKA_BROKERS=kafka:9092
-      - KAFKA_TOPIC_QUIZ_COMPLETED=quiz-completed
+      - KAFKA_TOPIC_GAME_COMPLETED=game-completed
     restart: unless-stopped
 
-  user-service:
-    image: ghcr.io/${GITHUB_OWNER}/user:${IMAGE_TAG}
-    container_name: user-service
-    ports:
-      - "50052:50052"
-    networks:
-      - app-network
-    environment:
-      - GRPC_HOST=0.0.0.0
-      - KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL}
-      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
-      - KEYCLOAK_PUBLIC_CLIENT_ID=${KEYCLOAK_PUBLIC_CLIENT_ID}
-      - KEYCLOAK_PUBLIC_CLIENT_SECRET=${KEYCLOAK_PUBLIC_CLIENT_SECRET}
-      - KEYCLOAK_ADMIN_CLIENT_ID=${KEYCLOAK_ADMIN_CLIENT_ID}
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=${KEYCLOAK_ADMIN_CLIENT_SECRET}
-    restart: unless-stopped
-
-  history-service:
-    image: ghcr.io/${GITHUB_OWNER}/history:${IMAGE_TAG}
-    container_name: history-service
+  statistics-service:
+    image: ghcr.io/${GITHUB_OWNER}/statistics:${IMAGE_TAG}
+    container_name: statistics-service
     ports:
       - "50053:50053"
     depends_on:
-      - postgres-history
-      - kafka
+      postgres-statistics:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     environment:
-      - POSTGRES_HOST=postgres-history
+      - POSTGRES_HOST=postgres-statistics
       - POSTGRES_PORT=5432
       - POSTGRES_DATABASE=${POSTGRES_DATABASE}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - GRPC_HOST=0.0.0.0
       - KAFKA_BROKERS=kafka:9092
-      - KAFKA_GROUP_ID=history-service
-      - KAFKA_TOPIC_QUIZ_COMPLETED=quiz-completed
+      - KAFKA_GROUP_ID=statistics-service
+      - KAFKA_TOPIC_GAME_COMPLETED=game-completed
     restart: unless-stopped
 
-  postgres-quiz:
+  postgres-game:
     image: postgres:18-alpine
-    container_name: postgres-quiz
+    container_name: postgres-game
     ports:
       - "5432:5432"
     networks:
@@ -126,12 +119,12 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
     volumes:
-      - postgres-quiz-data:/var/lib/postgresql/data
+      - postgres-game-data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  postgres-history:
+  postgres-statistics:
     image: postgres:18-alpine
-    container_name: postgres-history
+    container_name: postgres-statistics
     ports:
       - "5433:5432"
     networks:
@@ -141,7 +134,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
     volumes:
-      - postgres-history-data:/var/lib/postgresql/data
+      - postgres-statistics-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   redis:
@@ -168,9 +161,19 @@ services:
       - KC_DB_URL=jdbc:postgresql://postgres-keycloak:5432/keycloak
       - KC_DB_USERNAME=${KEYCLOAK_DB_USERNAME}
       - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - SMTP_HOST=${SMTP_HOST}
+      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
     volumes:
-      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
-    command: [ "start-dev", "--import-realm" ]
+      - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./keycloak/themes/gordle:/opt/keycloak/themes/gordle:ro
+    command: [ "start-dev", "--import-realm", "--health-enabled=true" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
     depends_on:
       - postgres-keycloak
     restart: unless-stopped
@@ -189,7 +192,6 @@ services:
     restart: unless-stopped
 
   prometheus:
-    profiles: [ "monitoring" ]
     image: prom/prometheus:v3.8.0
     container_name: prometheus
     ports:
@@ -227,20 +229,12 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: "true"
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       CLUSTER_ID: MkU3OEVBNkYwNkJCMzJBQg==
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     volumes:
       - kafka-data:/var/lib/kafka/data
-    restart: unless-stopped
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    ports:
-      - "8081:8080"
-    networks:
-      - app-network
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
     restart: unless-stopped

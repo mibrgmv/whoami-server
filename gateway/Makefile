@@ -1,6 +1,6 @@
 .PHONY: lint gen swag build push
 
-GO_MODULE=whoami-server/gateway
+GO_MODULE=gordle/gateway
 PROTO_DIR=api/v1
 
 build:

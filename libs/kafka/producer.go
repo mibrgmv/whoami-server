@@ -2,8 +2,6 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -11,7 +9,7 @@ import (
 )
 
 type Producer interface {
-	Produce(ctx context.Context, topic string, key string, value interface{}) error
+	Produce(ctx context.Context, topic string, key string, value []byte) error
 	Close() error
 }
 
@@ -38,16 +36,11 @@ func NewProducer(cfg ProducerConfig) Producer {
 	return &producer{writer: writer}
 }
 
-func (p *producer) Produce(ctx context.Context, topic string, key string, value interface{}) error {
-	valueBytes, err := json.Marshal(value)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message: %w", err)
-	}
-
+func (p *producer) Produce(ctx context.Context, topic string, key string, value []byte) error {
 	message := kafka.Message{
 		Topic: topic,
 		Key:   []byte(key),
-		Value: valueBytes,
+		Value: value,
 		Time:  time.Now(),
 	}
 

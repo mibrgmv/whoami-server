@@ -2,34 +2,30 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"whoami-server/libs/keycloak"
 )
 
 func RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, exists := c.Get("claims")
-		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Claims not found"})
+		rolesVal := c.Request.Context().Value(RolesKey)
+		rolesStr, ok := rolesVal.(string)
+		if !ok || rolesStr == "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "No roles found"})
 			c.Abort()
 			return
 		}
 
-		keycloakClaims, ok := claims.(*keycloak.Claims)
-		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid claims"})
-			c.Abort()
-			return
+		for _, r := range strings.Split(rolesStr, ",") {
+			if r == role {
+				c.Next()
+				return
+			}
 		}
 
-		if !keycloakClaims.HasRole(role) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
-			c.Abort()
-			return
-		}
-
-		c.Next()
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
+		c.Abort()
 	}
 }
 
