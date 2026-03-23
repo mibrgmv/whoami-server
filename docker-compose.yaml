@@ -158,7 +158,7 @@ services:
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
     volumes:
-      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
       - ./keycloak/themes/gordle:/opt/keycloak/themes/gordle:ro
     command: [ "start-dev", "--import-realm", "--health-enabled=true" ]
     healthcheck:
