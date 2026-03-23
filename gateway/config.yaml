@@ -27,6 +27,8 @@ statistics_service:
   host: localhost
   port: 50053
 
+guest_secret:
+
 keycloak:
   base_url:
   issuer_url:
