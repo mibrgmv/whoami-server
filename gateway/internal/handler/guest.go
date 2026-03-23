@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gordle/libs/auth"
+	"gordle/gateway/internal/auth"
 )
 
 func GuestAuth(guestSecret string) gin.HandlerFunc {

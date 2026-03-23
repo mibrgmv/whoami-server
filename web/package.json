@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "generate": "npx buf generate"
+    "preview": "vite preview"
   },
   "dependencies": {
     "qrcode.react": "^4.2.0",
@@ -18,10 +17,6 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.66.1",
-    "@bufbuild/protobuf": "^2.11.0",
-    "@bufbuild/protoc-gen-es": "^2.6.3",
-    "@connectrpc/protoc-gen-connect-es": "^1.7.0",
     "@eslint/js": "^9.8.0",
     "@types/node": "^25.5.0",
     "@types/react": "^18.3.3",

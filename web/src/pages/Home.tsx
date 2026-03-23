@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore, redirectToLogin } from '../stores/authStore'
+import { config } from '../config'
+import { useAuthStore } from '../stores/authStore'
 import { useRoomStore } from '../stores/roomStore'
 import { room as roomApi } from '../api/client'
 import { useGameStore } from '../stores/gameStore'
@@ -12,7 +13,7 @@ export function Home() {
   const navigate = useNavigate()
   const { isAuthenticated, isGuest, username, hasHydrated, loginAsGuest, logout } = useAuthStore()
   const { createRoom, isLoading } = useRoomStore()
-  const { dailyStatus, dailyStatusFetched, fetchDailyStatus, clearDailyStatus, randomStatus, randomStatusFetched, fetchRandomStatus } = useGameStore()
+  const { dailyStatus, dailyStatusFetched, fetchDailyStatus, randomStatus, randomStatusFetched, fetchRandomStatus } = useGameStore()
 
   const [roomCode, setRoomCode] = useState('')
   const [isJoining, setIsJoining] = useState(false)
@@ -94,7 +95,6 @@ export function Home() {
 
   const handleLogout = () => {
     logout()
-    clearDailyStatus()
   }
 
   const getDailyStatus = () => {
@@ -236,14 +236,14 @@ export function Home() {
                     <button className="btn btn-primary" onClick={handleGuestLogin}>
                       Play as Guest
                     </button>
-                    <button className="btn btn-secondary" onClick={() => redirectToLogin()}>
+                    <button className="btn btn-secondary" onClick={() => { window.location.href = `${config.apiBase}/auth/login` }}>
                       Log in
                     </button>
                   </>
                 )}
                 {isAuthenticated && isGuest && (
                   <>
-                    <button className="btn btn-secondary" onClick={() => redirectToLogin()}>
+                    <button className="btn btn-secondary" onClick={() => { window.location.href = `${config.apiBase}/auth/login` }}>
                       Log in
                     </button>
                     <button className="btn btn-secondary" onClick={handleLogout}>

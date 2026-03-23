@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { redirectToRegister } from '../stores/authStore'
+import { config } from '../config'
 import './Auth.css'
 
 export function Register() {
   useEffect(() => {
-    redirectToRegister()
+    window.location.href = `${config.apiBase}/auth/register`
   }, [])
 
   return (

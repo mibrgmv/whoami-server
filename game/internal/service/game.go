@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gordle/game/internal/models"
 	"gordle/game/internal/repository"
+	gamev1 "gordle/game/pkg/protogen/game/v1"
 	"gordle/libs/kafka"
-	statisticsv1 "gordle/statistics/pkg/protogen/statistics/v1"
 )
 
 var (
@@ -233,7 +233,7 @@ func (s *gameService) publishGameCompleted(ctx context.Context, session *models.
 		gameDate = *session.GameDate
 	}
 
-	event := &statisticsv1.GameCompletedEvent{
+	event := &gamev1.GameCompletedEvent{
 		UserId:       session.UserID.String(),
 		SessionId:    session.ID.String(),
 		GameMode:     string(session.GameMode),

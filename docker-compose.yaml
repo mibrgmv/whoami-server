@@ -32,6 +32,8 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
+      redis:
+        condition: service_started
       game-service:
         condition: service_started
       statistics-service:
@@ -46,7 +48,11 @@ services:
       - KEYCLOAK_BASE_URL=http://keycloak:8080
       - KEYCLOAK_ISSUER_URL=${KEYCLOAK_ISSUER_URL}
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
       - GUEST_SECRET=${GUEST_SECRET}
+      - REDIS_ADDRESS=redis:6379
+      - SESSION_CALLBACK_URL=${SESSION_CALLBACK_URL}
     restart: unless-stopped
 
   game-service:

@@ -3,6 +3,7 @@ package config
 import (
 	"gordle/libs/keycloak"
 	"gordle/libs/server"
+	"gordle/libs/storage/redis"
 )
 
 type Config struct {
@@ -13,4 +14,12 @@ type Config struct {
 	GameWebSocket     server.Config     `mapstructure:"game_websocket"`
 	StatisticsService server.Config     `mapstructure:"statistics_service"`
 	GuestSecret       string            `mapstructure:"guest_secret"`
+	Redis             redis.Config      `mapstructure:"redis"`
+	Session           SessionConfig     `mapstructure:"session"`
+}
+
+type SessionConfig struct {
+	CookieName   string `mapstructure:"cookie_name"`
+	CookieSecure bool   `mapstructure:"cookie_secure"`
+	CallbackURL  string `mapstructure:"callback_url"`
 }

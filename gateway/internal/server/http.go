@@ -11,23 +11,27 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	goredis "github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
+	"gordle/gateway/internal/auth"
 	appcfg "gordle/gateway/internal/config"
 	"gordle/gateway/internal/handler"
 	"gordle/gateway/internal/metrics"
 	"gordle/gateway/internal/middleware"
+	redisrepo "gordle/gateway/internal/repository/redis"
 	"gordle/gateway/internal/websocket"
 	gamev1 "gordle/gateway/pkg/protogen/game/v1"
 	roomv1 "gordle/gateway/pkg/protogen/room/v1"
 	statisticsv1 "gordle/gateway/pkg/protogen/statistics/v1"
+	"gordle/libs/keycloak"
 )
 
-func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger) (*http.Server, error) {
+func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Collector, logger *slog.Logger, redisClient *goredis.Client, keycloakClient *keycloak.Client) (*http.Server, error) {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
 			md := metadata.New(map[string]string{
@@ -79,17 +83,31 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		}
 	}
 
-	jwtConfig := middleware.JWTConfig{
-		KeycloakBaseURL:   cfg.Keycloak.BaseURL,
-		KeycloakIssuerURL: cfg.Keycloak.IssuerURL,
-		Realm:             cfg.Keycloak.Realm,
-		KeyRefreshTTL:     1 * time.Hour,
-		HTTPTimeout:       10 * time.Second,
-		Metrics:           collector,
-		GuestSecret:       cfg.GuestSecret,
+	sessionRepo := redisrepo.NewSessionRepository(redisClient)
+
+	keycloakValidator := auth.NewKeycloakValidator(auth.KeycloakValidatorConfig{
+		BaseURL:       cfg.Keycloak.BaseURL,
+		IssuerURL:     cfg.Keycloak.IssuerURL,
+		Realm:         cfg.Keycloak.Realm,
+		KeyRefreshTTL: 1 * time.Hour,
+		HTTPTimeout:   10 * time.Second,
+	})
+
+	var guestValidator *auth.GuestTokenValidator
+	if cfg.GuestSecret != "" {
+		guestValidator = auth.NewGuestTokenValidator(cfg.GuestSecret)
 	}
-	jwtMiddleware := middleware.JWT(jwtConfig)
-	jwtOptionalMiddleware := middleware.JWTOptional(jwtConfig)
+
+	authConfig := middleware.AuthConfig{
+		KeycloakValidator: keycloakValidator,
+		GuestValidator:    guestValidator,
+		SessionRepo:       sessionRepo,
+		KeycloakClient:    keycloakClient,
+		CookieName:        cfg.Session.CookieName,
+		Metrics:           collector,
+	}
+	authMiddleware := middleware.Auth(authConfig)
+	authOptionalMiddleware := middleware.AuthOptional(authConfig)
 
 	switch cfg.HTTP.Mode {
 	case "debug":
@@ -131,12 +149,18 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/api/v1/swagger.json")))
 
-	// Guest auth (no Keycloak needed)
+	authHandler := handler.NewAuthHandler(sessionRepo, keycloakClient, cfg.Session)
+	router.GET("/api/v1/auth/login", authHandler.Login)
+	router.GET("/api/v1/auth/register", authHandler.Register)
+	router.GET("/api/v1/auth/callback", authHandler.Callback)
+	router.GET("/api/v1/auth/logout", authHandler.Logout)
+	router.GET("/api/v1/auth/me", authOptionalMiddleware, authHandler.Me)
+	router.GET("/api/v1/auth/action", authHandler.Action)
+
 	router.POST("/api/v1/auth/guest", handler.GuestAuth(cfg.GuestSecret))
 
-	// Game routes (auth optional - guests can play)
 	gamesGroup := router.Group("/api/v1")
-	gamesGroup.Use(jwtOptionalMiddleware)
+	gamesGroup.Use(authOptionalMiddleware)
 	{
 		gamesGroup.Any("/games", gin.WrapH(gwmux))
 		gamesGroup.Any("/games/*path", gin.WrapH(gwmux))
@@ -144,9 +168,9 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 
 	roomsGroup := router.Group("/api/v1/rooms")
 	{
-		roomsGroup.POST("", jwtMiddleware, gin.WrapH(gwmux))
+		roomsGroup.POST("", authMiddleware, gin.WrapH(gwmux))
 
-		roomsGroup.Use(jwtOptionalMiddleware)
+		roomsGroup.Use(authOptionalMiddleware)
 		roomsGroup.GET("/:code", gin.WrapH(gwmux))
 		roomsGroup.POST("/:code/join", gin.WrapH(gwmux))
 
@@ -160,9 +184,8 @@ func NewHttpServer(ctx context.Context, cfg appcfg.Config, collector *metrics.Co
 		}
 	}
 
-	// Protected routes (auth required)
 	protectedGroup := router.Group("/api/v1")
-	protectedGroup.Use(jwtMiddleware)
+	protectedGroup.Use(authMiddleware)
 	{
 		protectedGroup.Any("/statistics", gin.WrapH(gwmux))
 		protectedGroup.Any("/statistics/*path", gin.WrapH(gwmux))

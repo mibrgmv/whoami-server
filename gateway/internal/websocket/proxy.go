@@ -35,12 +35,10 @@ func NewProxy(targetAddr string, logger *slog.Logger) (*Proxy, error) {
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Build target URL
 	targetURL := *p.targetURL
 	targetURL.Path = r.URL.Path
 	targetURL.RawQuery = r.URL.RawQuery
 
-	// Remove /api/v1 prefix if present
 	targetURL.Path = strings.TrimPrefix(targetURL.Path, "/api/v1")
 
 	p.logger.Info("proxying WebSocket",
@@ -48,7 +46,6 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		slog.String("target", targetURL.String()),
 	)
 
-	// Connect to backend
 	backendConn, resp, err := websocket.DefaultDialer.Dial(targetURL.String(), nil)
 	if err != nil {
 		p.logger.Error("failed to connect to backend",
@@ -64,7 +61,6 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer backendConn.Close()
 
-	// Upgrade client connection
 	clientConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		p.logger.Error("failed to upgrade client connection", slog.String("error", err.Error()))
@@ -72,20 +68,16 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer clientConn.Close()
 
-	// Proxy messages bidirectionally
 	errChan := make(chan error, 2)
 
-	// Client -> Backend
 	go func() {
 		errChan <- p.copyMessages(backendConn, clientConn)
 	}()
 
-	// Backend -> Client
 	go func() {
 		errChan <- p.copyMessages(clientConn, backendConn)
 	}()
 
-	// Wait for either direction to fail
 	<-errChan
 }
 

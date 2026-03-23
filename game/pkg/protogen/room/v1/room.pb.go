@@ -29,7 +29,6 @@ type RoomMode int32
 const (
 	RoomMode_ROOM_MODE_UNSPECIFIED  RoomMode = 0
 	RoomMode_ROOM_MODE_SINGLE_ROUND RoomMode = 1
-	RoomMode_ROOM_MODE_MARATHON     RoomMode = 2
 )
 
 // Enum value maps for RoomMode.
@@ -37,12 +36,10 @@ var (
 	RoomMode_name = map[int32]string{
 		0: "ROOM_MODE_UNSPECIFIED",
 		1: "ROOM_MODE_SINGLE_ROUND",
-		2: "ROOM_MODE_MARATHON",
 	}
 	RoomMode_value = map[string]int32{
 		"ROOM_MODE_UNSPECIFIED":  0,
 		"ROOM_MODE_SINGLE_ROUND": 1,
-		"ROOM_MODE_MARATHON":     2,
 	}
 )
 
@@ -290,7 +287,6 @@ type RoomSettings struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Mode          RoomMode               `protobuf:"varint,1,opt,name=mode,proto3,enum=room.v1.RoomMode" json:"mode,omitempty"`
 	MaxPlayers    int32                  `protobuf:"varint,2,opt,name=max_players,json=maxPlayers,proto3" json:"max_players,omitempty"`
-	TimeLimitSecs int32                  `protobuf:"varint,3,opt,name=time_limit_secs,json=timeLimitSecs,proto3" json:"time_limit_secs,omitempty"` // For marathon mode
 	ShowGuesses   bool                   `protobuf:"varint,4,opt,name=show_guesses,json=showGuesses,proto3" json:"show_guesses,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -336,13 +332,6 @@ func (x *RoomSettings) GetMode() RoomMode {
 func (x *RoomSettings) GetMaxPlayers() int32 {
 	if x != nil {
 		return x.MaxPlayers
-	}
-	return 0
-}
-
-func (x *RoomSettings) GetTimeLimitSecs() int32 {
-	if x != nil {
-		return x.TimeLimitSecs
 	}
 	return 0
 }
@@ -534,7 +523,6 @@ type RoomPlayer struct {
 	Status          PlayerStatus           `protobuf:"varint,5,opt,name=status,proto3,enum=room.v1.PlayerStatus" json:"status,omitempty"`
 	Result          PlayerResult           `protobuf:"varint,6,opt,name=result,proto3,enum=room.v1.PlayerResult" json:"result,omitempty"`
 	CurrentAttempts int32                  `protobuf:"varint,7,opt,name=current_attempts,json=currentAttempts,proto3" json:"current_attempts,omitempty"`
-	TotalScore      int32                  `protobuf:"varint,8,opt,name=total_score,json=totalScore,proto3" json:"total_score,omitempty"`
 	Guesses         []*Guess               `protobuf:"bytes,9,rep,name=guesses,proto3" json:"guesses,omitempty"`
 	FinishedAt      string                 `protobuf:"bytes,10,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -616,13 +604,6 @@ func (x *RoomPlayer) GetResult() PlayerResult {
 func (x *RoomPlayer) GetCurrentAttempts() int32 {
 	if x != nil {
 		return x.CurrentAttempts
-	}
-	return 0
-}
-
-func (x *RoomPlayer) GetTotalScore() int32 {
-	if x != nil {
-		return x.TotalScore
 	}
 	return 0
 }
@@ -948,12 +929,11 @@ var File_room_proto protoreflect.FileDescriptor
 const file_room_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"room.proto\x12\aroom.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xa1\x01\n" +
+	"room.proto\x12\aroom.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"y\n" +
 	"\fRoomSettings\x12%\n" +
 	"\x04mode\x18\x01 \x01(\x0e2\x11.room.v1.RoomModeR\x04mode\x12\x1f\n" +
 	"\vmax_players\x18\x02 \x01(\x05R\n" +
-	"maxPlayers\x12&\n" +
-	"\x0ftime_limit_secs\x18\x03 \x01(\x05R\rtimeLimitSecs\x12!\n" +
+	"maxPlayers\x12!\n" +
 	"\fshow_guesses\x18\x04 \x01(\bR\vshowGuesses\"\xa0\x02\n" +
 	"\x04Room\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -970,7 +950,7 @@ const file_room_proto_rawDesc = "" +
 	"\x05Guess\x12\x12\n" +
 	"\x04word\x18\x01 \x01(\tR\x04word\x12/\n" +
 	"\aresults\x18\x02 \x03(\x0e2\x15.room.v1.LetterResultR\aresults\x12%\n" +
-	"\x0eattempt_number\x18\x03 \x01(\x05R\rattemptNumber\"\xf5\x02\n" +
+	"\x0eattempt_number\x18\x03 \x01(\x05R\rattemptNumber\"\xd4\x02\n" +
 	"\n" +
 	"RoomPlayer\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12\x17\n" +
@@ -979,9 +959,7 @@ const file_room_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x12-\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x15.room.v1.PlayerStatusR\x06status\x12-\n" +
 	"\x06result\x18\x06 \x01(\x0e2\x15.room.v1.PlayerResultR\x06result\x12)\n" +
-	"\x10current_attempts\x18\a \x01(\x05R\x0fcurrentAttempts\x12\x1f\n" +
-	"\vtotal_score\x18\b \x01(\x05R\n" +
-	"totalScore\x12(\n" +
+	"\x10current_attempts\x18\a \x01(\x05R\x0fcurrentAttempts\x12(\n" +
 	"\aguesses\x18\t \x03(\v2\x0e.room.v1.GuessR\aguesses\x12\x1f\n" +
 	"\vfinished_at\x18\n" +
 	" \x01(\tR\n" +
@@ -1001,11 +979,10 @@ const file_room_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"b\n" +
 	"\x10JoinRoomResponse\x12!\n" +
 	"\x04room\x18\x01 \x01(\v2\r.room.v1.RoomR\x04room\x12+\n" +
-	"\x06player\x18\x02 \x01(\v2\x13.room.v1.RoomPlayerR\x06player*Y\n" +
+	"\x06player\x18\x02 \x01(\v2\x13.room.v1.RoomPlayerR\x06player*A\n" +
 	"\bRoomMode\x12\x19\n" +
 	"\x15ROOM_MODE_UNSPECIFIED\x10\x00\x12\x1a\n" +
-	"\x16ROOM_MODE_SINGLE_ROUND\x10\x01\x12\x16\n" +
-	"\x12ROOM_MODE_MARATHON\x10\x02*u\n" +
+	"\x16ROOM_MODE_SINGLE_ROUND\x10\x01*u\n" +
 	"\n" +
 	"RoomStatus\x12\x1b\n" +
 	"\x17ROOM_STATUS_UNSPECIFIED\x10\x00\x12\x17\n" +

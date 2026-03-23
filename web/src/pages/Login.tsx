@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { redirectToLogin } from '../stores/authStore'
+import { config } from '../config'
 import './Auth.css'
 
 export function Login() {
   useEffect(() => {
-    redirectToLogin()
+    window.location.href = `${config.apiBase}/auth/login`
   }, [])
 
   return (

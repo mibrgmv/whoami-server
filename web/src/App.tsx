@@ -4,7 +4,6 @@ import { Game } from './pages/Game'
 import { Room } from './pages/Room'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
-import { OAuthCallback } from './pages/OAuthCallback'
 import { Profile } from './pages/Profile'
 import { ToastContainer } from './components/Toast'
 
@@ -19,7 +18,6 @@ function App() {
         <Route path="/room/:code" element={<Room />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>

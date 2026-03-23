@@ -4,11 +4,10 @@ ARG SERVICE
 
 WORKDIR /src
 
-COPY go.work go.work.sum ./
 COPY libs/go.mod libs/go.sum ./libs/
 COPY ${SERVICE}/go.mod ${SERVICE}/go.sum ./${SERVICE}/
 
-RUN go mod download
+RUN go work init ./libs ./${SERVICE} && go mod download
 
 COPY libs/ ./libs/
 COPY ${SERVICE}/ ./${SERVICE}/
@@ -54,11 +53,13 @@ CMD ["./app"]
 
 FROM node:22-alpine AS web-builder
 
+ARG VITE_API_BASE
+
 WORKDIR /src
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ ./
-RUN npm run build
+RUN VITE_API_BASE=${VITE_API_BASE} npm run build
 
 
 FROM nginx:alpine AS web

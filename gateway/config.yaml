@@ -31,7 +31,16 @@ keycloak:
   base_url:
   issuer_url:
   realm:
-  public_client_id:
-  public_client_secret:
-  admin_client_id:
-  admin_client_secret:
+  client_id:
+  client_secret:
+
+redis:
+  address: localhost:6379
+  password: ""
+  db: 0
+  ttl: 30m
+
+session:
+  cookie_name: gordle_session
+  cookie_secure: false
+  callback_url: http://localhost:3000/api/v1/auth/callback

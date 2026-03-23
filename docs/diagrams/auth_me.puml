@@ -1,0 +1,61 @@
+@startuml Me Flow
+skinparam style strictuml
+
+actor Browser
+participant "AuthOptional\nMiddleware" as MW
+participant "Gateway\n/auth/me" as GW
+database Redis
+participant Keycloak
+
+Browser -> MW: GET /api/v1/auth/me\n(Cookie: gordle_session=abc123)\n(Authorization: Bearer guest_...)
+activate MW
+
+== Middleware: Resolve Identity ==
+
+alt Authorization: Bearer present
+    MW -> MW: IsGuestToken(token)?
+
+    alt Guest token
+        MW -> MW: ValidateToken(token)\n(signature verified)
+        MW -> MW: Set context:\nisGuest=true, userID=...
+    else Keycloak JWT
+        MW -> MW: KeycloakValidator.ValidateToken(token)\n(RSA signature + issuer check)
+        MW -> MW: Set context:\nusername, email, roles
+    end
+else Cookie present
+    MW -> Redis: Get("gordle:session:abc123")
+
+    alt Session found
+        Redis --> MW: session {username, email, roles, ...}
+
+        alt Access token expired
+            MW -> Keycloak: RefreshToken(refresh_token)
+            Keycloak --> MW: new tokens
+            MW -> Redis: Update(session_id, updated_session)
+        end
+
+        MW -> MW: Set context from session\n+ Authorization header for downstream
+    else Session not found / expired
+        Redis --> MW: nil
+    end
+end
+
+MW -> GW: Next()
+deactivate MW
+activate GW
+
+== Handler: Read from Context ==
+
+alt userID present in context
+    alt isGuest == true
+        Browser <-- GW: 200 OK\n{"username": "", "email": "",\n"isGuest": true, "isAuthenticated": true}
+    else
+        Browser <-- GW: 200 OK\n{"username": "user", "email": "...",\n"isGuest": false, "isAuthenticated": true}
+    end
+else No identity in context
+    Browser <-- GW: 200 OK\n{"username": "", "email": "",\n"isGuest": false, "isAuthenticated": false}
+end
+
+deactivate GW
+
+@enduml

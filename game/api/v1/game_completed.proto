@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package game.v1;
+
+option go_package = "gordle/game/pkg/protogen/game/v1;gamev1";
+
+message GameCompletedEvent {
+  string user_id = 1;
+  string session_id = 2;
+  string game_mode = 3;
+  string game_date = 4;
+  string target_word = 5;
+  repeated string guesses = 6;
+  string result = 7;
+  int32 attempts_used = 8;
+}

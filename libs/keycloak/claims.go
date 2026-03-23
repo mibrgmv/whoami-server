@@ -1,6 +1,13 @@
 package keycloak
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type Claims struct {
 	jwt.RegisteredClaims
@@ -36,4 +43,42 @@ func (c *Claims) HasRole(role string) bool {
 
 func (c *Claims) IsAdmin() bool {
 	return c.HasRole("admin")
+}
+
+func (c *Claims) Roles() []string {
+	if c == nil || c.RealmAccess == nil {
+		return nil
+	}
+
+	rolesInterface, ok := c.RealmAccess["roles"].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	roles := make([]string, 0, len(rolesInterface))
+	for _, r := range rolesInterface {
+		if str, ok := r.(string); ok {
+			roles = append(roles, str)
+		}
+	}
+	return roles
+}
+
+func ParseUnverifiedClaims(accessToken string) (*Claims, error) {
+	parts := strings.Split(accessToken, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode token payload: %w", err)
+	}
+
+	var claims Claims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse token claims: %w", err)
+	}
+
+	return &claims, nil
 }

@@ -1,54 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { config } from '../config'
 import { auth } from '../api/client'
-
-export function redirectToLogin(): void {
-  sessionStorage.setItem('auth_return_to', window.location.pathname)
-  const params = new URLSearchParams({
-    client_id: config.keycloak.clientId,
-    redirect_uri: `${window.location.origin}/oauth/callback`,
-    response_type: 'code',
-    scope: 'openid',
-  })
-  window.location.href = `${config.keycloak.oidcBase}/auth?${params}`
-}
-
-export function redirectToRegister(): void {
-  sessionStorage.setItem('auth_return_to', window.location.pathname)
-  const params = new URLSearchParams({
-    client_id: config.keycloak.clientId,
-    redirect_uri: `${window.location.origin}/oauth/callback`,
-    response_type: 'code',
-    scope: 'openid',
-  })
-  window.location.href = `${config.keycloak.oidcBase}/registrations?${params}`
-}
-
-function parseUsername(token: string): string | null {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-    const payload = JSON.parse(new TextDecoder().decode(bytes))
-    return payload.preferred_username || null
-  } catch {
-    return null
-  }
-}
+import { config } from '../config'
+import { useGameStore } from './gameStore'
 
 interface AuthState {
   accessToken: string | null
-  refreshToken: string | null
   username: string | null
   isGuest: boolean
   isAuthenticated: boolean
   hasHydrated: boolean
 
+  init: () => Promise<void>
   loginAsGuest: () => Promise<void>
-  logout: () => Promise<void>
+  logout: () => void
   clearAuth: () => void
-  setTokens: (accessToken: string, refreshToken: string, isGuest?: boolean) => void
+  setGuestToken: (accessToken: string) => void
   setHasHydrated: (state: boolean) => void
 }
 
@@ -56,7 +23,6 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       accessToken: null,
-      refreshToken: null,
       username: null,
       isGuest: false,
       isAuthenticated: false,
@@ -66,12 +32,11 @@ export const useAuthStore = create<AuthState>()(
         set({ hasHydrated: state })
       },
 
-      setTokens: (accessToken, refreshToken, isGuest = false) => {
+      setGuestToken: (accessToken) => {
         set({
           accessToken,
-          refreshToken,
-          username: parseUsername(accessToken),
-          isGuest,
+          username: null,
+          isGuest: true,
           isAuthenticated: true,
         })
       },
@@ -79,35 +44,50 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => {
         set({
           accessToken: null,
-          refreshToken: null,
           username: null,
           isGuest: false,
           isAuthenticated: false,
         })
       },
 
-      loginAsGuest: async () => {
-        const response = await auth.guest()
-        get().setTokens(response.access_token, '', true)
-      },
-
-      logout: async () => {
-        const { refreshToken, isGuest } = get()
-        if (refreshToken) {
-          try {
-            await auth.logout(refreshToken)
-          } catch {
-            // Ignore logout errors
+      init: async () => {
+        try {
+          const me = await auth.me()
+          if (me.isAuthenticated && !me.isGuest) {
+            if (get().isGuest) {
+              useGameStore.getState().clearRandomSession()
+            }
+            set({
+              accessToken: null,
+              username: me.username || null,
+              isGuest: false,
+              isAuthenticated: true,
+            })
+          } else if (!me.isAuthenticated) {
+            const state = get()
+            if (!state.isGuest) {
+              get().clearAuth()
+            }
+          }
+        } catch {
+          if (!get().isGuest) {
+            get().clearAuth()
           }
         }
-        get().clearAuth()
+      },
 
+      loginAsGuest: async () => {
+        const response = await auth.guest()
+        get().setGuestToken(response.access_token)
+      },
+
+      logout: () => {
+        const { isGuest } = get()
+        get().clearAuth()
+        useGameStore.getState().clearRandomSession()
+        useGameStore.getState().clearDailyStatus()
         if (!isGuest) {
-          const params = new URLSearchParams({
-            client_id: config.keycloak.clientId,
-            post_logout_redirect_uri: window.location.origin,
-          })
-          window.location.href = `${config.keycloak.oidcBase}/logout?${params}`
+          window.location.href = `${config.apiBase}/auth/logout`
         }
       },
     }),
@@ -115,19 +95,14 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({
         accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         username: state.username,
         isGuest: state.isGuest,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.isAuthenticated && !state.isGuest && !state.refreshToken) {
-          state.accessToken = null
-          state.refreshToken = null
-          state.isGuest = false
-          state.isAuthenticated = false
-        }
-        state?.setHasHydrated(true)
+        state?.init().finally(() => {
+          state?.setHasHydrated(true)
+        })
       },
     }
   )

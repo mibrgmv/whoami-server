@@ -1,0 +1,29 @@
+@startuml Login Flow
+skinparam style strictuml
+
+actor Browser
+participant "Gateway\n/auth/login" as GW
+database Redis
+participant Keycloak
+
+Browser -> GW: GET /api/v1/auth/login?return_to=/game
+activate GW
+
+GW -> GW: sanitizeReturnTo(return_to)
+GW -> GW: state = uuid.New()
+GW -> Redis: SetState(state, "/game")\nTTL = 5 min
+Redis --> GW: OK
+
+GW -> GW: Build Keycloak auth URL\nclient_id, redirect_uri,\nresponse_type=code, scope=openid, state
+
+Browser <-- GW: 302 Redirect → Keycloak /auth
+deactivate GW
+
+Browser -> Keycloak: GET /realms/{realm}/protocol/openid-connect/auth?...
+activate Keycloak
+Keycloak --> Browser: Login page (gordle theme)
+Browser -> Keycloak: POST credentials
+Keycloak --> Browser: 302 Redirect → /api/v1/auth/callback?code=...&state=...
+deactivate Keycloak
+
+@enduml

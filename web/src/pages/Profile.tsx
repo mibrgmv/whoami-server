@@ -6,20 +6,8 @@ import { statistics } from '../api/client'
 import type { UserStatistics, GameHistoryItem } from '../types/api'
 import './Profile.css'
 
-function keycloakActionUrl(action: string): string {
-  const params = new URLSearchParams({
-    client_id: config.keycloak.clientId,
-    redirect_uri: `${window.location.origin}/oauth/callback`,
-    response_type: 'code',
-    scope: 'openid',
-    kc_action: action,
-  })
-  return `${config.keycloak.oidcBase}/auth?${params}`
-}
-
 function handleKeycloakAction(action: string) {
-  sessionStorage.setItem('auth_return_to', '/profile')
-  window.location.href = keycloakActionUrl(action)
+  window.location.href = `${config.apiBase}/auth/action?kc_action=${action}&return_to=/profile`
 }
 
 export function Profile() {
