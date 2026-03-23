@@ -4,12 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: web
-    ports:
-      - "3000:80"
-    depends_on:
-      - gateway
-    networks:
-      - app-network
 
   gateway:
     build:
@@ -36,3 +30,27 @@ services:
       target: statistics
       args:
         SERVICE: statistics
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8082:8080"
+    networks:
+      - app-network
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.29
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+    restart: unless-stopped

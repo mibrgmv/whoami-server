@@ -5,7 +5,7 @@ BUILD_SERVICES := gateway game statistics
 
 .PHONY: up down down-v rs rs-web logs build build-all lint test tidy gen web web-build web-install help
 
-up: build-all
+up:
 	$(COMPOSE) up -d --build
 
 down:

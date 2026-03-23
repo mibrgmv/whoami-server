@@ -1,38 +1,27 @@
-# Git
 .git
 .gitignore
 
-# IDE
 .idea
 .vscode
 .vs
 *.iml
 
-# Environment
 .env
 .env.*
-secrets.dev.yaml
-values.dev.yaml
 
-# Build artifacts (keep bin/ - Dockerfile uses pre-built binaries)
+**/bin
 **/obj
 
-# Documentation
 *.md
 LICENSE
 docs/
 
-# Docker (avoid recursion)
-docker-compose*.yml
 docker-compose*.yaml
 
-# Node (if any frontend)
 **/node_modules
 **/npm-debug.log
 
-# Test files
 **/*_test.go
 **/testdata
 
-# Misc
 **/.DS_Store

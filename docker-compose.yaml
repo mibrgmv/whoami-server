@@ -46,6 +46,7 @@ services:
       - KEYCLOAK_BASE_URL=http://keycloak:8080
       - KEYCLOAK_ISSUER_URL=${KEYCLOAK_ISSUER_URL}
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - GUEST_SECRET=${GUEST_SECRET}
     restart: unless-stopped
 
   game-service:
@@ -230,28 +231,4 @@ services:
       start_period: 15s
     volumes:
       - kafka-data:/var/lib/kafka/data
-    restart: unless-stopped
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    ports:
-      - "8082:8080"
-    networks:
-      - app-network
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
-    restart: unless-stopped
-
-  mailpit:
-    image: axllent/mailpit:v1.29
-    container_name: mailpit
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-    networks:
-      - app-network
     restart: unless-stopped
