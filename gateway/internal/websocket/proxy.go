@@ -1,101 +1,42 @@
 package websocket
 
 import (
-	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
-
-	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Configure properly in production
-	},
-}
-
 type Proxy struct {
-	targetURL *url.URL
-	logger    *slog.Logger
+	reverse *httputil.ReverseProxy
+	logger  *slog.Logger
 }
 
 func NewProxy(targetAddr string, logger *slog.Logger) (*Proxy, error) {
-	targetURL, err := url.Parse("ws://" + targetAddr)
+	targetURL, err := url.Parse("http://" + targetAddr)
 	if err != nil {
 		return nil, err
 	}
+
+	reverse := httputil.NewSingleHostReverseProxy(targetURL)
+	reverse.Director = func(req *http.Request) {
+		req.URL.Scheme = targetURL.Scheme
+		req.URL.Host = targetURL.Host
+		req.URL.Path = strings.TrimPrefix(req.URL.Path, "/api/v1")
+		req.Host = targetURL.Host
+	}
+
 	return &Proxy{
-		targetURL: targetURL,
-		logger:    logger,
+		reverse: reverse,
+		logger:  logger,
 	}, nil
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	targetURL := *p.targetURL
-	targetURL.Path = r.URL.Path
-	targetURL.RawQuery = r.URL.RawQuery
-
-	targetURL.Path = strings.TrimPrefix(targetURL.Path, "/api/v1")
-
 	p.logger.Info("proxying WebSocket",
 		slog.String("path", r.URL.Path),
-		slog.String("target", targetURL.String()),
+		slog.String("target", r.URL.Path),
 	)
-
-	backendConn, resp, err := websocket.DefaultDialer.Dial(targetURL.String(), nil)
-	if err != nil {
-		p.logger.Error("failed to connect to backend",
-			slog.String("error", err.Error()),
-			slog.String("target", targetURL.String()),
-		)
-		if resp != nil {
-			http.Error(w, "Failed to connect to game server", resp.StatusCode)
-		} else {
-			http.Error(w, "Failed to connect to game server", http.StatusBadGateway)
-		}
-		return
-	}
-	defer backendConn.Close()
-
-	clientConn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		p.logger.Error("failed to upgrade client connection", slog.String("error", err.Error()))
-		return
-	}
-	defer clientConn.Close()
-
-	errChan := make(chan error, 2)
-
-	go func() {
-		errChan <- p.copyMessages(backendConn, clientConn)
-	}()
-
-	go func() {
-		errChan <- p.copyMessages(clientConn, backendConn)
-	}()
-
-	<-errChan
-}
-
-func (p *Proxy) copyMessages(dst, src *websocket.Conn) error {
-	for {
-		messageType, message, err := src.ReadMessage()
-		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-				return nil
-			}
-			if err == io.EOF {
-				return nil
-			}
-			return err
-		}
-
-		if err := dst.WriteMessage(messageType, message); err != nil {
-			return err
-		}
-	}
+	p.reverse.ServeHTTP(w, r)
 }
