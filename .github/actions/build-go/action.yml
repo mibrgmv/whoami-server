@@ -1,0 +1,21 @@
+name: Build Go Service
+description: Shared template for building Go services
+
+inputs:
+  service:
+    description: Service directory name
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache-dependency-path: ${{ inputs.service }}/go.sum
+
+    - name: Build
+      shell: bash
+      run: go build ./cmd/app
+      working-directory: ${{ inputs.service }}

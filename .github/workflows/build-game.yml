@@ -1,0 +1,22 @@
+name: Build Game
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'game/**'
+      - 'libs/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'game/**'
+      - 'libs/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-go
+        with:
+          service: game

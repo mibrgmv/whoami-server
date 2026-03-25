@@ -1,0 +1,22 @@
+name: Build Statistics
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'statistics/**'
+      - 'libs/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'statistics/**'
+      - 'libs/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-go
+        with:
+          service: statistics
