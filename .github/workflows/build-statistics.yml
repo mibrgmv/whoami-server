@@ -2,12 +2,12 @@ name: Build Statistics
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'statistics/**'
       - 'libs/**'
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'statistics/**'
       - 'libs/**'

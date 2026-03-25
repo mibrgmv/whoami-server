@@ -2,12 +2,12 @@ name: Build Gateway
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'gateway/**'
       - 'libs/**'
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'gateway/**'
       - 'libs/**'

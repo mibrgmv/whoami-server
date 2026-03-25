@@ -2,11 +2,11 @@ name: Build Web
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'web/**'
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
     paths:
       - 'web/**'
 
