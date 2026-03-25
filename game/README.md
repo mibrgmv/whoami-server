@@ -14,7 +14,7 @@ Game service for Gordle - handles single-player sessions and multiplayer rooms.
 
 ### WebSocket
 
-Connect to: `ws://game-server/rooms/{code}/ws?player_id=xxx`
+Connect to: `wss://game-server/rooms/{code}/ws?player_id=xxx`
 
 The `player_id` is obtained from `JoinRoom` response. Once connected, all game actions go through WebSocket.
 
