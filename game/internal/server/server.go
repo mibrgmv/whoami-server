@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log/slog"
 	"net"
 	"net/http"
@@ -32,8 +33,12 @@ type Server struct {
 	roomService service.RoomService
 }
 
-func NewServer(pool *pgxpool.Pool, redisClient *goredis.Client, kafkaCfg *kafka.Config) *Server {
+func NewServer(ctx context.Context, pool *pgxpool.Pool, redisClient *goredis.Client, kafkaCfg *kafka.Config) *Server {
 	logger := logging.NewLogger("game-service")
+
+	if err := kafka.EnsureTopic(ctx, kafkaCfg.Brokers, kafkaCfg.Topics.GameCompleted, 1); err != nil {
+		logger.Error("failed to ensure kafka topic", slog.String("topic", kafkaCfg.Topics.GameCompleted), slog.String("error", err.Error()))
+	}
 
 	producer := kafka.NewProducer(kafka.ProducerConfig{
 		Brokers:  kafkaCfg.Brokers,

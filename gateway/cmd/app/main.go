@@ -14,7 +14,8 @@ import (
 	"gordle/libs/config"
 	"gordle/libs/keycloak"
 	"gordle/libs/logging"
-	"gordle/libs/storage/redis"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -35,9 +36,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	redisClient, err := redis.NewClient(ctx, cfg.Redis)
-	if err != nil {
-		logger.Error("failed to create Redis client", slog.String("error", err.Error()))
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	defer func(redisClient *redis.Client) {
+		err := redisClient.Close()
+		if err != nil {
+			logger.Error("failed to close redis client", slog.String("error", err.Error()))
+		}
+	}(redisClient)
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		logger.Error("failed to connect to Redis", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 	logger.Info("connected to Redis")
@@ -57,7 +68,7 @@ func main() {
 		}
 	}()
 
-	s, err := server.NewHttpServer(ctx, cfg, collector, logger, redisClient.Raw(), keycloakClient)
+	s, err := server.NewHttpServer(ctx, cfg, collector, logger, redisClient, keycloakClient)
 	if err != nil {
 		logger.Error("failed to create HTTP server", slog.String("error", err.Error()))
 		os.Exit(1)
