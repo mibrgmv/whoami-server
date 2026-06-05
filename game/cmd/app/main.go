@@ -8,13 +8,13 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gordle/libs/config"
-	"gordle/libs/storage/redis"
-	"gordle/libs/tools"
+	"github.com/redis/go-redis/v9"
 
 	appcfg "gordle/game/internal/config"
 	"gordle/game/internal/seed"
 	"gordle/game/internal/server"
+	"gordle/libs/config"
+	"gordle/libs/tools"
 )
 
 func main() {
@@ -51,13 +51,23 @@ func main() {
 		log.Fatalf("failed to seed words: %v", err)
 	}
 
-	redisClient, err := redis.NewClient(ctx, *cfg.Redis)
-	if err != nil {
-		log.Fatalf("Failed to create Redis client: %v", err)
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	defer func(redisClient *redis.Client) {
+		err := redisClient.Close()
+		if err != nil {
+			log.Fatalf("failed to close redis client: %v", err)
+		}
+	}(redisClient)
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("failed to connect to Redis: %v", err)
 	}
-	log.Println("Connected to Redis successfully")
+	log.Println("connected to Redis successfully")
 
-	s := server.NewServer(pool, redisClient.Raw(), cfg.Kafka)
+	s := server.NewServer(pool, redisClient, cfg.Kafka)
 
 	go func() {
 		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
