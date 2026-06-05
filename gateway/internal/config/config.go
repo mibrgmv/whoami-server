@@ -21,9 +21,11 @@ type Config struct {
 		DB       int           `mapstructure:"db"`
 		TTL      time.Duration `mapstructure:"ttl"`
 	} `mapstructure:"redis"`
-	Session struct {
-		CookieName   string `mapstructure:"cookie_name"`
-		CookieSecure bool   `mapstructure:"cookie_secure"`
-		CallbackURL  string `mapstructure:"callback_url"`
-	} `mapstructure:"session"`
+	Session SessionConfig `mapstructure:"session"`
+}
+
+type SessionConfig struct {
+	CookieName   string `mapstructure:"cookie_name"`
+	CookieSecure bool   `mapstructure:"cookie_secure"`
+	CallbackURL  string `mapstructure:"callback_url"`
 }
