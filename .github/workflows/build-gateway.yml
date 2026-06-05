@@ -1,0 +1,23 @@
+name: Build Gateway
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'gateway/**'
+      - 'libs/**'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'gateway/**'
+      - 'libs/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-go
+        with:
+          service: gateway

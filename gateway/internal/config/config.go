@@ -1,9 +1,10 @@
 package config
 
 import (
+	"time"
+
 	"gordle/libs/keycloak"
 	"gordle/libs/server"
-	"gordle/libs/storage/redis"
 )
 
 type Config struct {
@@ -14,8 +15,13 @@ type Config struct {
 	GameWebSocket     server.Config     `mapstructure:"game_websocket"`
 	StatisticsService server.Config     `mapstructure:"statistics_service"`
 	GuestSecret       string            `mapstructure:"guest_secret"`
-	Redis             redis.Config      `mapstructure:"redis"`
-	Session           SessionConfig     `mapstructure:"session"`
+	Redis             struct {
+		Address  string        `mapstructure:"address"`
+		Password string        `mapstructure:"password"`
+		DB       int           `mapstructure:"db"`
+		TTL      time.Duration `mapstructure:"ttl"`
+	} `mapstructure:"redis"`
+	Session SessionConfig `mapstructure:"session"`
 }
 
 type SessionConfig struct {
