@@ -24,6 +24,8 @@ type MessageHandler func(ctx context.Context, message kafka.Message) error
 type Consumer struct {
 	reader  *kafka.Reader
 	handler MessageHandler
+	brokers []string
+	topic   string
 }
 
 func NewConsumer(cfg ConsumerConfig, handler MessageHandler) *Consumer {
@@ -42,10 +44,16 @@ func NewConsumer(cfg ConsumerConfig, handler MessageHandler) *Consumer {
 	return &Consumer{
 		reader:  reader,
 		handler: handler,
+		brokers: cfg.Brokers,
+		topic:   cfg.Topic,
 	}
 }
 
 func (c *Consumer) Start(ctx context.Context) {
+	if err := WaitForTopic(ctx, c.brokers, c.topic, 3*time.Second); err != nil {
+		log.Printf("Failed waiting for topic %q: %v", c.topic, err)
+		return
+	}
 	c.consumeLoop(ctx)
 }
 

@@ -67,7 +67,7 @@ func main() {
 	}
 	log.Println("connected to Redis successfully")
 
-	s := server.NewServer(pool, redisClient, cfg.Kafka)
+	s := server.NewServer(ctx, pool, redisClient, cfg.Kafka)
 
 	go func() {
 		if err := s.Start(cfg.Grpc.GetAddr()); err != nil {
